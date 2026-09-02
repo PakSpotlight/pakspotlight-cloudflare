@@ -27,3 +27,4 @@ FOR DELETE TO authenticated USING (true);
 7. The website Admin button opens a login screen for visitors who are not signed in. After login, Admin tools are available. LOG OUT returns to the public site.
 
 Important: The browser-side login is only the UI gate. The Supabase Row Level Security and anon write revocation above are the actual database protection.
+Update
