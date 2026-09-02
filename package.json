@@ -1,0 +1,11 @@
+{
+  "name": "pak-spotlight",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
