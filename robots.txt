@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pak-spotlight.pakifun3.workers.dev/sitemap.xml
