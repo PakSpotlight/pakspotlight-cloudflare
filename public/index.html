@@ -74,31 +74,10 @@ footer{padding:26px 6%!important;color:#7f8792!important}
 </div></main>
 <footer><div><b>PAK SPOTLIGHT</b><br>Classic PTV Drama Archive</div><div>Privacy · Terms · Copyright / Removal · Contact</div><div>© 2026 Pak Spotlight</div></footer>
 
-<script>
-const SUPABASE_URL="https://whcseoasnaswlhnzduix.supabase.co";
-const SUPABASE_KEY="sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
-let supabase=null;
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const supabase=createClient("https://whcseoasnaswlhnzduix.supabase.co","sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk");
 const $=id=>document.getElementById(id); const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function getSupabase(){
-  if(supabase)return supabase;
-  try{
-    const mod=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
-    supabase=mod.createClient(SUPABASE_URL,SUPABASE_KEY);
-    return supabase;
-  }catch(e){
-    console.error("Supabase client failed to load",e);
-    throw new Error("Admin client could not load. Public archive uses direct Supabase access.");
-  }
-}
-async function publicDramaFetch(query="id,title,urdu_title,year,type,writer,director,cast,description,youtube_url,series_name,episode_number"){
-  const u=new URL(SUPABASE_URL+"/rest/v1/Drama");
-  u.searchParams.set("select",query);
-  u.searchParams.set("order","id.asc");
-  const r=await fetch(u,{headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,Accept:"application/json"}});
-  const text=await r.text();
-  if(!r.ok)throw new Error("Drama query failed ("+r.status+"): "+text.slice(0,300));
-  return JSON.parse(text);
-}
 let rows=[],editingId=null,editingImage="",loadPromise=null,viewMode="home",viewType="",dataReady=false;
 let authSession=null;
 function map(r){return {id:r.id,title:r.title??r.Title??"",urdu:r.urdu_title??r.urdu??r.Urdu??"",year:r.year??"",type:r.type??"",writer:r.writer??"",produced:r.produced??"",director:r.director??"",cast:r.cast??"",description:r.description??"",youtube:r.youtube_url??r.youtube??"",image:r.thumbnail_url??r.image??r.thumbnail??"",series:r.series_name??"",episode:r.episode_number==null?null:Number(r.episode_number)}}
@@ -106,16 +85,12 @@ function normalize(s){return String(s??"").replace(/\s+/g," ").trim().toLowerCas
 async function load(force=false){
   if(loadPromise&&!force)return loadPromise;
   loadPromise=(async()=>{
-    try{
-      const data=await publicDramaFetch();
-      rows=(data||[]).map(map);dataReady=true;
-      return rows;
-    }catch(e){
-      console.error("Drama load failed",e);
-      dataReady=false;
-      rows=[];
-      return rows;
-    }
+    let q=await supabase.from("Drama").select("id,title,urdu_title,year,type,writer,director,cast,description,youtube_url,series_name,episode_number");
+    if(q.error){console.warn("Fast Drama query failed; using full Drama query",q.error);q=await supabase.from("Drama").select("*")}
+    if(q.error){console.error("Drama load failed",q.error);dataReady=false;return rows}
+    rows=(q.data||[]).map(map);dataReady=true;
+    
+    return rows;
   })();
   return loadPromise;
 }
@@ -129,15 +104,12 @@ async function hydrateThumbs(){
     const group=batches.slice(start,start+4);
     await Promise.all(group.map(async batch=>{
       try{
-        const u=new URL(SUPABASE_URL+"/rest/v1/Drama");
-        u.searchParams.set("select","id,thumbnail_url");
-        u.searchParams.set("id","in.("+batch.join(",")+")");
-        const rr=await fetch(u,{headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,Accept:"application/json"}});
-        if(!rr.ok)throw new Error("thumbnail query "+rr.status);
-        const data=await rr.json();
-        const im=new Map((data||[]).map(x=>[String(x.id),x.thumbnail_url||""]));
-        rows.forEach(r=>{if(im.has(String(r.id)))r.image=im.get(String(r.id))});
-        if(viewMode==="home" && document.visibilityState!=="hidden") renderHomeInPlace();
+        const q=await supabase.from("Drama").select("id,thumbnail_url").in("id",batch);
+        if(!q.error){
+          const im=new Map((q.data||[]).map(x=>[String(x.id),x.thumbnail_url||""]));
+          rows.forEach(r=>{if(im.has(String(r.id)))r.image=im.get(String(r.id))});
+          if(viewMode==="home" && document.visibilityState!=="hidden") renderHomeInPlace();
+        }
       }catch(e){console.warn("Thumbnail load failed",e)}
     }));
   }
@@ -237,7 +209,6 @@ window.migrateThumbnails=async function(){
   }finally{btn.disabled=false}
 };
 window.showAdmin=async function(){
-  try{await getSupabase()}catch(e){$('app').innerHTML=`<section><div class="auth-box"><h1>Admin unavailable</h1><p class="meta">${esc(e.message)}</p><a class="watch" href="#" onclick="goHome();return false">← WEBSITE</a></div></section>`;return}
   const {data}=await supabase.auth.getSession();
   authSession=data.session||null;
   if(!authSession){showLogin();return}
@@ -247,19 +218,17 @@ window.showAdmin=async function(){
 };
 function showLogin(){
   $('app').innerHTML=`<section><div class="auth-box"><a class="watch" href="#" onclick="goHome();return false">← WEBSITE</a><h1>Admin Login</h1><p class="meta">Admin access is restricted. Sign in to manage dramas.</p><form id="loginForm"><label>Email</label><input id="loginEmail" type="email" autocomplete="username" required placeholder="admin@example.com"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Password"><div class="actions"><button class="btn gold" type="submit">SIGN IN</button><button class="btn" type="button" onclick="goHome()">CANCEL</button></div><div id="loginMsg" class="auth-error"></div></form></div></section>`;
-  $('loginForm').onsubmit=async e=>{e.preventDefault();await getSupabase();$('loginMsg').textContent='Signing in…';const q=await supabase.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});if(q.error){$('loginMsg').textContent='Login failed: '+q.error.message;return}authSession=q.data.session;updateAdminButton();showAdmin()};
+  $('loginForm').onsubmit=async e=>{e.preventDefault();$('loginMsg').textContent='Signing in…';const q=await supabase.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});if(q.error){$('loginMsg').textContent='Login failed: '+q.error.message;return}authSession=q.data.session;updateAdminButton();showAdmin()};
 }
 window.logoutAdmin=async function(){await supabase.auth.signOut();authSession=null;updateAdminButton();goHome()};
 function updateAdminButton(){const b=$('adminSwitch');if(b)b.textContent=authSession?'ADMIN':'ADMIN';}
 window.adminForm=async function(d=null){if(!authSession){showLogin();return}return adminForm(d)};
 function renderAdmin(){const list=$('adminList'),gs=groups(rows);list.innerHTML=gs.length?gs.map(g=>`<div class="drama-row"><div><b>${esc(isSeries(g[0])&&g[0].series?g[0].series:g[0].title)}</b><div class="meta">${esc(g[0].type)} · ${g.length} item${g.length===1?'':'s'}</div>${g.length>1?`<div class="admin-episodes">${g.map(e=>'Episode '+(e.episode??'?')+' — '+esc(e.title)).join('<br>')}</div>`:''}</div><div class="actions">${g.map(e=>`<button onclick="adminEdit('${encodeURIComponent(String(e.id))}')">EDIT${e.episode?' E'+e.episode:''}</button><button class="danger" onclick="adminDelete('${encodeURIComponent(String(e.id))}')">DELETE${e.episode?' E'+e.episode:''}</button>`).join('')}</div></div>`).join(''):'<div class="empty">No dramas yet.</div>'}
 window.adminEdit=id=>{if(!authSession){showLogin();return}const d=rows.find(x=>String(x.id)===decodeURIComponent(id));if(d)adminForm(d)};window.adminDelete=async id=>{if(!authSession){showLogin();return}const d=rows.find(x=>String(x.id)===decodeURIComponent(id));if(!d||!confirm('Delete '+d.title+'?'))return;const q=await supabase.from('Drama').delete().eq('id',d.id);if(q.error){alert('Delete failed: '+q.error.message);return}loadPromise=null;await load(true);showAdmin()};
-async function setupAuth(){
-  try{const s=await getSupabase();const {data}=await s.auth.getSession();authSession=data.session||null;updateAdminButton();s.auth.onAuthStateChange((_event,session)=>{authSession=session||null;updateAdminButton()})}catch(e){console.warn("Auth client not available",e)}
-}
-// Render a tiny shell immediately; public archive does not depend on the Supabase JS module.
+supabase.auth.getSession().then(({data})=>{authSession=data.session||null;updateAdminButton()}).catch(()=>{});
+supabase.auth.onAuthStateChange((_event,session)=>{authSession=session||null;updateAdminButton()});
+// Render a tiny shell immediately; never overwrite a detail page when background thumbnails finish.
 $('app').innerHTML='<section class="hero"><div class="hero-copy"><div class="tag">CLASSIC PAKISTANI TELEVISION</div><h1>PAK SPOTLIGHT</h1><p>Loading the archive…</p></div></section>';
-load().then(()=>{home(rows);scheduleThumbs()}).catch(e=>{console.error(e);home(rows)});
-if(location.pathname==='/admin'||location.pathname==='/admin/') showAdmin();
+if(location.pathname==='/admin'||location.pathname==='/admin/'){showAdmin().catch(e=>{console.error(e);showLogin()})}else{load().then(()=>{home(rows);scheduleThumbs()}).catch(e=>{console.error(e);home(rows)})}
 </script>
 </body></html>
