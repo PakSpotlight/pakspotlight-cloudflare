@@ -3,19 +3,6 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pak Spotlight — Classic PTV Drama Archive</title>
-<meta name="description" content="Pak Spotlight is a classic Pakistani PTV drama archive featuring drama serials, classic long plays, telefilms, comedy and short productions with YouTube viewing links.">
-<meta name="robots" content="index,follow,max-image-preview:large">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Pak Spotlight — Classic PTV Drama Archive">
-<meta property="og:description" content="Explore classic Pakistani PTV dramas, serials, long plays, comedy and short productions on Pak Spotlight.">
-<meta property="og:url" content="https://pak-spotlight.pakifun3.workers.dev/">
-<meta property="og:image" content="https://pak-spotlight.pakifun3.workers.dev/logo.png">
-<meta property="og:site_name" content="Pak Spotlight">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Pak Spotlight — Classic PTV Drama Archive">
-<meta name="twitter:description" content="Classic Pakistani PTV dramas, serials, long plays, comedy and short productions.">
-<meta name="twitter:image" content="https://pak-spotlight.pakifun3.workers.dev/logo.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Pak Spotlight","url":"https://pak-spotlight.pakifun3.workers.dev/","description":"Classic Pakistani PTV drama archive featuring drama serials, long plays, comedy and short productions."}</script>
 <style>
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#050608;color:#f5f2ea;font-family:Arial,sans-serif}
 a{color:inherit;text-decoration:none}header{position:sticky;top:0;z-index:20;background:rgba(5,6,8,.97);border-bottom:1px solid #292b30;display:flex;align-items:center;justify-content:space-between;padding:9px 5%}
@@ -68,20 +55,28 @@ footer{padding:26px 6%!important;color:#7f8792!important}
 
 <style>
 .auth-box{max-width:520px;margin:55px auto;padding:28px;background:#111216;border:1px solid #292c32;border-radius:14px}.auth-box h1{margin-top:0}.auth-box label{display:block;color:#aaa;font-size:12px;font-weight:bold;margin:14px 0 7px}.auth-box input{width:100%;box-sizing:border-box;background:#080a0d;border:1px solid #363940;color:#fff;border-radius:7px;padding:13px}.auth-box .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.auth-error{color:#ff8585;margin-top:12px}.auth-success{color:#8ee6a5;margin-top:12px}.admin-switch.logged-in{display:block}.logout-btn{margin-left:8px}
-
-<style>
-.ai-box{margin-top:18px;padding:16px;border:1px solid #343840;background:#0d1014;border-radius:12px}.ai-box h3{margin:0 0 8px}.ai-row{display:flex;gap:10px;flex-wrap:wrap}.ai-row input{flex:1;min-width:220px}.ai-results{margin-top:10px;display:grid;gap:8px}.ai-result{padding:12px;border:1px solid #30343b;border-radius:9px;background:#11151a;cursor:pointer}.ai-result:hover{border-color:#ffd34e}.ai-status{margin-top:10px;color:#aaa;font-size:13px;line-height:1.5}.ai-result b{display:block;margin-bottom:4px}.ai-result small{color:#999}.ai-badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#252a31;color:#ffd34e;font-size:10px;font-weight:700;margin-left:6px}
 </style>
 </head>
 <body>
-<header class="topbar"><a class="brand" href="#" onclick="goHome();return false"><img class="logo" src="/logo.png" alt="Pak Spotlight" width="48" height="48"><div><b>PAK SPOTLIGHT</b><small>CLASSIC PTV DRAMA ARCHIVE</small></div></a><nav class="public-nav"><a href="#" onclick="goHome();return false">HOME</a><a href="#series" onclick="navTo('series');return false">DRAMA SERIALS</a><a href="#longplays" onclick="navTo('longplays');return false">LONG PLAYS</a><a href="#comedy" onclick="navTo('comedy');return false">COMEDY</a><a href="#shorts" onclick="navTo('shorts');return false">SHORTS</a></nav></header>
-<main id="app"></main>
-
+<header class="topbar"><a class="brand" href="#" onclick="goHome();return false"><img class="logo" src="/logo.png" alt="Pak Spotlight" width="48" height="48"><div><b>PAK SPOTLIGHT</b><small>CLASSIC PTV DRAMA ARCHIVE</small></div></a><button id="adminSwitch" class="admin-switch" onclick="showAdmin()">ADMIN</button><nav class="public-nav"><a href="#" onclick="goHome();return false">HOME</a><a href="#series" onclick="navTo('series');return false">DRAMA SERIALS</a><a href="#longplays" onclick="navTo('longplays');return false">LONG PLAYS</a><a href="#comedy" onclick="navTo('comedy');return false">COMEDY</a><a href="#shorts" onclick="navTo('shorts');return false">SHORTS</a></nav></header>
+<main id="app"><section class="hero"><div class="hero-copy"><div class="tag">CLASSIC PAKISTANI TELEVISION</div><h1>PAK SPOTLIGHT</h1><p>Loading the archive…</p></div></section></main>
+<main id="adminApp" class="admin-only"><div class="admin-shell">
+<div class="admin-tabs"><button class="admin-btn admin-tab active" id="dashTab" onclick="showAdminDashboard()">Dashboard</button><button class="admin-btn admin-tab" id="addTab" onclick="showAdminAdd()">+ Add Drama</button></div>
+<section id="adminDashboard"><h1>Drama Dashboard</h1><div class="panel"><h2 id="adminCount">0 Dramas</h2><p class="note">Add or edit dramas here. Changes are saved in your Supabase database and will appear on the public website.</p></div><div class="panel"><h2>Your Dramas</h2><div id="adminList"></div></div></section>
+<section id="adminAdd" style="display:none"><h1 id="adminFormTitle">Add New Drama</h1><div class="panel"><form id="adminForm">
+<div><label>English Title *</label><input id="a_title" required placeholder="AAPA"></div>
+<div><label>Urdu Title</label><input id="a_urdu" placeholder="آپا"></div>
+<div class="full"><label>Description</label><textarea id="a_description" placeholder="Write an original description..."></textarea></div>
+<div class="full"><label>YouTube link</label><input id="a_youtube" type="url" placeholder="https://youtu.be/..."></div>
+<div class="full"><label>Thumbnail image</label><input id="a_image" type="file" accept="image/*"></div>
+<div class="full actions"><button class="admin-btn gold" type="submit">SAVE DRAMA</button><button class="admin-btn" type="button" onclick="showAdminDashboard()">CANCEL</button></div><div id="adminMsg" class="success"></div>
+</form></div></section>
+</div></main>
 <footer><div><b>PAK SPOTLIGHT</b><br>Classic PTV Drama Archive</div><div>Privacy · Terms · Copyright / Removal · Contact</div><div>© 2026 Pak Spotlight</div></footer>
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-const supabase=createClient("https://whcseoasnaswlhnzduix.supabase.co","sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk");
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const supabaseClient=window.supabase.createClient("https://whcseoasnaswlhnzduix.supabase.co","sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk");
 const $=id=>document.getElementById(id); const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let rows=[],editingId=null,editingImage="",loadPromise=null,viewMode="home",viewType="",dataReady=false;
 let authSession=null;
@@ -90,8 +85,8 @@ function normalize(s){return String(s??"").replace(/\s+/g," ").trim().toLowerCas
 async function load(force=false){
   if(loadPromise&&!force)return loadPromise;
   loadPromise=(async()=>{
-    let q=await supabase.from("Drama").select("id,title,urdu_title,year,type,writer,director,cast,description,youtube_url,series_name,episode_number");
-    if(q.error){console.warn("Fast Drama query failed; using full Drama query",q.error);q=await supabase.from("Drama").select("*")}
+    let q=await supabaseClient.from("Drama").select("id,title,urdu_title,year,type,writer,director,cast,description,youtube_url,series_name,episode_number");
+    if(q.error){console.warn("Fast Drama query failed; using full Drama query",q.error);q=await supabaseClient.from("Drama").select("*")}
     if(q.error){console.error("Drama load failed",q.error);dataReady=false;return rows}
     rows=(q.data||[]).map(map);dataReady=true;
     
@@ -109,7 +104,7 @@ async function hydrateThumbs(){
     const group=batches.slice(start,start+4);
     await Promise.all(group.map(async batch=>{
       try{
-        const q=await supabase.from("Drama").select("id,thumbnail_url").in("id",batch);
+        const q=await supabaseClient.from("Drama").select("id,thumbnail_url").in("id",batch);
         if(!q.error){
           const im=new Map((q.data||[]).map(x=>[String(x.id),x.thumbnail_url||""]));
           rows.forEach(r=>{if(im.has(String(r.id)))r.image=im.get(String(r.id))});
@@ -123,36 +118,17 @@ function isSeries(d){return ["Serial / Series","Series","Serial","Comedy"].inclu
 function yt(url){try{const u=new URL(url);if(u.hostname.includes("youtu.be"))return u.pathname.split("/").filter(Boolean)[0]||"";if(u.hostname.includes("youtube.com")){if(u.pathname==="/watch")return u.searchParams.get("v")||"";const parts=u.pathname.split("/").filter(Boolean);const i=parts.findIndex(x=>["embed","shorts","live"].includes(x));if(i>=0)return parts[i+1]||"";return u.searchParams.get("v")||parts.pop()||""}return ""}catch{return ""}}
 function poster(d,extra=""){return d.image?`<div class="poster ${extra}"><img src="${esc(d.image)}" alt="${esc(d.title)}" decoding="async"></div>`:`<div class="poster ${extra}"><b>${esc(d.title)}</b></div>`}
 function groups(list){const m=new Map();for(const d of list){const series=isSeries(d)&&String(d.series||"").trim();const key=series?"series:"+String(d.type).trim().toLowerCase()+":"+normalize(series):"id:"+d.id;if(!m.has(key))m.set(key,[]);m.get(key).push(d)}return [...m.values()].map(g=>g.sort((a,b)=>(a.episode??999999)-(b.episode??999999)))}
-function updateSEO(d=null){
-  const base='https://pak-spotlight.pakifun3.workers.dev/';
-  const title=d?(isSeries(d)&&d.series?`${d.series} — Pak Spotlight`:`${d.title} — Pak Spotlight`):'Pak Spotlight — Classic PTV Drama Archive';
-  const desc=d?(String(d.description||'').trim()||`Watch ${isSeries(d)&&d.series?d.series:d.title} on Pak Spotlight, a classic Pakistani PTV drama archive.`):'Pak Spotlight is a classic Pakistani PTV drama archive featuring drama serials, classic long plays, telefilms, comedy and short productions with YouTube viewing links.';
-  document.title=title;
-  const meta=document.querySelector('meta[name="description"]');if(meta)meta.setAttribute('content',desc.slice(0,300));
-  const ogTitle=document.querySelector('meta[property="og:title"]');if(ogTitle)ogTitle.setAttribute('content',title);
-  const ogDesc=document.querySelector('meta[property="og:description"]');if(ogDesc)ogDesc.setAttribute('content',desc.slice(0,300));
-  const twTitle=document.querySelector('meta[name="twitter:title"]');if(twTitle)twTitle.setAttribute('content',title);
-  const twDesc=document.querySelector('meta[name="twitter:description"]');if(twDesc)twDesc.setAttribute('content',desc.slice(0,300));
-  const image=d&&d.image?d.image:'https://pak-spotlight.pakifun3.workers.dev/logo.png';
-  const ogImage=document.querySelector('meta[property="og:image"]');if(ogImage)ogImage.setAttribute('content',image);
-  const twImage=document.querySelector('meta[name="twitter:image"]');if(twImage)twImage.setAttribute('content',image);
-  const pageUrl=d?base+'?drama='+encodeURIComponent(String(d.id)):base;
-  const ogUrl=document.querySelector('meta[property="og:url"]');if(ogUrl)ogUrl.setAttribute('content',pageUrl);
-  let canonical=document.querySelector('link[rel="canonical"]');if(!canonical){canonical=document.createElement('link');canonical.rel='canonical';document.head.appendChild(canonical)}
-  canonical.href=pageUrl;
-}
-function card(g){const d=g[0],series=isSeries(d)&&!!String(d.series||"").trim(),title=series?d.series:d.title;const href='?drama='+encodeURIComponent(String(d.id));return `<article class="card"><a href="${href}" onclick="openItem('${encodeURIComponent(String(d.id))}');return false" aria-label="Open ${esc(title)}">${poster(d)}<div class="body"><h3>${esc(title)}</h3><div class="meta">${esc(d.year)} · ${esc(d.type)}${series?` · ${g.length} Episode${g.length===1?'':'s'}`:''}</div><p>${esc(d.description)}</p><span class="watch">${series?'OPEN SERIES →':'OPEN DRAMA →'}</span></div></a></article>`}
-function home(list=rows){viewMode="home";viewType="";updateSEO();$('app').innerHTML=`<section class="hero"><div class="hero-copy"><div class="tag">CLASSIC PAKISTANI TELEVISION</div><h1>PAK SPOTLIGHT</h1><p>Explore the golden era of Pakistani television — timeless dramas, unforgettable stories and legendary performances, all gathered in one place.</p><a class="btn gold" href="#archive">BROWSE DRAMAS ↓</a></div></section><section id="archive"><div class="section-note">Pak Spotlight preserves classic Pakistani television dramas, drama serials, long plays, comedy and short productions in one searchable archive.</div><div class="head"><div><div class="tag">PAK SPOTLIGHT ARCHIVE</div><h2>All Dramas</h2></div><input id="search" placeholder="Search dramas..." aria-label="Search dramas"></div><div class="grid" id="cards"></div></section><section id="series"><div class="head"><div><div class="tag">DRAMA SERIALS</div><h2>Drama Serials</h2></div></div><div class="grid" id="seriesCards"></div></section><section id="longplays"><div class="head"><div><div class="tag">LONG PLAYS</div><h2>Classic Long Plays</h2></div></div><div class="grid" id="longCards"></div></section><section id="comedy"><div class="head"><div><div class="tag">COMEDY</div><h2>Comedy</h2></div></div><div class="grid" id="comedyCards"></div></section><section id="shorts"><div class="head"><div><div class="tag">SHORTS</div><h2>Shorts</h2></div></div><div class="grid" id="shortCards"></div></section>`;renderAll(list);const search=$('search');if(search)search.oninput=()=>renderAll(list.filter(d=>(d.title+" "+d.urdu+" "+d.year+" "+d.type+" "+d.writer+" "+d.series).toLowerCase().includes(search.value.toLowerCase())))}
+function card(g){const d=g[0],series=isSeries(d)&&!!String(d.series||"").trim(),title=series?d.series:d.title;return `<article class="card" onclick="openItem('${encodeURIComponent(String(d.id))}')">${poster(d)}<div class="body"><h3>${esc(title)}</h3><div class="meta">${esc(d.year)} · ${esc(d.type)}${series?` · ${g.length} Episode${g.length===1?'':'s'}`:''}</div><p>${esc(d.description)}</p><span class="watch">${series?'OPEN SERIES →':'OPEN DRAMA →'}</span></div></article>`}
+function home(list=rows){viewMode="home";viewType="";document.title="Pak Spotlight — Classic PTV Drama Archive";$('app').innerHTML=`<section class="hero"><div class="hero-copy"><div class="tag">CLASSIC PAKISTANI TELEVISION</div><h1>PAK SPOTLIGHT</h1><p>Explore the golden era of Pakistani television — timeless dramas, unforgettable stories and legendary performances, all gathered in one place.</p><a class="btn gold" href="#archive">BROWSE DRAMAS ↓</a></div></section><section id="archive"><div class="head"><div><div class="tag">PAK SPOTLIGHT ARCHIVE</div><h2>All Dramas</h2></div><input id="search" placeholder="Search dramas..." aria-label="Search dramas"></div><div class="grid" id="cards"></div></section><section id="series"><div class="head"><div><div class="tag">DRAMA SERIALS</div><h2>Drama Serials</h2></div></div><div class="grid" id="seriesCards"></div></section><section id="longplays"><div class="head"><div><div class="tag">LONG PLAYS</div><h2>Classic Long Plays</h2></div></div><div class="grid" id="longCards"></div></section><section id="comedy"><div class="head"><div><div class="tag">COMEDY</div><h2>Comedy</h2></div></div><div class="grid" id="comedyCards"></div></section><section id="shorts"><div class="head"><div><div class="tag">SHORTS</div><h2>Shorts</h2></div></div><div class="grid" id="shortCards"></div></section>`;renderAll(list);const search=$('search');if(search)search.oninput=()=>renderAll(list.filter(d=>(d.title+" "+d.urdu+" "+d.year+" "+d.type+" "+d.writer+" "+d.series).toLowerCase().includes(search.value.toLowerCase())))}
 function renderAll(list){const gs=groups(list);$('cards').innerHTML=gs.length?gs.map(card).join(""):"<div class='empty'>No dramas found.</div>";const series=gs.filter(g=>["Serial / Series","Series","Serial"].includes(g[0].type)&&g[0].series);$('seriesCards').innerHTML=series.length?series.map(card).join(""):"<div class='empty'>No series added yet.</div>";const lp=gs.filter(g=>g[0].type==="Long Play");$('longCards').innerHTML=lp.length?lp.map(card).join(""):"<div class='empty'>No long plays yet.</div>";const co=gs.filter(g=>g[0].type==="Comedy");$('comedyCards').innerHTML=co.length?co.map(card).join(""):"<div class='empty'>No comedy entries yet.</div>";const sh=gs.filter(g=>g[0].type==="Shorts");$('shortCards').innerHTML=sh.length?sh.map(card).join(""):"<div class='empty'>No shorts yet.</div>"}
 function renderHomeInPlace(){if(viewMode!=="home")return;const list=viewType?rows.filter(d=>d.type===viewType):rows;renderAll(list)}
 function renderCurrent(){renderHomeInPlace()}
-window.openItem=function(id){viewMode="detail";viewType="";const d=rows.find(x=>String(x.id)===decodeURIComponent(id));if(!d)return;updateSEO(d);const target='?drama='+encodeURIComponent(String(d.id));if(location.search!==target)history.pushState({drama:String(d.id)},"",target);const eps=isSeries(d)&&d.series?rows.filter(x=>normalize(x.series)===normalize(d.series)&&String(x.type)===String(d.type)).sort((a,b)=>(a.episode??999999)-(b.episode??999999)):[d];const series=isSeries(d)&&!!d.series;const first=eps.find(e=>yt(e.youtube))||d;const firstId=yt(first.youtube);$('app').innerHTML=`<a class="watch" href="#" onclick="goHome();return false">← BACK TO ARCHIVE</a><section><div class="detail-top">${poster(d,'detail-poster')}<div><div class="tag">${esc(d.type)}</div><h1>${esc(series?d.series:d.title)}</h1>${d.urdu?`<h2>${esc(d.urdu)}</h2>`:""}<p>${esc(d.description)}</p><div class="info"><div><b>Year</b>${esc(d.year)}</div><div><b>Type</b>${esc(d.type)}</div><div><b>Writer</b>${esc(d.writer)}</div><div><b>Director</b>${esc(d.director)}</div><div><b>Cast</b>${esc(d.cast)}</div></div></div></div></section>${firstId?`<section class="player-section"><h2>▶ Watch</h2><div class="video-wrap"><iframe id="ytPlayer" src="https://www.youtube.com/embed/${firstId}?rel=0" title="${esc(series?d.series:d.title)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></section>`:""}<section><h2>${series?'Episodes':'Watch'}</h2><div class="episodes">${eps.map((e,i)=>{const vid=yt(e.youtube);return `<div class="episode ${i===0&&vid?'selected':''}"><div class="epno">${e.episode??i+1}</div><div class="epbody"><b>${series?'Episode '+(e.episode??i+1):esc(e.title)}</b><span class="meta">${esc(e.year)}</span></div>${vid?`<button class="btn gold ${i===0?'playing':''}" onclick="playEpisode('${vid}',this);return false">▶ ${series?'PLAY EPISODE '+(e.episode??i+1):'WATCH'}</button>`:`<span class="meta">Video link not added</span>`}</div>`}).join("")}</div></section>`;window.scrollTo(0,0)};
+window.openItem=function(id){viewMode="detail";viewType="";const d=rows.find(x=>String(x.id)===decodeURIComponent(id));if(!d)return;const eps=isSeries(d)&&d.series?rows.filter(x=>normalize(x.series)===normalize(d.series)&&String(x.type)===String(d.type)).sort((a,b)=>(a.episode??999999)-(b.episode??999999)):[d];const series=isSeries(d)&&!!d.series;const first=eps.find(e=>yt(e.youtube))||d;const firstId=yt(first.youtube);$('app').innerHTML=`<a class="watch" href="#" onclick="goHome();return false">← BACK TO ARCHIVE</a><section><div class="detail-top">${poster(d,'detail-poster')}<div><div class="tag">${esc(d.type)}</div><h1>${esc(series?d.series:d.title)}</h1>${d.urdu?`<h2>${esc(d.urdu)}</h2>`:""}<p>${esc(d.description)}</p><div class="info"><div><b>Year</b>${esc(d.year)}</div><div><b>Type</b>${esc(d.type)}</div><div><b>Writer</b>${esc(d.writer)}</div><div><b>Director</b>${esc(d.director)}</div><div><b>Cast</b>${esc(d.cast)}</div></div></div></div></section>${firstId?`<section class="player-section"><h2>▶ Watch</h2><div class="video-wrap"><iframe id="ytPlayer" src="https://www.youtube.com/embed/${firstId}?rel=0" title="${esc(series?d.series:d.title)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></section>`:""}<section><h2>${series?'Episodes':'Watch'}</h2><div class="episodes">${eps.map((e,i)=>{const vid=yt(e.youtube);return `<div class="episode ${i===0&&vid?'selected':''}"><div class="epno">${e.episode??i+1}</div><div class="epbody"><b>${series?'Episode '+(e.episode??i+1):esc(e.title)}</b><span class="meta">${esc(e.year)}</span></div>${vid?`<button class="btn gold ${i===0?'playing':''}" onclick="playEpisode('${vid}',this);return false">▶ ${series?'PLAY EPISODE '+(e.episode??i+1):'WATCH'}</button>`:`<span class="meta">Video link not added</span>`}</div>`}).join("")}</div></section>`;window.scrollTo(0,0)};
 window.playEpisode=function(videoId,btn){const p=$('ytPlayer');if(!p)return;p.src=`https://www.youtube.com/embed/${videoId}?rel=0&autoplay=1`;document.querySelectorAll('.episode .btn').forEach(b=>b.classList.remove('playing'));if(btn)btn.classList.add('playing');document.querySelectorAll('.episode').forEach(e=>e.classList.remove('selected'));btn?.closest('.episode')?.classList.add('selected');document.querySelector('.player-section')?.scrollIntoView({behavior:'smooth',block:'start'})};
-window.goHome=function(){if(location.search)history.pushState({},"",location.pathname);if(!dataReady){load().then(()=>home(rows));return}home(rows)};
-window.addEventListener("popstate",()=>{const q=new URLSearchParams(location.search);const id=q.get("drama");if(id){if(!dataReady){load().then(()=>openItem(id));}else openItem(id)}else goHome()});
+window.goHome=function(){if(!dataReady){load().then(()=>home(rows));return}home(rows)};
 window.showCategory=function(type){const filter=d=>type==="SERIES"?["Serial / Series","Series","Serial"].includes(d.type):type?d.type===type:true;if(!dataReady){load().then(()=>{viewType=type;home(rows.filter(filter));window.scrollTo(0,0)});return}viewType=type;home(rows.filter(filter));window.scrollTo(0,0)};
-function adminForm(d=null){editingId=d?.id||null;editingImage=d?.image||"";$('app').innerHTML=`<section class="admin-shell"><a class="watch" href="#" onclick="goHome();return false">← WEBSITE</a><h1>${d?'Edit '+esc(d.title):'Add Drama'}</h1><form id="form" class="form"><div><label>English Title *</label><input id="title" required value="${esc(d?.title)}"></div><div><label>Urdu Title</label><input id="urdu" value="${esc(d?.urdu)}"></div><div><label>Year</label><input id="year" value="${esc(d?.year)}"></div><div><label>Category</label><select id="type"><option>Serial / Series</option><option>Long Play</option><option>Comedy</option><option>Shorts</option></select></div><div><label>Series Name (for episodes)</label><input id="series" value="${esc(d?.series)}" placeholder="e.g. Nuskha Hazir Hai"></div><div><label>Episode Number</label><input id="episode" type="number" min="1" value="${d?.episode??''}" placeholder="1, 2, 3..."></div><div><label>Writer</label><input id="writer" value="${esc(d?.writer)}"></div><div><label>Director</label><input id="director" value="${esc(d?.director)}"></div><div><label>Produced</label><input id="produced" value="${esc(d?.produced)}"></div><div class="full"><label>Cast</label><input id="cast" value="${esc(d?.cast)}"></div><div class="full"><label>Description</label><textarea id="description">${esc(d?.description)}</textarea></div><div class="full"><label>YouTube Link</label><input id="youtube" type="url" value="${esc(d?.youtube)}" placeholder="https://youtu.be/..."><div class="ai-box"><h3>🤖 Identify & Auto-Fill <span class="ai-badge">PAK SPOTLIGHT</span></h3><div class="ai-row"><input id="ytSearch" placeholder="Search your Pak Spotlight channel"><button type="button" onclick="searchPakSpotlight()">SEARCH CHANNEL</button><button type="button" class="gold" onclick="identifyAndAutofill()">IDENTIFY & AUTO-FILL</button></div><div id="aiStatus" class="ai-status">Paste a YouTube link above, or search your Pak Spotlight channel. Review every field before saving.</div><div id="aiResults" class="ai-results"></div></div></div><div class="full"><label>Thumbnail Image</label><input id="image" type="file" accept="image/*"><div class="meta">When editing, leave this empty to keep the existing thumbnail.</div></div><div class="full actions"><button class="gold" type="submit">SAVE DRAMA</button><button type="button" onclick="showAdmin()">CANCEL</button></div><div class="full msg" id="msg"></div></form></section>`;$('type').value=d?.type||'Serial / Series';$('form').onsubmit=saveForm}
-async function saveForm(e){e.preventDefault();if(!authSession){showLogin();return}$('msg').textContent='Saving...';const f=$('image').files[0];if(f&&f.size>3*1024*1024){$('msg').textContent='Thumbnail must be under 3 MB.';return}const payload={title:$('title').value.trim(),urdu_title:$('urdu').value.trim(),year:$('year').value.trim(),type:$('type').value,series_name:$('series').value.trim(),episode_number:$('episode').value?Number($('episode').value):null,writer:$('writer').value.trim(),director:$('director').value.trim(),produced:$('produced').value.trim(),cast:$('cast').value.trim(),description:$('description').value.trim(),youtube_url:$('youtube').value.trim()};let id=editingId;let q;if(editingId){q=await supabase.from('Drama').update(payload).eq('id',editingId);if(q.error){$('msg').textContent='Save failed: '+q.error.message;return}}else{q=await supabase.from('Drama').insert(payload).select('id').single();if(q.error){$('msg').textContent='Save failed: '+q.error.message;return}id=q.data.id}if(f){$('msg').textContent='Uploading thumbnail...';const ext=(f.type||'image/jpeg').split('/')[1]?.replace('jpeg','jpg')||'jpg';const path=`drama/${id}.${ext}`;const up=await supabase.storage.from('thumbnails').upload(path,f,{contentType:f.type||'image/jpeg',upsert:true,cacheControl:'31536000'});if(up.error){$('msg').textContent='Drama saved, but thumbnail upload failed: '+up.error.message;return}const pub=supabase.storage.from('thumbnails').getPublicUrl(path).data.publicUrl;const uq=await supabase.from('Drama').update({thumbnail_url:pub}).eq('id',id);if(uq.error){$('msg').textContent='Thumbnail uploaded, but database update failed: '+uq.error.message;return}}else if(editingId&&editingImage){await supabase.from('Drama').update({thumbnail_url:editingImage}).eq('id',id)}loadPromise=null;await load(true);$('msg').textContent='Saved successfully.';setTimeout(showAdmin,400)}
+function adminForm(d=null){editingId=d?.id||null;editingImage=d?.image||"";$('app').innerHTML=`<section class="admin-shell"><a class="watch" href="#" onclick="goHome();return false">← WEBSITE</a><h1>${d?'Edit '+esc(d.title):'Add Drama'}</h1><form id="form" class="form"><div><label>English Title *</label><input id="title" required value="${esc(d?.title)}"></div><div><label>Urdu Title</label><input id="urdu" value="${esc(d?.urdu)}"></div><div><label>Year</label><input id="year" value="${esc(d?.year)}"></div><div><label>Category</label><select id="type"><option>Serial / Series</option><option>Long Play</option><option>Comedy</option><option>Shorts</option></select></div><div><label>Series Name (for episodes)</label><input id="series" value="${esc(d?.series)}" placeholder="e.g. Nuskha Hazir Hai"></div><div><label>Episode Number</label><input id="episode" type="number" min="1" value="${d?.episode??''}" placeholder="1, 2, 3..."></div><div><label>Writer</label><input id="writer" value="${esc(d?.writer)}"></div><div><label>Director</label><input id="director" value="${esc(d?.director)}"></div><div><label>Produced</label><input id="produced" value="${esc(d?.produced)}"></div><div class="full"><label>Cast</label><input id="cast" value="${esc(d?.cast)}"></div><div class="full"><label>Description</label><textarea id="description">${esc(d?.description)}</textarea></div><div class="full"><label>YouTube Link</label><input id="youtube" type="url" value="${esc(d?.youtube)}" placeholder="https://youtu.be/..."></div><div class="full"><label>Thumbnail Image</label><input id="image" type="file" accept="image/*"><div class="meta">When editing, leave this empty to keep the existing thumbnail.</div></div><div class="full actions"><button class="gold" type="submit">SAVE DRAMA</button><button type="button" onclick="showAdmin()">CANCEL</button></div><div class="full msg" id="msg"></div></form></section>`;$('type').value=d?.type||'Serial / Series';$('form').onsubmit=saveForm}
+async function saveForm(e){e.preventDefault();if(!authSession){showLogin();return}$('msg').textContent='Saving...';const f=$('image').files[0];if(f&&f.size>3*1024*1024){$('msg').textContent='Thumbnail must be under 3 MB.';return}const payload={title:$('title').value.trim(),urdu_title:$('urdu').value.trim(),year:$('year').value.trim(),type:$('type').value,series_name:$('series').value.trim(),episode_number:$('episode').value?Number($('episode').value):null,writer:$('writer').value.trim(),director:$('director').value.trim(),produced:$('produced').value.trim(),cast:$('cast').value.trim(),description:$('description').value.trim(),youtube_url:$('youtube').value.trim()};let id=editingId;let q;if(editingId){q=await supabaseClient.from('Drama').update(payload).eq('id',editingId);if(q.error){$('msg').textContent='Save failed: '+q.error.message;return}}else{q=await supabaseClient.from('Drama').insert(payload).select('id').single();if(q.error){$('msg').textContent='Save failed: '+q.error.message;return}id=q.data.id}if(f){$('msg').textContent='Uploading thumbnail...';const ext=(f.type||'image/jpeg').split('/')[1]?.replace('jpeg','jpg')||'jpg';const path=`drama/${id}.${ext}`;const up=await supabaseClient.storage.from('thumbnails').upload(path,f,{contentType:f.type||'image/jpeg',upsert:true,cacheControl:'31536000'});if(up.error){$('msg').textContent='Drama saved, but thumbnail upload failed: '+up.error.message;return}const pub=supabaseClient.storage.from('thumbnails').getPublicUrl(path).data.publicUrl;const uq=await supabaseClient.from('Drama').update({thumbnail_url:pub}).eq('id',id);if(uq.error){$('msg').textContent='Thumbnail uploaded, but database update failed: '+uq.error.message;return}}else if(editingId&&editingImage){await supabaseClient.from('Drama').update({thumbnail_url:editingImage}).eq('id',id)}loadPromise=null;await load(true);$('msg').textContent='Saved successfully.';setTimeout(showAdmin,400)}
 window.testThumbnailStorage=async function(){
   if(!authSession){showLogin();return}
   const msg=$('migrationMsg'); if(!msg)return;
@@ -160,9 +136,9 @@ window.testThumbnailStorage=async function(){
   try{
     const testPath=`_migration_test/${Date.now()}.txt`;
     const blob=new Blob(['Pak Spotlight Storage test'],{type:'text/plain'});
-    const up=await supabase.storage.from('thumbnails').upload(testPath,blob,{contentType:'text/plain',upsert:false,cacheControl:'3600'});
+    const up=await supabaseClient.storage.from('thumbnails').upload(testPath,blob,{contentType:'text/plain',upsert:false,cacheControl:'3600'});
     if(up.error)throw up.error;
-    await supabase.storage.from('thumbnails').remove([testPath]);
+    await supabaseClient.storage.from('thumbnails').remove([testPath]);
     msg.textContent='Storage test successful. The thumbnails bucket is working.';
   }catch(e){
     console.error('Storage test failed',e);
@@ -179,11 +155,11 @@ window.migrateThumbnails=async function(){
   try{
     msg.textContent='Checking Storage bucket...';
     const testPath=`_migration_test/${Date.now()}.txt`;
-    const testUp=await supabase.storage.from('thumbnails').upload(testPath,new Blob(['test'],{type:'text/plain'}),{contentType:'text/plain',upsert:false,cacheControl:'3600'});
+    const testUp=await supabaseClient.storage.from('thumbnails').upload(testPath,new Blob(['test'],{type:'text/plain'}),{contentType:'text/plain',upsert:false,cacheControl:'3600'});
     if(testUp.error)throw new Error('Storage bucket check failed: '+testUp.error.message);
-    await supabase.storage.from('thumbnails').remove([testPath]);
+    await supabaseClient.storage.from('thumbnails').remove([testPath]);
 
-    const idsQ=await supabase.from('Drama').select('id').like('thumbnail_url','data:%');
+    const idsQ=await supabaseClient.from('Drama').select('id').like('thumbnail_url','data:%');
     if(idsQ.error)throw idsQ.error;
     const ids=(idsQ.data||[]).map(x=>x.id).filter(Boolean);
     if(!ids.length){msg.textContent='No old Base64 thumbnails found. Nothing to migrate.';return}
@@ -192,7 +168,7 @@ window.migrateThumbnails=async function(){
     for(let i=0;i<ids.length;i++){
       const id=ids[i];
       try{
-        const q=await supabase.from('Drama').select('id,title,thumbnail_url').eq('id',id).single();
+        const q=await supabaseClient.from('Drama').select('id,title,thumbnail_url').eq('id',id).single();
         if(q.error)throw q.error;
         const row=q.data;
         if(!row||!String(row.thumbnail_url||'').startsWith('data:'))continue;
@@ -210,11 +186,11 @@ window.migrateThumbnails=async function(){
         }
         const ext=(mime.split('/')[1]||'jpg').replace('jpeg','jpg').replace(/[^a-z0-9]/gi,'')||'jpg';
         const path=`migrated/${id}.${ext}`;
-        const up=await supabase.storage.from('thumbnails').upload(path,new Blob([bytes],{type:mime}),{contentType:mime,upsert:true,cacheControl:'31536000'});
+        const up=await supabaseClient.storage.from('thumbnails').upload(path,new Blob([bytes],{type:mime}),{contentType:mime,upsert:true,cacheControl:'31536000'});
         if(up.error)throw new Error('Storage upload failed: '+up.error.message);
-        const pub=supabase.storage.from('thumbnails').getPublicUrl(path).data.publicUrl;
+        const pub=supabaseClient.storage.from('thumbnails').getPublicUrl(path).data.publicUrl;
         if(!pub)throw new Error('Could not create public Storage URL');
-        const uq=await supabase.from('Drama').update({thumbnail_url:pub}).eq('id',id);
+        const uq=await supabaseClient.from('Drama').update({thumbnail_url:pub}).eq('id',id);
         if(uq.error)throw new Error('Database update failed: '+uq.error.message);
         done++;
         msg.textContent=`Migrated ${done} of ${ids.length}: ${row.title||row.id}`;
@@ -233,8 +209,7 @@ window.migrateThumbnails=async function(){
   }finally{btn.disabled=false}
 };
 window.showAdmin=async function(){
-  let robots=document.querySelector('meta[name=robots]'); if(!robots){robots=document.createElement('meta');robots.name='robots';document.head.appendChild(robots)} robots.content='noindex,nofollow,noarchive';
-  const {data}=await supabase.auth.getSession();
+  const {data}=await supabaseClient.auth.getSession();
   authSession=data.session||null;
   if(!authSession){showLogin();return}
   await load();
@@ -243,28 +218,17 @@ window.showAdmin=async function(){
 };
 function showLogin(){
   $('app').innerHTML=`<section><div class="auth-box"><a class="watch" href="#" onclick="goHome();return false">← WEBSITE</a><h1>Admin Login</h1><p class="meta">Admin access is restricted. Sign in to manage dramas.</p><form id="loginForm"><label>Email</label><input id="loginEmail" type="email" autocomplete="username" required placeholder="admin@example.com"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Password"><div class="actions"><button class="btn gold" type="submit">SIGN IN</button><button class="btn" type="button" onclick="goHome()">CANCEL</button></div><div id="loginMsg" class="auth-error"></div></form></div></section>`;
-  $('loginForm').onsubmit=async e=>{e.preventDefault();$('loginMsg').textContent='Signing in…';const q=await supabase.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});if(q.error){$('loginMsg').textContent='Login failed: '+q.error.message;return}authSession=q.data.session;updateAdminButton();showAdmin()};
+  $('loginForm').onsubmit=async e=>{e.preventDefault();$('loginMsg').textContent='Signing in…';const q=await supabaseClient.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});if(q.error){$('loginMsg').textContent='Login failed: '+q.error.message;return}authSession=q.data.session;updateAdminButton();showAdmin()};
 }
-window.logoutAdmin=async function(){await supabase.auth.signOut();authSession=null;updateAdminButton();goHome()};
-function updateAdminButton(){}
+window.logoutAdmin=async function(){await supabaseClient.auth.signOut();authSession=null;updateAdminButton();goHome()};
+function updateAdminButton(){const b=$('adminSwitch');if(b)b.textContent=authSession?'ADMIN':'ADMIN';}
 window.adminForm=async function(d=null){if(!authSession){showLogin();return}return adminForm(d)};
-function setAIStatus(text,ok=false){const el=$('aiStatus');if(el){el.textContent=text;el.style.color=ok?'#8ee6a5':'#aaa'}}
-function fillField(id,value){const el=$(id);if(el&&value!==undefined&&value!==null&&String(value).trim()!=='')el.value=String(value).trim()}
-function applyAutofill(data){
-  fillField('title',data.title); fillField('urdu',data.urdu); fillField('year',data.year); fillField('series',data.series); fillField('episode',data.episode);
-  fillField('writer',data.writer); fillField('director',data.director); fillField('produced',data.produced); fillField('cast',data.cast); fillField('description',data.description); fillField('youtube',data.youtube);
-  if(data.type&&$('type')){const opts=[...$('type').options].map(o=>o.value); if(opts.includes(data.type))$('type').value=data.type}
-}\nwindow.searchPakSpotlight=async function(){\n  const q=$('ytSearch')?.value.trim(); if(!q){setAIStatus('Enter a drama/video name to search your Pak Spotlight channel.');return}
-  setAIStatus('Searching Pak Spotlight YouTube channel…'); $('aiResults').innerHTML='';\n  try{const r=await fetch('/api/youtube-search?q='+encodeURIComponent(q));const j=await r.json();if(!r.ok)throw new Error(j.error||'Search failed');\n    const items=j.items||[]; if(!items.length){setAIStatus('No matching videos found on Pak Spotlight.');return}
-    $('aiResults').innerHTML=items.map((v,i)=>`<div class="ai-result" onclick="selectYouTubeResult(${i})"><b>${esc(v.title)}</b><small>${esc(v.publishedAt||'')} · ${esc(v.description||'').slice(0,180)}</small></div>`).join('');\n    window.__ytResults=items; setAIStatus(`${items.length} matching video${items.length===1?'':'s'} found. Tap one to select it.`);\n  }catch(e){console.error(e);setAIStatus('YouTube search failed: '+(e.message||e))}
-};\nwindow.selectYouTubeResult=function(i){const v=window.__ytResults?.[i];if(!v)return;fillField('youtube',v.url);setAIStatus('Selected: '+v.title+' — now identifying metadata…');identifyAndAutofill()}\nwindow.identifyAndAutofill=async function(){\n  const url=$('youtube')?.value.trim(); if(!url){setAIStatus('Paste a YouTube link first, or search the Pak Spotlight channel.');return}
-  setAIStatus('Identifying video and preparing fields…');\n  try{const r=await fetch('/api/identify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Identification failed');\n    applyAutofill(j.data||{});\n    const note=j.aiUsed?'AI-assisted draft ready.':'YouTube metadata draft ready. AI key is not connected yet, so no unsupported facts were invented.';\n    setAIStatus(note+' Review all fields before saving.',true);\n  }catch(e){console.error(e);setAIStatus('Auto-fill failed: '+(e.message||e))}
-};\nfunction renderAdmin(){const list=$('adminList'),gs=groups(rows);list.innerHTML=gs.length?gs.map(g=>`<div class="drama-row"><div><b>${esc(isSeries(g[0])&&g[0].series?g[0].series:g[0].title)}</b><div class="meta">${esc(g[0].type)} · ${g.length} item${g.length===1?'':'s'}</div>${g.length>1?`<div class="admin-episodes">${g.map(e=>'Episode '+(e.episode??'?')+' — '+esc(e.title)).join('<br>')}</div>`:''}</div><div class="actions">${g.map(e=>`<button onclick="adminEdit('${encodeURIComponent(String(e.id))}')">EDIT${e.episode?' E'+e.episode:''}</button><button class="danger" onclick="adminDelete('${encodeURIComponent(String(e.id))}')">DELETE${e.episode?' E'+e.episode:''}</button>`).join('')}</div></div>`).join(''):'<div class="empty">No dramas yet.</div>'}
-window.adminEdit=id=>{if(!authSession){showLogin();return}const d=rows.find(x=>String(x.id)===decodeURIComponent(id));if(d)adminForm(d)};window.adminDelete=async id=>{if(!authSession){showLogin();return}const d=rows.find(x=>String(x.id)===decodeURIComponent(id));if(!d||!confirm('Delete '+d.title+'?'))return;const q=await supabase.from('Drama').delete().eq('id',d.id);if(q.error){alert('Delete failed: '+q.error.message);return}loadPromise=null;await load(true);showAdmin()};
-supabase.auth.getSession().then(({data})=>{authSession=data.session||null;updateAdminButton()}).catch(()=>{});
-supabase.auth.onAuthStateChange((_event,session)=>{authSession=session||null;updateAdminButton()});
+function renderAdmin(){const list=$('adminList'),gs=groups(rows);list.innerHTML=gs.length?gs.map(g=>`<div class="drama-row"><div><b>${esc(isSeries(g[0])&&g[0].series?g[0].series:g[0].title)}</b><div class="meta">${esc(g[0].type)} · ${g.length} item${g.length===1?'':'s'}</div>${g.length>1?`<div class="admin-episodes">${g.map(e=>'Episode '+(e.episode??'?')+' — '+esc(e.title)).join('<br>')}</div>`:''}</div><div class="actions">${g.map(e=>`<button onclick="adminEdit('${encodeURIComponent(String(e.id))}')">EDIT${e.episode?' E'+e.episode:''}</button><button class="danger" onclick="adminDelete('${encodeURIComponent(String(e.id))}')">DELETE${e.episode?' E'+e.episode:''}</button>`).join('')}</div></div>`).join(''):'<div class="empty">No dramas yet.</div>'}
+window.adminEdit=id=>{if(!authSession){showLogin();return}const d=rows.find(x=>String(x.id)===decodeURIComponent(id));if(d)adminForm(d)};window.adminDelete=async id=>{if(!authSession){showLogin();return}const d=rows.find(x=>String(x.id)===decodeURIComponent(id));if(!d||!confirm('Delete '+d.title+'?'))return;const q=await supabaseClient.from('Drama').delete().eq('id',d.id);if(q.error){alert('Delete failed: '+q.error.message);return}loadPromise=null;await load(true);showAdmin()};
+supabaseClient.auth.getSession().then(({data})=>{authSession=data.session||null;updateAdminButton()}).catch(()=>{});
+supabaseClient.auth.onAuthStateChange((_event,session)=>{authSession=session||null;updateAdminButton()});
 // Render a tiny shell immediately; never overwrite a detail page when background thumbnails finish.
 $('app').innerHTML='<section class="hero"><div class="hero-copy"><div class="tag">CLASSIC PAKISTANI TELEVISION</div><h1>PAK SPOTLIGHT</h1><p>Loading the archive…</p></div></section>';
-load().then(()=>{if(location.pathname==='/admin'||location.pathname==='/admin/'){showAdmin();return}const q=new URLSearchParams(location.search);const id=q.get('drama');if(id){openItem(id)}else{home(rows)}scheduleThumbs()}).catch(e=>{console.error(e);if(location.pathname==='/admin'||location.pathname==='/admin/'){showAdmin()}else{home(rows)}});
+load().then(()=>{home(rows);scheduleThumbs()}).catch(e=>{console.error(e);home(rows)});
 </script>
 </body></html>
