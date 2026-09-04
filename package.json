@@ -1,6 +1,0 @@
-{
-  "name":"pak-spotlight",
-  "private":true,
-  "scripts":{"deploy":"wrangler deploy"},
-  "devDependencies":{"wrangler":"latest"}
-}
