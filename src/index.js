@@ -1,7 +1,4 @@
-const SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
-const YOUTUBE_HANDLE = "@pkspotlight";
-const OPENAI_MODEL = "gpt-4o-mini";
+// Pak Spotlight Worker — Uses OpenRouter AI for auto-fill
 
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
@@ -352,3 +349,5 @@ export default {
     return env.ASSETS.fetch(request);
   }
 };
+
+export { index_default as default };
