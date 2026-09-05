@@ -595,6 +595,43 @@ input, select, textarea { font-family: inherit; }
   line-height: 1.4;
 }
 
+/* Category Manager */
+.cat-chips-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.cat-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.cat-chip:hover {
+  background: var(--bg-card-hover);
+}
+.cat-chip .remove-cat-btn {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px;
+}
+.cat-chip .remove-cat-btn:hover {
+  color: #ff8a80;
+}
+
 /* Form Layout & Inputs */
 .form-grid {
   display: grid;
@@ -786,6 +823,72 @@ let authSession = null;
 let editingId = null;
 let editingImage = "";
 let stagedAiThumbnailUrl = ""; // Holds the YouTube thumbnail URL to upload to Supabase
+let configuredCategories = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
+
+async function loadCategories() {
+  try {
+    const res = await fetch("/api/categories");
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.categories) && data.categories.length > 0) {
+        configuredCategories = data.categories;
+      }
+    }
+  } catch (e) {
+    console.warn("Could not load categories", e);
+  }
+}
+
+function renderCategoryChips() {
+  const container = $("catChipsList");
+  if (!container) return;
+  container.innerHTML = configuredCategories.map((c, i) => `
+    <div class="cat-chip">
+      <span>${esc(c)}</span>
+      <button class="remove-cat-btn" title="Remove category" onclick="removeCategory(${i})">✕</button>
+    </div>
+  `).join("");
+}
+
+window.removeCategory = function(index) {
+  if (configuredCategories.length <= 1) {
+    alert("At least one category is required.");
+    return;
+  }
+  configuredCategories.splice(index, 1);
+  renderCategoryChips();
+};
+
+async function saveCategoriesToServer() {
+  const status = $("catStatusMsg");
+  const btn = $("saveCatsBtn");
+  if (!authSession) { showLogin(); return; }
+
+  btn.disabled = true;
+  status.className = "ai-status active info";
+  status.textContent = "Saving categories configuration to server…";
+
+  try {
+    const res = await fetch("/api/categories", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": "Bearer " + authSession.access_token
+      },
+      body: JSON.stringify({ categories: configuredCategories })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || "Failed to save categories.");
+
+    status.className = "ai-status active ok";
+    status.textContent = "✓ Categories saved! AI auto-fill and public site will now use this category list.";
+  } catch (err) {
+    status.className = "ai-status active err";
+    status.textContent = "Error saving categories: " + (err.message || String(err));
+  } finally {
+    btn.disabled = false;
+  }
+}
 
 function mapRow(r) {
   return {
@@ -896,6 +999,7 @@ async function showDashboard() {
 
   try {
     await loadData();
+    await loadCategories();
   } catch (e) {
     $("adminApp").innerHTML = `
       <div class="panel">
@@ -955,6 +1059,23 @@ async function showDashboard() {
       <div class="drama-list" id="dramaList"></div>
     </div>
 
+    <!-- Categories Configuration Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Categories Management</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Configure active drama categories for the catalog, AI auto-fill, and main stream page.</div>
+        </div>
+      </div>
+      <div class="cat-chips-list" id="catChipsList"></div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <input class="search-input" id="newCatInput" placeholder="Add new category (e.g. Telefilm, Musical, Satire)..." style="flex:1;min-width:220px">
+        <button class="btn btn-gold btn-sm" id="addCatBtn" type="button">+ ADD CATEGORY</button>
+        <button class="btn btn-ghost btn-sm" id="saveCatsBtn" type="button">SAVE CATEGORIES</button>
+      </div>
+      <div id="catStatusMsg" class="ai-status" style="margin-top:12px"></div>
+    </div>
+
     <div class="panel">
       <div class="panel-header">
         <div class="panel-title">Supabase Storage Verification</div>
@@ -974,6 +1095,20 @@ async function showDashboard() {
 
   $("addDramaBtn").onclick = () => showForm();
   $("testStorageBtn").onclick = testStorage;
+
+  renderCategoryChips();
+  $("addCatBtn").onclick = () => {
+    const val = $("newCatInput").value.trim();
+    if (!val) return;
+    if (configuredCategories.some(c => c.toLowerCase() === val.toLowerCase())) {
+      alert("This category already exists.");
+      return;
+    }
+    configuredCategories.push(val);
+    $("newCatInput").value = "";
+    renderCategoryChips();
+  };
+  $("saveCatsBtn").onclick = saveCategoriesToServer;
 
   const searchInput = $("tableSearch");
   searchInput.oninput = () => {
@@ -1087,10 +1222,9 @@ function showForm(d = null) {
           <div>
             <label>Category</label>
             <select id="f_type">
-              <option value="Long Play">Long Play (Telefilm / Single Episode)</option>
-              <option value="Serial / Series">Serial / Series (Multi-episode)</option>
-              <option value="Comedy">Comedy / Satire</option>
-              <option value="Shorts">Shorts / Clips</option>
+              ${(configuredCategories.includes(d?.type) || !d?.type ? configuredCategories : [d.type, ...configuredCategories]).map(c => `
+                <option value="${esc(c)}" ${(d?.type || configuredCategories[0]) === c ? 'selected' : ''}>${esc(c)}</option>
+              `).join("")}
             </select>
           </div>
 
@@ -1249,8 +1383,9 @@ async function runAiAutofill() {
     setVal("f_youtube", url);
 
     if ($("f_type") && f.type) {
-      const allowed = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
-      $("f_type").value = allowed.includes(f.type) ? f.type : "Long Play";
+      const match = configuredCategories.find(c => c.toLowerCase() === String(f.type).trim().toLowerCase()) 
+        || (configuredCategories.includes(f.type) ? f.type : (configuredCategories[0] || "Long Play"));
+      $("f_type").value = match;
     }
 
     // AI Thumbnail Detection & Staging

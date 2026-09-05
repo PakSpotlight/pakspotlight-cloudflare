@@ -635,6 +635,298 @@ input, select, textarea { font-family: inherit; }
 }
 
 /* ============================================================
+   DEDICATED WATCH PAGE EXPERIENCE
+   ============================================================ */
+.watch-page-container {
+  padding: 85px 5% 60px;
+  max-width: 1340px;
+  margin: 0 auto;
+  width: 100%;
+}
+.watch-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.watch-back-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.watch-back-btn:hover {
+  background: rgba(245, 197, 66, 0.12);
+  border-color: var(--gold);
+  color: var(--gold);
+  transform: translateX(-3px);
+}
+.watch-breadcrumbs {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.watch-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.watch-action-btn {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.watch-action-btn:hover {
+  background: rgba(245, 197, 66, 0.08);
+  border-color: var(--border-gold);
+  color: var(--gold);
+}
+.watch-theater-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-gold);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(245, 197, 66, 0.12);
+  background: #000;
+  margin-bottom: 30px;
+}
+.theater-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(245, 197, 66, 0.04) 0%, transparent 70%);
+  z-index: 1;
+}
+.watch-player-frame {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 ratio */
+  z-index: 2;
+}
+.watch-player-frame iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+.watch-no-stream {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #0b140f;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.watch-no-stream span {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+.watch-details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  margin-bottom: 44px;
+}
+.watch-details-grid.has-playlist {
+  grid-template-columns: 1fr 340px;
+}
+.watch-info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.watch-title-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.watch-title {
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 3.5vw, 40px);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+}
+.watch-urdu {
+  font-family: var(--font-urdu);
+  font-size: clamp(20px, 3vw, 30px);
+  color: var(--gold);
+  direction: rtl;
+}
+.watch-meta-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.watch-synopsis {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+}
+.watch-credits-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+}
+.credit-chip b {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.7px;
+  margin-bottom: 3px;
+}
+.credit-chip span {
+  font-size: 13px;
+  color: #fff;
+  font-weight: 600;
+}
+.credit-chip.full {
+  grid-column: 1 / -1;
+}
+
+/* Series Playlist on Watch Page */
+.watch-playlist-column {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  max-height: 520px;
+}
+.playlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.playlist-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+.playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.playlist-item:hover, .playlist-item.active {
+  background: var(--bg-card-hover);
+  border-color: rgba(245, 197, 66, 0.4);
+}
+.playlist-item.active {
+  background: rgba(245, 197, 66, 0.1);
+  border-color: var(--gold);
+}
+.ep-badge {
+  font-family: var(--font-serif);
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--gold);
+  min-width: 28px;
+  text-align: center;
+}
+.ep-info {
+  flex: 1;
+  min-width: 0;
+}
+.ep-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ep-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+/* Recommendations Section */
+.watch-recommendations-section {
+  border-top: 1px solid var(--border);
+  padding-top: 36px;
+  margin-top: 20px;
+}
+.section-title-wrap {
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: var(--font-serif);
+  font-size: clamp(20px, 2.5vw, 26px);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+.section-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .watch-details-grid.has-playlist { grid-template-columns: 1fr; }
+  .watch-playlist-column { max-height: 360px; }
+  .watch-page-container { padding: 75px 4% 40px; }
+}
+
+/* ============================================================
    NETFLIX MODAL / MORE INFO DIALOG
    ============================================================ */
 .modal-overlay {
@@ -891,12 +1183,12 @@ footer {
         <span class="brand-sub">Classic PTV Archive</span>
       </div>
     </a>
-    <nav class="nav-links">
-      <a class="nav-link active" id="navHome" href="#" onclick="showHomeView(); return false;">Home</a>
-      <a class="nav-link" id="navSerials" href="#" onclick="showCategoryView('Serial / Series'); return false;">Drama Serials</a>
-      <a class="nav-link" id="navLong" href="#" onclick="showCategoryView('Long Play'); return false;">Long Plays</a>
-      <a class="nav-link" id="navComedy" href="#" onclick="showCategoryView('Comedy'); return false;">Comedy</a>
-      <a class="nav-link" id="navShorts" href="#" onclick="showCategoryView('Shorts'); return false;">Shorts</a>
+    <nav class="nav-links" id="desktopNavLinks">
+      <a class="nav-link active" id="nav-home" href="#" onclick="showHomeView(); return false;">Home</a>
+      <a class="nav-link" id="nav-serial---series" href="#" onclick="showCategoryView('Serial / Series'); return false;">Drama Serials</a>
+      <a class="nav-link" id="nav-long-play" href="#" onclick="showCategoryView('Long Play'); return false;">Long Plays</a>
+      <a class="nav-link" id="nav-comedy" href="#" onclick="showCategoryView('Comedy'); return false;">Comedy</a>
+      <a class="nav-link" id="nav-shorts" href="#" onclick="showCategoryView('Shorts'); return false;">Shorts</a>
     </nav>
   </div>
 
@@ -913,11 +1205,11 @@ footer {
 
 <!-- Mobile Horizontal Category Strip -->
 <nav class="mobile-nav-strip" id="mobileNavStrip">
-  <button class="m-pill active" id="mNavHome" onclick="showHomeView()">All</button>
-  <button class="m-pill" id="mNavSerials" onclick="showCategoryView('Serial / Series')">Serials</button>
-  <button class="m-pill" id="mNavLong" onclick="showCategoryView('Long Play')">Long Plays</button>
-  <button class="m-pill" id="mNavComedy" onclick="showCategoryView('Comedy')">Comedy</button>
-  <button class="m-pill" id="mNavShorts" onclick="showCategoryView('Shorts')">Shorts</button>
+  <button class="m-pill active" id="mNav-home" onclick="showHomeView()">All</button>
+  <button class="m-pill" id="mNav-serial---series" onclick="showCategoryView('Serial / Series')">Serials</button>
+  <button class="m-pill" id="mNav-long-play" onclick="showCategoryView('Long Play')">Long Plays</button>
+  <button class="m-pill" id="mNav-comedy" onclick="showCategoryView('Comedy')">Comedy</button>
+  <button class="m-pill" id="mNav-shorts" onclick="showCategoryView('Shorts')">Shorts</button>
 </nav>
 
 <!-- Main App Surface -->
@@ -925,26 +1217,13 @@ footer {
   <!-- Rendered dynamically -->
 </main>
 
-<!-- Netflix Modal Dialog for Playback & Details -->
-<div class="modal-overlay" id="detailModal">
-  <div class="modal-card">
-    <button class="modal-close-btn" id="modalClose">✕</button>
-    <div class="modal-video-wrap" id="modalPlayerWrap">
-      <!-- Iframe injected here -->
-    </div>
-    <div class="modal-body" id="modalBody">
-      <!-- Metadata and episodes injected here -->
-    </div>
-  </div>
-</div>
-
 <!-- Footer -->
 <footer>
   <div class="footer-inner">
     <div>
       <b style="color:#fff;font-family:var(--font-serif)">PAK SPOTLIGHT</b> — Dedicated to preserving the Golden Age of Pakistani Television.
     </div>
-    <div style="display:flex;gap:18px;align-items:center">
+    <div class="footer-links-wrap" id="footerNavLinks" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
       <a href="#" onclick="showHomeView(); return false;">Home</a>
       <a href="#" onclick="showCategoryView('Serial / Series'); return false;">Serials</a>
       <a href="#" onclick="showCategoryView('Long Play'); return false;">Long Plays</a>
@@ -969,10 +1248,60 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 let rows = [];
-let viewMode = "home"; // "home" | "category" | "search"
+let viewMode = "home"; // "home" | "category" | "search" | "watch"
 let activeCategory = "all";
 let currentDetailDrama = null;
 let currentPlayingYt = "";
+let categories = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
+
+function sanitizeId(str) {
+  return String(str || "").toLowerCase().replace(/[^a-z0-9]/g, "-");
+}
+
+async function loadCategories() {
+  try {
+    const res = await fetch("/api/categories");
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.categories) && data.categories.length > 0) {
+        categories = data.categories.map(c => String(c || "").trim()).filter(Boolean);
+        renderNavCategories();
+      }
+    }
+  } catch (e) {
+    console.warn("Could not load categories, using defaults", e);
+  }
+}
+
+function renderNavCategories() {
+  const desktopNav = $("desktopNavLinks");
+  if (desktopNav) {
+    desktopNav.innerHTML = `
+      <a class="nav-link ${activeCategory === 'all' ? 'active' : ''}" id="nav-home" href="#" onclick="showHomeView(); return false;">Home</a>
+      ${categories.map(c => `
+        <a class="nav-link ${activeCategory === c ? 'active' : ''}" id="nav-${sanitizeId(c)}" href="#" onclick="showCategoryView('${esc(c)}'); return false;">${esc(c)}</a>
+      `).join("")}
+    `;
+  }
+  const mobileNav = $("mobileNavStrip");
+  if (mobileNav) {
+    mobileNav.innerHTML = `
+      <button class="m-pill ${activeCategory === 'all' ? 'active' : ''}" id="mNav-home" onclick="showHomeView()">All</button>
+      ${categories.map(c => `
+        <button class="m-pill ${activeCategory === c ? 'active' : ''}" id="mNav-${sanitizeId(c)}" onclick="showCategoryView('${esc(c)}')">${esc(c)}</button>
+      `).join("")}
+    `;
+  }
+  const footerLinks = $("footerNavLinks");
+  if (footerLinks) {
+    footerLinks.innerHTML = `
+      <a href="#" onclick="showHomeView(); return false;">Home</a>
+      ${categories.slice(0, 5).map(c => `
+        <a href="#" onclick="showCategoryView('${esc(c)}'); return false;">${esc(c)}</a>
+      `).join("")}
+    `;
+  }
+}
 
 function mapRow(r) {
   return {
@@ -1040,25 +1369,71 @@ async function loadData() {
 }
 
 // ----------------------
-// NETFLIX BILLBOARD + ROWS HOME VIEW
+// RECOMMENDATION ENGINE
+// ----------------------
+function getRecommendations(currentDrama, limit = 10) {
+  const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim();
+  const cWriter = normalize(currentDrama.writer);
+  const cDirector = normalize(currentDrama.director);
+  const cType = normalize(currentDrama.type);
+  const cYear = parseInt(currentDrama.year) || 0;
+  const currentSeries = isSer ? normalize(currentDrama.series) : "";
+
+  const candidates = rows.filter(r => {
+    if (r.id === currentDrama.id) return false;
+    if (currentSeries && isSeries(r) && normalize(r.series) === currentSeries) return false;
+    return true;
+  });
+
+  const scored = candidates.map(r => {
+    let score = 0;
+    const rWriter = normalize(r.writer);
+    const rDirector = normalize(r.director);
+    const rType = normalize(r.type);
+    const rYear = parseInt(r.year) || 0;
+
+    if (cWriter && rWriter && (cWriter.includes(rWriter) || rWriter.includes(cWriter))) score += 6;
+    if (cType && rType && cType === rType) score += 3;
+    if (cDirector && rDirector && (cDirector.includes(rDirector) || rDirector.includes(cDirector))) score += 3;
+    if (cYear && rYear && Math.abs(cYear - rYear) <= 5) score += 2;
+    if (r.image) score += 1;
+
+    return { drama: r, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  const selectedDramas = scored.slice(0, limit).map(s => s.drama);
+  return groupDramas(selectedDramas);
+}
+
+// ----------------------
+// NETFLIX BILLBOARD + ROWS HOME VIEW (DYNAMICALLY CATEGORIZED)
 // ----------------------
 function renderNetflixHome() {
   viewMode = "home";
   document.title = "Pak Spotlight — Classic PTV Drama Stream";
 
-  // Pick a featured drama with a high-res thumbnail for the billboard
   const featured = rows.find(r => r.image && r.title && r.description) || rows[0] || {};
   const isSer = isSeries(featured) && !!featured.series;
   const fTitle = isSer ? featured.series : featured.title;
-  const fYt = extractYouTubeId(featured.youtube);
-
-  // Filter lists for rows
   const allGroups = groupDramas(rows);
-  const serials = allGroups.filter(g => ["Serial / Series", "Series", "Serial"].includes(g[0].type));
-  const longPlays = allGroups.filter(g => g[0].type === "Long Play");
-  const comedies = allGroups.filter(g => g[0].type === "Comedy");
-  const shorts = allGroups.filter(g => g[0].type === "Shorts");
-  const eightiesNineties = allGroups.filter(g => {
+
+  // Group and sort by configured categories
+  const categoryRowsHtml = categories.map(cat => {
+    const catGroups = allGroups.filter(g => {
+      const dramaType = String(g[0].type || "").toLowerCase().trim();
+      const target = cat.toLowerCase().trim();
+      if (target === "serial / series" || target === "series" || target === "serial") {
+        return ["serial / series", "series", "serial"].includes(dramaType);
+      }
+      return dramaType === target;
+    });
+    if (!catGroups.length) return "";
+    const rowId = "cat-" + sanitizeId(cat);
+    return renderCarouselRow(cat, rowId, catGroups);
+  }).join("");
+
+  const goldenAge = allGroups.filter(g => {
     const y = parseInt(g[0].year) || 0;
     return y >= 1970 && y <= 1999;
   });
@@ -1078,23 +1453,20 @@ function renderNetflixHome() {
         </div>
         <p class="billboard-desc">${esc(featured.description || "A celebrated masterpiece from the golden archive of Pakistani television, renowned for its brilliant writing and legendary performances.")}</p>
         <div class="billboard-actions">
-          <button class="btn-play" onclick="openDramaModal(${featured.id}, true)">
+          <button class="btn-play" onclick="openWatchPage(${featured.id})">
             ▶ PLAY NOW
           </button>
-          <button class="btn-info" onclick="openDramaModal(${featured.id}, false)">
+          <button class="btn-info" onclick="openWatchPage(${featured.id})">
             ⓘ MORE DETAILS
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Horizontal Netflix Rows -->
+    <!-- Horizontal Category Carousels -->
     <div class="rows-container">
-      ${serials.length ? renderCarouselRow("Popular Drama Serials", "serials", serials) : ''}
-      ${longPlays.length ? renderCarouselRow("Masterpiece Long Plays & Telefilms", "longplays", longPlays) : ''}
-      ${comedies.length ? renderCarouselRow("Classic Comedy & Satire", "comedy", comedies) : ''}
-      ${eightiesNineties.length ? renderCarouselRow("Golden Age: 70s, 80s & 90s Classics", "vintage", eightiesNineties) : ''}
-      ${shorts.length ? renderCarouselRow("Shorts & Mini Features", "shorts", shorts) : ''}
+      ${categoryRowsHtml}
+      ${goldenAge.length ? renderCarouselRow("Golden Age: 70s, 80s & 90s Classics", "vintage", goldenAge) : ''}
       ${renderCarouselRow("Complete Masterpiece Collection", "all", allGroups)}
     </div>
   `;
@@ -1129,7 +1501,7 @@ function renderNetflixCard(g) {
   const count = g.length;
 
   return `
-    <div class="netflix-card" onclick="openDramaModal(${d.id})">
+    <div class="netflix-card" onclick="openWatchPage(${d.id})">
       <div class="card-media">
         ${d.image ? `
           <img src="${esc(d.image)}" alt="${esc(title)}" loading="lazy">
@@ -1183,10 +1555,9 @@ function renderBrowseGrid(title, items, showPills = true) {
         ${showPills ? `
           <div class="filter-pills">
             <button class="filter-pill ${activeCategory === 'all' ? 'active' : ''}" onclick="showCategoryView('all')">All</button>
-            <button class="filter-pill ${activeCategory === 'Serial / Series' ? 'active' : ''}" onclick="showCategoryView('Serial / Series')">Drama Serials</button>
-            <button class="filter-pill ${activeCategory === 'Long Play' ? 'active' : ''}" onclick="showCategoryView('Long Play')">Long Plays</button>
-            <button class="filter-pill ${activeCategory === 'Comedy' ? 'active' : ''}" onclick="showCategoryView('Comedy')">Comedy</button>
-            <button class="filter-pill ${activeCategory === 'Shorts' ? 'active' : ''}" onclick="showCategoryView('Shorts')">Shorts</button>
+            ${categories.map(c => `
+              <button class="filter-pill ${activeCategory === c ? 'active' : ''}" onclick="showCategoryView('${esc(c)}')">${esc(c)}</button>
+            `).join("")}
           </div>
         ` : ''}
       </div>
@@ -1207,123 +1578,199 @@ function renderBrowseGrid(title, items, showPills = true) {
 }
 
 // ----------------------
-// NETFLIX MODAL & VIDEO PLAYER
+// DEDICATED WATCH PAGE EXPERIENCE
 // ----------------------
-window.openDramaModal = function(id, autoplay = true) {
+window.openWatchPage = function(id) {
   const d = rows.find(r => r.id === Number(id));
   if (!d) return;
-  currentDetailDrama = d;
+  viewMode = "watch";
 
   const isSer = isSeries(d) && !!String(d.series || "").trim();
   const episodes = isSer 
     ? rows.filter(x => normalize(x.series) === normalize(d.series) && String(x.type) === String(d.type)).sort((a, b) => (a.episode ?? 9999) - (b.episode ?? 9999))
     : [d];
 
-  const initialEp = (extractYouTubeId(d.youtube) ? d : null) || episodes.find(e => extractYouTubeId(e.youtube)) || d;
-  const initialYt = extractYouTubeId(initialEp.youtube);
+  const currentEp = (extractYouTubeId(d.youtube) ? d : null) || episodes.find(e => extractYouTubeId(e.youtube)) || d;
+  const initialYt = extractYouTubeId(currentEp.youtube);
   currentPlayingYt = initialYt;
 
-  // Iframe player
-  $("modalPlayerWrap").innerHTML = initialYt ? `
-    <iframe id="modalIframe" src="https://www.youtube.com/embed/${initialYt}?rel=0&autoplay=${autoplay ? '1' : '0'}" title="${esc(d.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-  ` : `
-    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0c140f;color:var(--text-muted)">
-      <span style="font-size:36px">🎬</span>
-      <span style="font-size:14px;color:#fff;margin-top:8px">Streaming stream being remastered</span>
-    </div>
-  `;
+  const pageTitle = isSer ? d.series : d.title;
+  document.title = `${pageTitle} — Watch PTV Classic | Pak Spotlight`;
 
-  // Body content
-  $("modalBody").innerHTML = `
-    <div class="modal-title-row">
-      <div>
-        <h2 class="modal-title">${esc(isSer ? d.series : d.title)}</h2>
-        <div class="modal-meta-row" style="margin-top:4px">
-          <span class="meta-chip meta-chip-gold">${esc(d.type)}</span>
-          ${d.year ? `<span class="meta-chip meta-chip-outline">${esc(d.year)}</span>` : ''}
-          ${isSer && episodes.length ? `<span class="meta-chip meta-chip-outline">${episodes.length} Episodes</span>` : ''}
+  try {
+    const newPath = `/watch?id=${d.id}`;
+    if (window.location.search !== `?id=${d.id}`) {
+      history.pushState({ dramaId: d.id }, "", newPath);
+    }
+  } catch {}
+
+  const recommendations = getRecommendations(d);
+
+  $("app").innerHTML = `
+    <div class="watch-page-container">
+      <!-- Top Navigation & Breadcrumb -->
+      <div class="watch-nav-bar">
+        <button class="watch-back-btn" onclick="goBackFromWatch()">
+          ← Back to Archive
+        </button>
+        <div class="watch-breadcrumbs">
+          <span>PTV Archive</span>
+          <span>›</span>
+          <a href="#" onclick="showCategoryView('${esc(d.type)}'); return false;" style="color:var(--gold)">${esc(d.type)}</a>
+          <span>›</span>
+          <span style="color:#fff;font-weight:700">${esc(pageTitle)}</span>
+        </div>
+        <div class="watch-nav-actions">
+          <button class="watch-action-btn" id="copyLinkBtn" onclick="copyWatchLink(${d.id})">
+            🔗 Copy Link
+          </button>
+          ${currentEp.youtube ? `
+            <a class="watch-action-btn" href="${esc(currentEp.youtube)}" target="_blank" rel="noopener">
+              Watch on YouTube ↗
+            </a>
+          ` : ''}
         </div>
       </div>
-      ${d.urdu ? `<div class="modal-urdu">${esc(d.urdu)}</div>` : ''}
-    </div>
 
-    <p class="modal-desc">${esc(d.description || "A cornerstone classic from Pakistan Television's golden era, celebrated for its brilliant dialogue, compelling characters, and timeless cultural resonance.")}</p>
-
-    <!-- Series Episodes Drawer (if multi-episode) -->
-    ${isSer && episodes.length > 1 ? `
-      <div class="episodes-section">
-        <div class="episodes-header">
-          <span>Episodes (${episodes.length})</span>
-          <span style="font-size:12px;color:var(--gold)">Click to switch episode</span>
+      <!-- Main Cinema Screen -->
+      <div class="watch-theater-wrap">
+        <div class="theater-glow"></div>
+        <div class="watch-player-frame" id="watchPlayerFrame">
+          ${initialYt ? `
+            <iframe id="watchIframe" src="https://www.youtube.com/embed/${initialYt}?rel=0&autoplay=1" title="${esc(d.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          ` : `
+            <div class="watch-no-stream">
+              <span>🎬</span>
+              <p>This classic masterpiece video stream is currently being digitized.</p>
+            </div>
+          `}
         </div>
-        <div class="episodes-list">
-          ${episodes.map((ep, idx) => {
-            const epYt = extractYouTubeId(ep.youtube);
-            const epNum = ep.episode ?? (idx + 1);
-            const isPlaying = (ep.id === initialEp.id);
-            return `
-              <div class="episode-row ${isPlaying ? 'active' : ''}" onclick="switchModalEpisode('${epYt}', this)">
-                <span class="ep-number">${epNum}</span>
-                <div class="ep-title-box">
-                  <div class="ep-name">${esc(ep.title)}</div>
-                  <div class="ep-sub">${ep.year ? 'Year: ' + esc(ep.year) : 'Classic Episode'}</div>
-                </div>
-                <div class="ep-play-btn">▶ PLAY</div>
+      </div>
+
+      <!-- Details & Playlist Layout -->
+      <div class="watch-details-grid ${isSer && episodes.length > 1 ? 'has-playlist' : ''}">
+        <!-- Details Column -->
+        <div class="watch-info-column">
+          <div class="watch-title-header">
+            <div>
+              <h1 class="watch-title">${esc(pageTitle)}</h1>
+              <div class="watch-meta-strip" style="margin-top:8px">
+                <span class="meta-chip meta-chip-gold">${esc(d.type)}</span>
+                ${d.year ? `<span class="meta-chip meta-chip-outline">${esc(d.year)}</span>` : ''}
+                ${isSer && d.episode ? `<span class="meta-chip meta-chip-outline">Episode ${d.episode}</span>` : ''}
+                ${isSer && episodes.length > 1 ? `<span class="meta-chip meta-chip-outline">${episodes.length} Episodes</span>` : ''}
               </div>
-            `;
-          }).join("")}
-        </div>
-      </div>
-    ` : ''}
+            </div>
+            ${d.urdu ? `<div class="watch-urdu">${esc(d.urdu)}</div>` : ''}
+          </div>
 
-    <!-- Credits Box -->
-    <div class="credits-box">
-      ${d.writer ? `<div class="credit-item"><b>Writer / Playwright</b><span>${esc(d.writer)}</span></div>` : ''}
-      ${d.director ? `<div class="credit-item"><b>Director</b><span>${esc(d.director)}</span></div>` : ''}
-      ${d.produced ? `<div class="credit-item"><b>Produced By</b><span>${esc(d.produced)}</span></div>` : ''}
-      ${d.cast ? `<div class="credit-item" style="grid-column:1/-1"><b>Star Cast</b><span>${esc(d.cast)}</span></div>` : ''}
+          <p class="watch-synopsis">${esc(d.description || "A celebrated masterpiece from the golden archive of Pakistan Television, renowned for its brilliant writing, timeless characters, and memorable cultural resonance.")}</p>
+
+          <div class="watch-credits-panel">
+            ${d.writer ? `<div class="credit-chip"><b>Playwright / Writer</b><span>${esc(d.writer)}</span></div>` : ''}
+            ${d.director ? `<div class="credit-chip"><b>Director</b><span>${esc(d.director)}</span></div>` : ''}
+            ${d.produced ? `<div class="credit-chip"><b>Produced By</b><span>${esc(d.produced)}</span></div>` : ''}
+            ${d.cast ? `<div class="credit-chip full"><b>Star Cast</b><span>${esc(d.cast)}</span></div>` : ''}
+          </div>
+        </div>
+
+        <!-- Series Playlist Column (if serial) -->
+        ${isSer && episodes.length > 1 ? `
+          <div class="watch-playlist-column">
+            <div class="playlist-header">
+              <span>Series Episodes (${episodes.length})</span>
+              <span style="font-size:11px;color:var(--gold)">1-Click Play</span>
+            </div>
+            <div class="playlist-list">
+              ${episodes.map((ep, idx) => {
+                const epYt = extractYouTubeId(ep.youtube);
+                const isPlaying = ep.id === currentEp.id;
+                return `
+                  <div class="playlist-item ${isPlaying ? 'active' : ''}" onclick="switchWatchEpisode('${epYt}', ${ep.id}, this)">
+                    <div class="ep-badge">${ep.episode ?? (idx + 1)}</div>
+                    <div class="ep-info">
+                      <div class="ep-name">${esc(ep.title)}</div>
+                      <div class="ep-sub">${ep.year ? 'Year: ' + esc(ep.year) : 'PTV Classic'} · ${isPlaying ? '▶ Now Playing' : 'Click to Play'}</div>
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Recommendations: "More Like This" -->
+      ${recommendations.length ? `
+        <div class="watch-recommendations-section">
+          <div class="section-title-wrap">
+            <h2 class="section-title">More Like This (Recommended)</h2>
+            <p class="section-sub">Curated classic masterpieces based on genre, writer, and style</p>
+          </div>
+          <div class="carousel-wrap">
+            <button class="chevron-btn chevron-left" onclick="scrollCarousel('rec-row', -1)">❮</button>
+            <div class="carousel-track" id="track-rec-row">
+              ${recommendations.map(g => renderNetflixCard(g)).join("")}
+            </div>
+            <button class="chevron-btn chevron-right" onclick="scrollCarousel('rec-row', 1)">❯</button>
+          </div>
+        </div>
+      ` : ''}
     </div>
   `;
 
-  $("detailModal").classList.add("open");
-  document.body.style.overflow = "hidden";
-
-  // Update hash
-  try { history.pushState(null, "", `#drama-${d.id}`); } catch {}
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
-window.switchModalEpisode = function(ytId, el) {
+window.openDramaModal = function(id) {
+  openWatchPage(id);
+};
+
+window.switchWatchEpisode = function(ytId, epDramaId, el) {
   if (!ytId) return;
-  const iframe = $("modalIframe");
+  const iframe = $("watchIframe");
   if (iframe) {
     iframe.src = `https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1`;
   }
-  document.querySelectorAll(".episode-row").forEach(r => r.classList.remove("active"));
+  document.querySelectorAll(".playlist-item").forEach(item => item.classList.remove("active"));
   if (el) el.classList.add("active");
+  if (epDramaId) {
+    try { history.replaceState(null, "", `/watch?id=${epDramaId}`); } catch {}
+  }
 };
 
-function closeModal() {
-  const modal = $("detailModal");
-  modal.classList.remove("open");
-  $("modalPlayerWrap").innerHTML = ""; // Stop video playback
-  document.body.style.overflow = "";
-  try { history.pushState(null, "", window.location.pathname); } catch {}
-}
-
-$("modalClose").onclick = closeModal;
-$("detailModal").onclick = e => {
-  if (e.target === $("detailModal")) closeModal();
+window.goBackFromWatch = function() {
+  if (activeCategory === "all") {
+    showHomeView();
+  } else {
+    showCategoryView(activeCategory);
+  }
+  try { history.pushState(null, "", window.location.pathname === "/watch" ? "/" : window.location.pathname); } catch {}
 };
-window.addEventListener("keydown", e => {
-  if (e.key === "Escape") closeModal();
-});
+
+window.copyWatchLink = function(id) {
+  const shareUrl = `${window.location.origin}/watch?id=${id}`;
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    const btn = $("copyLinkBtn");
+    if (btn) {
+      btn.innerHTML = "✓ Copied!";
+      btn.style.color = "var(--gold)";
+      setTimeout(() => {
+        btn.innerHTML = "🔗 Copy Link";
+        btn.style.color = "";
+      }, 2000);
+    }
+  }).catch(() => {
+    alert("Share Link: " + shareUrl);
+  });
+};
 
 // ----------------------
 // NAVIGATION & SEARCH HANDLERS
 // ----------------------
 window.showHomeView = function() {
   activeCategory = "all";
-  updateNavActive("navHome");
+  updateNavActive("nav-home");
   renderNetflixHome();
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
@@ -1334,22 +1781,19 @@ window.showCategoryView = function(category) {
     showHomeView();
     return;
   }
-  const navMap = {
-    "Serial / Series": "navSerials",
-    "Long Play": "navLong",
-    "Comedy": "navComedy",
-    "Shorts": "navShorts"
-  };
-  updateNavActive(navMap[category]);
+  updateNavActive("nav-" + sanitizeId(category));
 
   const allGroups = groupDramas(rows);
   let filtered = allGroups;
   if (category !== "all") {
-    filtered = allGroups.filter(g => 
-      category === "Serial / Series" 
-        ? ["Serial / Series", "Series", "Serial"].includes(g[0].type)
-        : g[0].type === category
-    );
+    filtered = allGroups.filter(g => {
+      const dramaType = String(g[0].type || "").toLowerCase().trim();
+      const target = category.toLowerCase().trim();
+      if (target === "serial / series" || target === "series" || target === "serial") {
+        return ["serial / series", "series", "serial"].includes(dramaType);
+      }
+      return dramaType === target;
+    });
   }
 
   renderBrowseGrid(category === "all" ? "All Dramas" : category, filtered, true);
@@ -1359,7 +1803,7 @@ function updateNavActive(id) {
   document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"));
   document.querySelectorAll(".m-pill").forEach(p => p.classList.remove("active"));
   if ($(id)) $(id).classList.add("active");
-  const mId = id ? "m" + id.charAt(0).toUpperCase() + id.slice(1) : "";
+  const mId = id ? "mNav-" + id.replace("nav-", "") : "";
   if ($(mId)) $(mId).classList.add("active");
 }
 
@@ -1394,26 +1838,52 @@ searchClear.onclick = () => {
 // Navbar background fade on scroll
 window.addEventListener("scroll", () => {
   const topbar = $("mainTopbar");
-  if (window.scrollY > 40) topbar.classList.add("scrolled");
-  else topbar.classList.remove("scrolled");
+  if (topbar) {
+    if (window.scrollY > 40) topbar.classList.add("scrolled");
+    else topbar.classList.remove("scrolled");
+  }
 });
 
-// Deep linking
-function checkHash() {
+// Deep linking & URL route inspection
+function checkUrlRoute() {
+  const url = new URL(window.location.href);
+  const idFromParam = url.searchParams.get("id") || url.searchParams.get("watch");
   const hash = window.location.hash || "";
+
+  if (idFromParam) {
+    openWatchPage(idFromParam);
+    return;
+  }
+  if (hash.startsWith("#watch-") || hash.startsWith("#watch/")) {
+    const id = hash.replace(/#watch[-\/]/, "");
+    openWatchPage(id);
+    return;
+  }
   if (hash.startsWith("#drama-")) {
     const id = hash.replace("#drama-", "");
-    openDramaModal(id, true);
+    openWatchPage(id);
+    return;
   }
 }
-window.addEventListener("hashchange", checkHash);
+
+window.addEventListener("popstate", () => {
+  const url = new URL(window.location.href);
+  const id = url.searchParams.get("id") || url.searchParams.get("watch");
+  if (id) {
+    openWatchPage(id);
+  } else {
+    showHomeView();
+  }
+});
+window.addEventListener("hashchange", checkUrlRoute);
 
 // Initialize
-loadData().then(() => {
+Promise.all([loadData(), loadCategories()]).then(() => {
+  renderNavCategories();
   renderNetflixHome();
-  checkHash();
+  checkUrlRoute();
 }).catch(e => {
-  console.error(e);
+  console.error("Initialization error:", e);
   renderNetflixHome();
 });
 </script>
