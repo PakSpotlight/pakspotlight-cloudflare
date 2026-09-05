@@ -1,5 +1,11 @@
 // Pak Spotlight Worker — Uses OpenRouter AI for auto-fill
 
+var SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
+var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
+var YOUTUBE_HANDLE = "@pkspotlight";
+var OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+var DEFAULT_AI_MODEL = "deepseek/deepseek-v4-flash-0731";
+
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, OPTIONS",
@@ -92,78 +98,127 @@ async function identifyVideo(url, env) {
 }
 
 async function aiAutofill(video, env) {
-  if (!env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured in Cloudflare.");
+  var apiKey = env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured in Cloudflare Worker secrets.");
+  var model = env.OPENROUTER_DEFAULT_MODEL || DEFAULT_AI_MODEL;
 
-  const prompt = `You are a specialist cataloger and historian for Pak Spotlight, an archive of classic Pakistani Television (PTV) dramas, serials, and telefilms from the 1960s to 2000s.
+  var prompt =
+    "You are preparing a catalog entry for Pak Spotlight, a Pakistani classic PTV drama archive.\n\n" +
+    "You have web search available. Search ONCE for the drama title to find credits (writer, director, cast, year) if the YouTube metadata is incomplete.\n\n" +
+    "From the YouTube metadata AND web search results, extract these fields. Only return facts — do not fabricate.\n\n" +
+    "Choose category: Serial / Series, Long Play, Comedy, or Shorts.\n" +
+    "Episode number: only if clearly indicated. Year: only if explicitly stated.\n\n" +
+    "Generate SEO content:\n" +
+    "- seo_title: Search-engine-friendly title (e.g. \"Drama Name (Year) - PTV Classic | Pak Spotlight\")\n" +
+    "- seo_description: 150-160 char meta description summarizing the drama with key credits.\n\n" +
+    "IMPORTANT: Return ONLY a valid JSON object, nothing else. No markdown, no explanation.\n" +
+    "JSON fields: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description, seo_title, seo_description.\n\n" +
+    "YouTube title: " + video.title + "\n" +
+    "YouTube description:\n" + (video.description || "").slice(0, 12000) + "\n" +
+    "Published date: " + video.publishedAt;
 
-Analyze the supplied YouTube title, description, and metadata. Extract and structure the information into valid JSON.
+  var requestBody = {
+    model: model,
+    messages: [
+      { role: "system", content: "Return ONLY valid JSON. Search the web once for drama credits if needed. Never fabricate facts." },
+      { role: "user", content: prompt }
+    ],
+    tools: [{ type: "openrouter:web_search", max_results: 5, max_total_results: 5 }],
+    temperature: 0
+  };
 
-GUIDELINES:
-1. "title": Clean English title of the drama or telefilm. Remove clutter like "Full Episode", "HD", "[Classic PTV Drama]", "Official Video", upload channel names, etc.
-2. "urdu_title": Authentic Urdu title in proper Urdu script (e.g. آپا, دھوپ کنارے, وارث, ان کہی, آنگن ٹیڑھا, داستان حبیب, خدا کی بستی). If not mentioned or identifiable, leave empty string "".
-3. "year": 4-digit release year (e.g. 1981, 1998). Only return when present or known for this classic drama; otherwise empty string.
-4. "type": Exactly one of: "Serial / Series", "Long Play", "Comedy", "Shorts".
-   - If it is a multi-episode drama, select "Serial / Series".
-   - If it is a standalone telefilm or single-part drama, select "Long Play".
-   - If it is lighthearted satire/sitcom, select "Comedy".
-   - If under 15 minutes or a brief clip, select "Shorts".
-5. "series_name": If it belongs to a series or serial, provide the clean series name (e.g. "Dhoop Kinare", "Nuskha Hazir Hai"). If standalone Long Play, leave empty string.
-6. "episode_number": If this video is a specific episode (e.g. Ep 1, Episode 03), return the numeric integer (e.g. 1 or 3). Otherwise empty string "".
-7. "writer": Playwright/writer (e.g. Ashfaq Ahmed, Bano Qudsia, Haseena Moin, Anwar Maqsood, Mumtaz Mufti, Amjad Islam Amjad).
-8. "director": Director name (e.g. Sahira Kazmi, Yawar Hayat, Nusrat Thakur, Misbah Khalid).
-9. "produced": Executive producer / PTV center (e.g. PTV Lahore, PTV Karachi, PTV Islamabad).
-10. "cast": Comma-separated list of prominent actors/cast (e.g. "Arifa Siddiqui, Nabeel, Nighat Butt").
-11. "description": A well-written, respectful 2-4 sentence summary/synopsis of the drama's story and heritage in English. Do not include subscribe links, channel links, or social media hashtags.
-
-Return valid JSON with these exact keys:
-{
-  "title": string,
-  "urdu_title": string,
-  "year": string,
-  "type": string,
-  "series_name": string,
-  "episode_number": string,
-  "writer": string,
-  "director": string,
-  "produced": string,
-  "cast": string,
-  "description": string
-}
-
-YouTube Title: ${video.title}
-YouTube Description:
-${(video.description || "").slice(0, 12000)}
-Published Date: ${video.publishedAt}`;
-
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+  var response = await fetch(OPENROUTER_API_URL, {
     method: "POST",
     headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${env.OPENAI_API_KEY}`
+      "Authorization": "Bearer " + apiKey,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://pakspotlight.com",
+      "X-Title": "Pak Spotlight"
     },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      temperature: 0.1,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: "You are an expert archivist of classic Pakistani television. Output strictly valid JSON." },
-        { role: "user", content: prompt }
-      ]
-    })
+    body: JSON.stringify(requestBody)
   });
 
-  const data = await r.json();
-  if (!r.ok) throw new Error(data.error?.message || "OpenAI request failed.");
+  if (!response.ok) {
+    var errData = {};
+    try { errData = await response.json(); } catch {}
+    throw new Error(errData.error?.message || "OpenRouter API request failed (" + response.status + ").");
+  }
 
-  let out = {};
+  var data = await response.json();
+  var out = {};
+  var rawContent = "";
+
+  if (data.choices) {
+    for (var i = data.choices.length - 1; i >= 0; i--) {
+      var choice = data.choices[i];
+      var msg = choice?.message;
+      if (!msg) continue;
+
+      if (msg.content && msg.content.trim()) {
+        rawContent = msg.content;
+        break;
+      }
+
+      if (msg.tool_calls) {
+        for (var tc of msg.tool_calls) {
+          var arg = tc?.function?.arguments;
+          if (arg && arg.trim().startsWith("{")) {
+            rawContent = arg;
+            break;
+          }
+        }
+        if (rawContent) break;
+      }
+    }
+  }
+
+  if (!rawContent && data.choices?.length === 1) {
+    rawContent = data.choices[0]?.message?.content || "";
+  }
+
+  if (!rawContent) {
+    delete requestBody.tools;
+    var retryResp = await fetch(OPENROUTER_API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + apiKey,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://pakspotlight.com",
+        "X-Title": "Pak Spotlight"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    if (retryResp.ok) {
+      var retryData = await retryResp.json();
+      rawContent = retryData.choices?.[0]?.message?.content || "";
+    }
+  }
+
+  rawContent = (rawContent || "").trim();
+
   try {
-    out = JSON.parse(data.choices?.[0]?.message?.content || "{}");
-  } catch {
-    throw new Error("AI returned an invalid JSON response.");
+    out = JSON.parse(rawContent);
+  } catch (e) {
+    var codeBlockMatch = rawContent.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    if (codeBlockMatch) {
+      try { out = JSON.parse(codeBlockMatch[1].trim()); } catch {}
+    }
+
+    if (!out.title) {
+      var braceStart = rawContent.indexOf("{");
+      var braceEnd = rawContent.lastIndexOf("}");
+      if (braceStart >= 0 && braceEnd > braceStart) {
+        try { out = JSON.parse(rawContent.slice(braceStart, braceEnd + 1)); } catch {}
+      }
+    }
+
+    if (!out.title) {
+      throw new Error("AI returned unreadable content. Please try again. Raw: " + rawContent.slice(0, 200));
+    }
   }
 
   return {
-    video,
+    video: video,
     fields: {
       title: out.title || video.title,
       urdu_title: out.urdu_title || "",
@@ -176,12 +231,14 @@ Published Date: ${video.publishedAt}`;
       produced: out.produced || "",
       cast: out.cast || "",
       description: out.description || video.description || "",
+      seo_title: out.seo_title || "",
+      seo_description: out.seo_description || "",
       thumbnail: video.thumbnail || ""
     }
   };
 }
 
-export default {
+var index_default = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
