@@ -103,9 +103,15 @@ async function aiAutofill(video, env) {
 
   var prompt =
     "You are preparing a catalog entry for Pak Spotlight, a Pakistani classic PTV drama archive.\n\n" +
-    "Use ONLY the supplied YouTube metadata. Do not invent facts. If writer, director, producer, cast, Urdu title, year, series name, or episode number is not clearly supported by the supplied metadata, return an empty string for that field.\n\n" +
-    "Choose category from exactly one of: Serial / Series, Long Play, Comedy, Shorts. Use the title/description to make a reasonable category classification, but leave factual credits blank when uncertain. For episode number, only return a number when clearly indicated (for example Episode 3, Ep 3, E03). For year, only return a year when explicitly present or unambiguously stated in the metadata.\n\n" +
-    "Return JSON with these exact string fields: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. episode_number may be an empty string.\n\n" +
+    "You have web search available. Use it to look up additional information about this drama when the YouTube metadata is incomplete. Search for the drama title along with terms like \"PTV drama\", \"Pakistani drama cast writer director\" to find credits.\n\n" +
+    "From the YouTube metadata AND any web search results, extract these fields. Only return facts you found — do not fabricate credits.\n\n" +
+    "Choose category from exactly one of: Serial / Series, Long Play, Comedy, Shorts.\n" +
+    "For episode number, only return a number when clearly indicated (Episode 3, Ep 3, E03).\n" +
+    "For year, only return a year when explicitly stated or confirmed.\n\n" +
+    "Also generate SEO-optimized content:\n" +
+    "- seo_title: A search-engine-friendly title (e.g. \"Drama Name (Year) - PTV Classic | Pak Spotlight\")\n" +
+    "- seo_description: A 150-160 character meta description for search engines, summarizing the drama with key credits.\n\n" +
+    "Return JSON with these exact string fields: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description, seo_title, seo_description. episode_number may be an empty string.\n\n" +
     "YouTube title: " + video.title + "\n" +
     "YouTube description:\n" + video.description.slice(0, 12000) + "\n" +
     "Published date: " + video.publishedAt;
@@ -121,9 +127,10 @@ async function aiAutofill(video, env) {
     body: JSON.stringify({
       model: model,
       messages: [
-        { role: "system", content: "Return only valid JSON. Never fabricate credits or historical facts." },
+        { role: "system", content: "You have web search available. Use it to find accurate information about Pakistani PTV dramas. Return only valid JSON. Never fabricate credits or historical facts — only return what you found." },
         { role: "user", content: prompt }
       ],
+      tools: [{ type: "openrouter:web_search" }],
       temperature: 0
     })
   });
@@ -156,7 +163,10 @@ async function aiAutofill(video, env) {
       director: out.director || "",
       produced: out.produced || "",
       cast: out.cast || "",
-      description: out.description || video.description || ""
+      description: out.description || video.description || "",
+      seo_title: out.seo_title || "",
+      seo_description: out.seo_description || "",
+      thumbnail: video.thumbnail || ""
     }
   };
 }
