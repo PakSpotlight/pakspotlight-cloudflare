@@ -6,6 +6,21 @@ var YOUTUBE_HANDLE = "@pkspotlight";
 var OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 var DEFAULT_AI_MODEL = "deepseek/deepseek-v4-flash-0731";
 
+const DEFAULT_CATEGORIES = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
+
+async function getCategories(env) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/categories.json?t=${Date.now()}`);
+    if (res.ok) {
+      const list = await res.json();
+      if (Array.isArray(list) && list.length > 0) {
+        return list.map(x => String(x || "").trim()).filter(Boolean);
+      }
+    }
+  } catch {}
+  return DEFAULT_CATEGORIES;
+}
+
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, OPTIONS",
@@ -101,12 +116,14 @@ async function aiAutofill(video, env) {
   var apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured in Cloudflare Worker secrets.");
   var model = env.OPENROUTER_DEFAULT_MODEL || DEFAULT_AI_MODEL;
+  const allowedCategories = await getCategories(env);
+  const categoriesListStr = allowedCategories.join(", ");
 
   var prompt =
     "You are preparing a catalog entry for Pak Spotlight, a Pakistani classic PTV drama archive.\n\n" +
     "You have web search available. Search ONCE for the drama title to find credits (writer, director, cast, year) if the YouTube metadata is incomplete.\n\n" +
     "From the YouTube metadata AND web search results, extract these fields. Only return facts — do not fabricate.\n\n" +
-    "Choose category: Serial / Series, Long Play, Comedy, or Shorts.\n" +
+    "Choose category: Exactly one of: " + categoriesListStr + ".\n" +
     "Episode number: only if clearly indicated. Year: only if explicitly stated.\n\n" +
     "Generate SEO content:\n" +
     "- seo_title: Search-engine-friendly title (e.g. \"Drama Name (Year) - PTV Classic | Pak Spotlight\")\n" +
@@ -223,7 +240,7 @@ async function aiAutofill(video, env) {
       title: out.title || video.title,
       urdu_title: out.urdu_title || "",
       year: out.year || "",
-      type: ["Serial / Series", "Long Play", "Comedy", "Shorts"].includes(out.type) ? out.type : "Long Play",
+      type: (allowedCategories.find(c => c.toLowerCase() === String(out.type || "").trim().toLowerCase()) || (allowedCategories.includes(out.type) ? out.type : (allowedCategories[0] || "Long Play"))),
       series_name: out.series_name || "",
       episode_number: out.episode_number || "",
       writer: out.writer || "",
@@ -248,6 +265,54 @@ var index_default = {
         status: 204,
         headers: CORS_HEADERS
       });
+    }
+
+    // Categories: Get Configured Categories
+    if (url.pathname === "/api/categories" && request.method === "GET") {
+      try {
+        const categories = await getCategories(env);
+        return json({ categories });
+      } catch (e) {
+        return json({ categories: DEFAULT_CATEGORIES });
+      }
+    }
+
+    // Categories: Save (Admin authenticated)
+    if (url.pathname === "/api/categories" && request.method === "POST") {
+      const auth = await requireUser(request);
+      if (auth.error) return json({ error: auth.error }, 401);
+      try {
+        const body = await request.json();
+        const incoming = body.categories;
+        if (!Array.isArray(incoming) || incoming.length === 0) {
+          return json({ error: "Categories must be a non-empty array." }, 400);
+        }
+        const cleaned = incoming.map(c => String(c || "").trim()).filter(Boolean);
+        if (cleaned.length === 0) {
+          return json({ error: "At least one valid category name is required." }, 400);
+        }
+
+        const storageUrl = `${SUPABASE_URL}/storage/v1/object/thumbnails/config/categories.json`;
+        const upRes = await fetch(storageUrl, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            authorization: `Bearer ${auth.token}`,
+            "content-type": "application/json",
+            "x-upsert": "true"
+          },
+          body: JSON.stringify(cleaned)
+        });
+
+        if (!upRes.ok) {
+          const upErr = await upRes.text();
+          return json({ error: `Failed to save categories to storage: ${upErr}` }, 500);
+        }
+
+        return json({ success: true, categories: cleaned });
+      } catch (e) {
+        return json({ error: e.message || String(e) }, 500);
+      }
     }
 
     // 1. YouTube Search
@@ -400,6 +465,13 @@ var index_default = {
       } catch (e) {
         return json({ error: e.message || String(e) }, 500);
       }
+    }
+
+    // Rewrite /watch to /index.html so clean watch URLs work directly
+    if (url.pathname === "/watch") {
+      const watchUrl = new URL(request.url);
+      watchUrl.pathname = "/index.html";
+      return env.ASSETS.fetch(new Request(watchUrl, request));
     }
 
     // Static assets fallback
