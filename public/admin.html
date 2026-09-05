@@ -2,108 +2,1402 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pak Spotlight — Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pak Spotlight — Admin Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#050608;color:#f5f2ea;font-family:Arial,sans-serif}
-a{color:inherit;text-decoration:none}header{position:sticky;top:0;z-index:20;background:rgba(5,6,8,.97);border-bottom:1px solid #292b30;display:flex;align-items:center;justify-content:space-between;padding:9px 5%}
-.brand{display:flex;align-items:center;gap:12px}.logo{width:55px;height:55px;object-fit:contain}.brand b{display:block;letter-spacing:2px}.brand small{font-size:9px;color:#aaa;letter-spacing:1.4px}nav{display:flex;gap:22px;font-size:14px;color:#ddd}nav a:hover{color:#ffd34e}
-main{min-height:80vh}.hero{min-height:620px;padding:80px 7%;display:flex;align-items:center;background:radial-gradient(circle at 78% 35%,#174d25 0,#101915 22%,#08090c 62%);position:relative;overflow:hidden}.hero:before{content:"";position:absolute;width:600px;height:600px;border:1px solid #d5a92855;border-radius:50%;right:-170px;top:30px}
-.hero-copy{max-width:700px;z-index:1}.tag{color:#ffd34e;letter-spacing:3px;font-size:11px;font-weight:bold}h1{font-size:clamp(50px,7vw,90px);line-height:.95;margin:18px 0}h1 span{color:#ffd34e}.hero p,.detail p{color:#b9bbb8;font-size:18px;line-height:1.7;max-width:620px}
-.btn{display:inline-block;padding:14px 21px;border-radius:8px;font-weight:bold;margin:8px 8px 0 0}.gold{background:#ffd34e;color:#17130a}.outline{border:1px solid #666}
-section{padding:75px 7%}.head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:28px}h2{font-size:40px;margin:8px 0}input{background:#111318;border:1px solid #35383f;color:#fff;padding:13px 15px;border-radius:8px;width:270px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.card{background:#111216;border:1px solid #292c32;border-radius:12px;overflow:hidden;transition:.2s}.card:hover{transform:translateY(-5px);border-color:#9e7c22}.poster{height:220px;background:linear-gradient(135deg,#18351f,#13151a);display:grid;place-items:center;text-align:center;padding:20px;color:#ffd34e;font-size:28px;font-weight:900}.body{padding:20px}.body h3{margin:0 0 6px;font-size:22px}.meta{font-size:12px;color:#999}.body p{color:#aaa;line-height:1.6;font-size:14px}.watch{color:#ffd34e;font-weight:bold;font-size:13px}.card .watch{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;padding:9px 14px;border:1px solid rgba(255,211,78,.55);border-radius:999px;background:rgba(255,211,78,.08);font-size:12px;letter-spacing:.3px;line-height:1;transition:.2s}.card:hover .watch{background:#ffd34e;color:#08090b;border-color:#ffd34e;transform:translateY(-1px)}
-.band{background:linear-gradient(90deg,#171205,#251d08);border-top:1px solid #57451b;border-bottom:1px solid #57451b;display:flex;justify-content:space-between;align-items:center;gap:25px}
-.years{display:flex;gap:12px;flex-wrap:wrap}.years a{border:1px solid #34363c;background:#111216;padding:15px 25px;border-radius:8px}.years a:hover{border-color:#ffd34e}
-.detail{max-width:1050px;margin:auto;padding:70px 7%}.detail-top{display:grid;grid-template-columns:360px 1fr;gap:40px;align-items:start}.detail-poster{min-height:400px;border-radius:14px;border:1px solid #3c3e45;background:linear-gradient(145deg,#173e22,#111318);display:grid;place-items:center;text-align:center;padding:30px;color:#ffd34e;font-size:42px;font-weight:900}.info{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:25px 0}.info div{background:#111216;border:1px solid #292c32;border-radius:8px;padding:15px}.info b{display:block;color:#888;font-size:11px;text-transform:uppercase;margin-bottom:5px}.empty{padding:30px;border:1px dashed #4b4d54;border-radius:10px;color:#aaa}
-footer{border-top:1px solid #292b30;padding:35px 7%;color:#888;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px}
-@media(max-width:800px){nav{display:none}.grid{grid-template-columns:1fr}.head{display:block}input{width:100%;margin-top:15px}.band{display:block}.detail-top{grid-template-columns:1fr}.detail-poster{min-height:280px}.info{grid-template-columns:1fr}h2{font-size:33px}}
+:root {
+  --bg-deep: #060b08;
+  --bg-surface: #0e1712;
+  --bg-card: #132019;
+  --bg-card-hover: #182920;
+  --border: #22372b;
+  --border-gold: rgba(245, 197, 66, 0.35);
+  --gold: #f5c542;
+  --gold-hover: #ffd768;
+  --gold-glow: rgba(245, 197, 66, 0.15);
+  --emerald-accent: #2e7d4d;
+  --text-primary: #fbf9f4;
+  --text-muted: #95a59c;
+  --text-dim: #64756c;
+  --danger: #ef5350;
+  --danger-bg: rgba(239, 83, 80, 0.12);
+  --success: #66bb6a;
+  --success-bg: rgba(102, 187, 106, 0.12);
+  --radius: 12px;
+  --font-serif: 'Cinzel', serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-urdu: 'Noto Nastaliq Urdu', serif;
+}
 
-/* Single-file Admin */
-.admin-shell{max-width:1100px;margin:auto;padding:35px 7%}.admin-shell .panel{background:#111216;border:1px solid #292c32;border-radius:14px;padding:25px;margin-bottom:22px}.admin-shell .form{display:grid;grid-template-columns:1fr 1fr;gap:16px}.admin-shell label{display:block;color:#aaa;font-size:12px;font-weight:bold;margin-bottom:7px}.admin-shell input,.admin-shell textarea,.admin-shell select{width:100%;background:#080a0d;border:1px solid #363940;color:#fff;border-radius:7px;padding:12px}.admin-shell textarea{min-height:110px;resize:vertical}.admin-shell .full{grid-column:1/-1}.admin-shell .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.admin-shell .admin-btn{border:1px solid #383b42;background:#15171b;color:#eee;border-radius:8px;padding:12px 17px;cursor:pointer;font-weight:bold}.admin-shell .admin-btn.gold{background:#ffd34e;color:#15120a;border-color:#ffd34e}.admin-shell .admin-btn.danger{color:#ff7777;border-color:#663333}.admin-shell .drama-row{display:flex;justify-content:space-between;gap:15px;align-items:center;border:1px solid #292c32;background:#0d0f12;padding:16px;border-radius:10px;margin-top:10px}.admin-shell .note{color:#aaa;line-height:1.6;font-size:14px}.admin-shell .success{color:#8ee6a5;margin-top:12px}.admin-shell .admin-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:25px}.admin-shell .admin-tab.active{background:#ffd34e;color:#15120a;border-color:#ffd34e}.admin-only{display:none}.admin-mode .public-only{display:none}.admin-mode .admin-only{display:block}.admin-mode header .public-nav{display:none}.admin-mode header .admin-switch{display:inline-block}.admin-switch{display:none}.mode-btn{border:1px solid #555;background:#15171b;color:#fff;padding:10px 14px;border-radius:8px;font-weight:bold;cursor:pointer}.mode-btn.gold{background:#ffd34e;color:#17130a;border-color:#ffd34e}@media(max-width:800px){.admin-shell .form{grid-template-columns:1fr}.admin-shell .full{grid-column:auto}.admin-shell .drama-row{align-items:flex-start;flex-direction:column}}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image: 
+    radial-gradient(circle at 85% 15%, rgba(46, 125, 77, 0.18) 0%, transparent 45%),
+    radial-gradient(circle at 15% 75%, rgba(245, 197, 66, 0.08) 0%, transparent 40%);
+  background-attachment: fixed;
+}
 
-/* Pak Spotlight redesigned preview — data/functions retained from previous build */
-:root{--bg:#0b0d10;--panel:#14171c;--line:#292e36;--text:#f5f5f3;--muted:#a8afb9;--gold:#ffd34e}
-html{scroll-behavior:smooth}body{background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
-.topbar{position:sticky;top:0;z-index:50;min-height:68px;padding:8px max(16px,4vw);display:flex;align-items:center;gap:18px;background:rgba(9,11,14,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
-.topbar .brand{display:flex;align-items:center;gap:10px;margin-right:auto}.topbar .logo{width:48px;height:48px;object-fit:contain}.topbar .brand b{font-size:16px;letter-spacing:2px}.topbar .brand small{display:block;color:#9aa1aa;font-size:8px;letter-spacing:1.1px;margin-top:3px}.topbar nav{display:flex;gap:18px}.topbar nav a{font-size:12px;font-weight:700;color:#ddd}.topbar nav a:hover{color:var(--gold)}
-.admin-switch{display:block;border:1px solid #555;background:#171a1f;color:#fff;border-radius:7px;padding:9px 12px;font-weight:700;cursor:pointer}
-.hero{min-height:330px!important;padding:58px 6%!important;background:radial-gradient(circle at 80% 30%,#244e2d 0,#121a16 25%,#080a0d 67%)!important}.hero-copy{max-width:680px}.hero h1{font-size:clamp(42px,7vw,76px);margin:14px 0 8px}.hero p{font-size:16px;line-height:1.6;color:#c1c6cd;max-width:610px}
-section{padding:42px max(16px,6%)!important}.head{margin-bottom:18px!important;align-items:center!important}.head h2{font-size:30px!important;margin:6px 0!important}.tag{font-size:10px!important;letter-spacing:2px!important;color:var(--gold)!important}.head input,input{background:#111419!important;border:1px solid #343a43!important;color:#fff!important;border-radius:7px!important;padding:11px 13px!important}.head input{width:240px!important}
-.grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important}.card{background:var(--panel)!important;border:1px solid var(--line)!important;border-radius:10px!important}.card:hover{transform:translateY(-3px)!important;border-color:#77611e!important}.poster{height:auto!important;aspect-ratio:16/9!important;padding:0!important;background:#1b2027!important;overflow:hidden}.poster img{width:100%;height:100%;object-fit:cover;display:block}.poster b{padding:12px}.body{padding:13px!important}.body h3{font-size:18px!important;margin-bottom:5px!important}.body p{font-size:12px!important;line-height:1.45!important;color:#9fa6af!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.meta{font-size:11px!important;color:#8e96a1!important}.watch{font-size:11px!important;color:var(--gold)!important}.section-note{color:#969eaa;margin:-5px 0 18px;font-size:14px}
-.band{background:transparent!important;border:0!important;padding:0!important}.years{gap:8px}.years a{padding:10px 16px}
-footer{padding:26px 6%!important;color:#7f8792!important}
-.detail{padding:40px 6%!important}.detail-top{grid-template-columns:minmax(230px,300px) 1fr!important;gap:28px!important}.detail-poster{min-height:0!important;height:auto!important;aspect-ratio:16/9!important}.detail-poster img{width:100%;height:100%;object-fit:cover}.episodes{display:grid;gap:9px}.episode{background:#13161b!important;border:1px solid var(--line)!important;border-radius:8px!important;padding:12px!important}
-.admin-shell{max-width:1050px!important;padding:30px 6%!important}.admin-shell .panel{background:#13161b!important;border-color:var(--line)!important}.admin-shell input,.admin-shell textarea,.admin-shell select{background:#0d1014!important}
-@media(max-width:850px){.topbar{flex-wrap:wrap}.topbar .brand{margin-right:0}.topbar nav{order:3;width:100%;justify-content:space-between;gap:8px;padding:3px 0}.topbar nav a{font-size:11px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.head{display:flex!important}.head input{width:220px!important}.detail-top{grid-template-columns:1fr!important}.detail-poster{max-width:420px}.hero{min-height:280px!important}}
-@media(max-width:520px){.topbar{padding:8px 12px}.topbar .logo{width:42px;height:42px}.topbar .brand b{font-size:13px}.topbar .brand small{font-size:7px}.topbar nav{overflow-x:auto;justify-content:flex-start}.topbar nav a{white-space:nowrap}.admin-switch{font-size:10px;padding:8px}.hero{padding:42px 16px!important}.hero h1{font-size:42px!important}section{padding:30px 16px!important}.head{display:block!important}.head input{width:100%!important;margin-top:10px}.grid{gap:10px!important}.body{padding:10px!important}.body h3{font-size:15px!important}.body p{display:none}.card .watch{font-size:10px!important;padding:8px 11px;margin-top:8px}.watch{font-size:10px!important}}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+input, select, textarea { font-family: inherit; }
 
-.video-wrap{position:relative;width:100%;max-width:1000px;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.video-wrap iframe{width:100%;height:100%;display:block;border:0}.player-section{padding-top:10px!important}.episode .btn.playing{opacity:.7}
-.topbar nav{flex:1;justify-content:flex-end;overflow-x:auto;white-space:nowrap}.topbar nav a{white-space:nowrap}
-@media(max-width:1000px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.topbar{gap:12px}.topbar nav{gap:12px}}
-@media(max-width:700px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.topbar nav{order:3;width:100%;justify-content:flex-start}.video-wrap{border-radius:8px}}
+/* Header */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6, 11, 8, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(245, 197, 66, 0.25));
+}
+.brand-titles {
+  display: flex;
+  flex-direction: column;
+}
+.brand-name {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.badge-admin {
+  background: linear-gradient(135deg, rgba(245, 197, 66, 0.2), rgba(245, 197, 66, 0.05));
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 1px;
+}
+.brand-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-/* Pak Spotlight header: Admin stays on the top row; public tabs are a single horizontal row below it. */
-.topbar{display:grid!important;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand admin" "nav nav";row-gap:8px;padding:9px 5%;align-items:center}
-.topbar .brand{grid-area:brand;min-width:0}
-.topbar .admin-switch{grid-area:admin;justify-self:end}
-.topbar .public-nav{grid-area:nav;width:100%;display:flex;justify-content:center;align-items:center;gap:24px;overflow-x:auto;white-space:nowrap;padding:3px 0 2px;scrollbar-width:none}
-.topbar .public-nav::-webkit-scrollbar{display:none}
-.topbar .public-nav a{flex:0 0 auto;font-weight:700}
-@media(max-width:700px){.topbar{padding:8px 22px;row-gap:7px}.topbar .public-nav{justify-content:flex-start;gap:20px;font-size:13px}.logo{width:48px;height:48px}.brand b{font-size:15px}.brand small{font-size:8px}.admin-switch{padding:10px 14px!important}}
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.btn-gold {
+  background: linear-gradient(135deg, #f5c542 0%, #d4a024 100%);
+  color: #0b110e;
+  box-shadow: 0 4px 14px rgba(245, 197, 66, 0.25);
+}
+.btn-gold:hover {
+  background: linear-gradient(135deg, #ffd768 0%, #e5b334 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(245, 197, 66, 0.35);
+}
+.btn-gold:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(245, 197, 66, 0.4);
+  color: var(--gold);
+}
+.btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid rgba(239, 83, 80, 0.3);
+}
+.btn-danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+}
 
-.ai-box{background:linear-gradient(135deg,#15191f,#101216);border:1px solid #3a3f48;border-radius:12px;padding:16px;margin-bottom:18px}.ai-box h3{margin:0 0 6px;color:#ffd34e}.ai-box p{margin:0 0 12px;color:#aeb5bf;font-size:13px;line-height:1.5}.ai-row{display:flex;gap:10px;flex-wrap:wrap}.ai-row input{flex:1;min-width:240px}.ai-status{margin-top:10px;font-size:13px}.ai-status.ok{color:#8ee6a5}.ai-status.err{color:#ff8888}</style>
-<style>
-body{background:#0b0d10;color:#f5f5f3}
-.admin-page{max-width:1100px;margin:0 auto;padding:30px 6%}
-.admin-header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 0 28px;border-bottom:1px solid #292e36;margin-bottom:25px}
-.admin-brand{display:flex;align-items:center;gap:12px}.admin-brand img{width:52px;height:52px;object-fit:contain}.admin-brand b{display:block;letter-spacing:2px}.admin-brand small{color:#999;letter-spacing:1.4px}
-.admin-card{background:#13161b;border:1px solid #292e36;border-radius:14px;padding:24px;margin-bottom:20px}
-.admin-form{display:grid;grid-template-columns:1fr 1fr;gap:15px}.admin-form .full{grid-column:1/-1}
-.admin-form label{display:block;color:#aaa;font-size:12px;font-weight:bold;margin-bottom:7px}
-.admin-form input,.admin-form textarea,.admin-form select{width:100%;background:#0d1014;border:1px solid #363c45;color:#fff;border-radius:8px;padding:12px;box-sizing:border-box}
-.admin-form textarea{min-height:120px;resize:vertical}
-.admin-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-.admin-btn{border:1px solid #383d45;background:#171a1f;color:#eee;border-radius:8px;padding:11px 16px;cursor:pointer;font-weight:bold}
-.admin-btn.gold{background:#ffd34e;color:#15120a;border-color:#ffd34e}.admin-btn.danger{color:#ff8585;border-color:#633838}
-.admin-msg{margin-top:12px;min-height:20px;color:#9aa3ad}.admin-success{color:#8ee6a5}.admin-error{color:#ff8585}
-.auth-box{max-width:520px;margin:50px auto;background:#13161b;border:1px solid #292e36;border-radius:14px;padding:28px}
-.auth-box h1{margin-top:0}.auth-box label{display:block;color:#aaa;font-size:12px;font-weight:bold;margin:14px 0 7px}
-.auth-box input{width:100%;box-sizing:border-box;background:#0d1014;border:1px solid #363c45;color:#fff;border-radius:8px;padding:13px}
-.drama-row{display:flex;justify-content:space-between;align-items:center;gap:15px;border:1px solid #292e36;background:#0d1014;padding:15px;border-radius:10px;margin-top:10px}
-.row-title{font-weight:bold}.row-meta{font-size:12px;color:#8f98a3;margin-top:5px}
-.empty{padding:25px;border:1px dashed #464c55;border-radius:10px;color:#aaa}
-@media(max-width:700px){.admin-form{grid-template-columns:1fr}.admin-form .full{grid-column:auto}.drama-row{align-items:flex-start;flex-direction:column}.admin-header{align-items:flex-start}}
+/* Main Container */
+.admin-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 36px 5%;
+  flex: 1;
+}
+
+/* Auth Card */
+.auth-wrapper {
+  max-width: 460px;
+  margin: 60px auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+.auth-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2e7d4d, var(--gold), #2e7d4d);
+}
+.auth-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.auth-header img {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 12px;
+}
+.auth-header h1 {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  color: #fff;
+  letter-spacing: 1px;
+}
+.auth-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.form-group {
+  margin-bottom: 18px;
+}
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.form-group input, .form-group textarea, .form-group select {
+  width: 100%;
+  background: #080e0a;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #fff;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.12);
+}
+.form-group textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.urdu-input {
+  font-family: var(--font-urdu);
+  direction: rtl;
+  font-size: 18px !important;
+}
+
+/* Dashboard Header */
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 30px;
+}
+.dash-title h1 {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+}
+.dash-title p {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Stats Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; width: 60px; height: 60px;
+  background: radial-gradient(circle, rgba(245, 197, 66, 0.1) 0%, transparent 70%);
+}
+.stat-card.alert {
+  border-color: rgba(239, 83, 80, 0.35);
+  background: rgba(239, 83, 80, 0.04);
+}
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+.stat-value {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.stat-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* Drama Management Section */
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.panel-title {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+.panel-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.search-input {
+  background: #080e0a;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: #fff;
+  font-size: 13px;
+  min-width: 240px;
+}
+.search-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+/* Drama Table / List */
+.drama-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.drama-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  transition: all 0.2s;
+}
+.drama-item:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(245, 197, 66, 0.3);
+}
+.drama-thumb-box {
+  width: 80px;
+  height: 48px;
+  border-radius: 6px;
+  background: #070d0a;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.drama-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.drama-thumb-box .no-thumb {
+  font-size: 9px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.1;
+  padding: 4px;
+}
+.drama-info {
+  flex: 1;
+  min-width: 0;
+}
+.drama-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.drama-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+.drama-urdu {
+  font-family: var(--font-urdu);
+  font-size: 14px;
+  color: var(--gold);
+  direction: rtl;
+}
+.drama-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.pill {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+}
+.pill-gold {
+  border-color: rgba(245, 197, 66, 0.3);
+  color: var(--gold);
+  background: rgba(245, 197, 66, 0.08);
+}
+.pill-missing {
+  border-color: rgba(239, 83, 80, 0.3);
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+.drama-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+/* AI Studio / Autofill Box */
+.ai-card {
+  background: linear-gradient(135deg, rgba(20, 36, 26, 0.9) 0%, rgba(14, 23, 18, 0.9) 100%);
+  border: 1px solid rgba(245, 197, 66, 0.35);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+.ai-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.ai-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.ai-badge {
+  background: linear-gradient(135deg, #f5c542, #d4a024);
+  color: #0b110e;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.8px;
+}
+.ai-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: #fff;
+  font-weight: 700;
+}
+.ai-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.ai-input-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ai-input-row input {
+  flex: 1;
+  min-width: 260px;
+  background: #080e0a;
+  border: 1px solid var(--border-gold);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #fff;
+  font-size: 14px;
+}
+.ai-status {
+  margin-top: 12px;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  display: none;
+}
+.ai-status.active { display: block; }
+.ai-status.info {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.ai-status.ok {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid rgba(102, 187, 106, 0.3);
+}
+.ai-status.err {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid rgba(239, 83, 80, 0.3);
+}
+
+/* Thumbnail Preview Box */
+.thumb-preview-card {
+  background: #09100c;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.thumb-img-wrap {
+  width: 140px;
+  aspect-ratio: 16/9;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-gold);
+  background: #000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  flex-shrink: 0;
+}
+.thumb-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.thumb-details {
+  flex: 1;
+  min-width: 200px;
+}
+.thumb-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.thumb-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Form Layout */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-grid .full {
+  grid-column: 1 / -1;
+}
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+/* Storage Card */
+.storage-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 5%;
+  color: var(--text-dim);
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  background: var(--bg-deep);
+}
+
+@media (max-width: 768px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .drama-item { flex-direction: column; align-items: flex-start; }
+  .drama-actions { width: 100%; justify-content: flex-start; }
+  .topbar { padding: 10px 16px; }
+  .admin-container { padding: 20px 16px; }
+}
 </style>
 </head>
 <body>
+
 <header class="topbar">
-  <a class="brand" href="/" aria-label="Pak Spotlight"><img class="logo" src="/logo.png" alt="Pak Spotlight" width="48" height="48"><div><b>PAK SPOTLIGHT</b><small>ADMINISTRATION</small></div></a>
-  <a class="admin-btn" href="/">WEBSITE</a>
+  <div class="brand">
+    <a href="/" title="Go to Website"><img src="/logo.png" alt="Pak Spotlight" width="44" height="44"></a>
+    <div class="brand-titles">
+      <div class="brand-name">PAK SPOTLIGHT <span class="badge-admin">ADMIN</span></div>
+      <div class="brand-sub">Classic PTV Drama Catalog</div>
+    </div>
+  </div>
+  <div class="topbar-actions" id="topbarActions">
+    <a class="btn btn-ghost btn-sm" href="/">← PUBLIC WEBSITE</a>
+  </div>
 </header>
-<main id="adminApp" class="admin-page"></main>
-<footer><div><b>PAK SPOTLIGHT</b><br>Classic PTV Drama Archive</div><div>Admin panel</div><div>© 2026 Pak Spotlight</div></footer>
+
+<main class="admin-container" id="adminApp">
+  <!-- Content injected dynamically -->
+</main>
+
+<footer>
+  <div><b>PAK SPOTLIGHT</b> — Dedicated to preserving Pakistan's golden television heritage.</div>
+  <div>Authorized Admin Portal · Supabase Cloudflare Edition</div>
+</footer>
+
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-const supabase=createClient("https://whcseoasnaswlhnzduix.supabase.co","sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk");
-const $=id=>document.getElementById(id);
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let rows=[],authSession=null,editingId=null,editingImage="";
-function map(r){return {id:r.id,title:r.title??r.Title??"",urdu:r.urdu_title??r.urdu??r.Urdu??"",year:r.year??"",type:r.type??"",writer:r.writer??"",produced:r.produced??"",director:r.director??"",cast:r.cast??"",description:r.description??"",youtube:r.youtube_url??r.youtube??"",image:r.thumbnail_url??r.image??r.thumbnail??"",series:r.series_name??"",episode:r.episode_number==null?null:Number(r.episode_number)}}
-function normalize(s){return String(s??"").replace(/\s+/g," ").trim().toLowerCase()}
-function isSeries(d){return ["Serial / Series","Series","Serial","Comedy"].includes(String(d.type||""))}
-function groups(list){const m=new Map();for(const d of list){const series=isSeries(d)&&String(d.series||"").trim();const key=series?"series:"+String(d.type).trim().toLowerCase()+":"+normalize(series):"id:"+d.id;if(!m.has(key))m.set(key,[]);m.get(key).push(d)}return [...m.values()].map(g=>g.sort((a,b)=>(a.episode??999999)-(b.episode??999999)))}
-async function load(){let q=await supabase.from("Drama").select("id,title,urdu_title,year,type,writer,director,cast,description,youtube_url,series_name,episode_number,thumbnail_url");if(q.error)q=await supabase.from("Drama").select("*");if(q.error)throw q.error;rows=(q.data||[]).map(map);return rows}
-function showLogin(message=""){ $("adminApp").innerHTML=`<div class="auth-box"><h1>Admin Login</h1><p class="meta">Sign in with your Supabase admin account to manage Pak Spotlight.</p><form id="loginForm"><label>Email</label><input id="loginEmail" type="email" autocomplete="username" required placeholder="admin@example.com"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Password"><div class="admin-actions"><button class="admin-btn gold" type="submit">SIGN IN</button><a class="admin-btn" href="/">CANCEL</a></div><div id="loginMsg" class="admin-msg admin-error">${esc(message)}</div></form></div>`; $("loginForm").onsubmit=async e=>{e.preventDefault();const msg=$("loginMsg");msg.className="admin-msg";msg.textContent="Signing in…";const q=await supabase.auth.signInWithPassword({email:$("loginEmail").value.trim(),password:$("loginPassword").value});if(q.error){msg.className="admin-msg admin-error";msg.textContent="Login failed: "+q.error.message;return}authSession=q.data.session;await showDashboard()}}
-async function showDashboard(){if(!authSession){showLogin();return}try{await load()}catch(e){$("adminApp").innerHTML=`<div class="admin-card"><h1>Database connection failed</h1><p class="admin-msg admin-error">${esc(e.message||e)}</p><button class="admin-btn" onclick="location.reload()">RETRY</button></div>`;return}$("adminApp").innerHTML=`<div class="admin-header"><div><div class="tag">PRIVATE ADMIN</div><h1>Drama Admin</h1><div class="meta">Signed in as ${esc(authSession.user.email||"Admin")}</div></div><button id="logoutBtn" class="admin-btn">LOG OUT</button></div><div class="admin-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><h2>Drama Dashboard</h2><p class="meta">${rows.length} drama record${rows.length===1?'':'s'} in Supabase.</p></div><button id="addBtn" class="admin-btn gold">+ ADD DRAMA</button></div></div><div class="admin-card"><h2>Your Dramas</h2><div id="adminList"></div></div><div class="admin-card"><h2>Thumbnails Storage</h2><p class="meta">Test the <b>thumbnails</b> bucket without changing existing drama data.</p><button id="testStorage" class="admin-btn">TEST STORAGE</button><div id="storageMsg" class="admin-msg"></div></div>`;$("logoutBtn").onclick=async()=>{await supabase.auth.signOut();authSession=null;showLogin()};$("addBtn").onclick=()=>showForm();$("testStorage").onclick=testStorage;renderAdmin()}
-function renderAdmin(){const list=$("adminList"),gs=groups(rows);list.innerHTML=gs.length?gs.map(g=>`<div class="drama-row"><div><div class="row-title">${esc(isSeries(g[0])&&g[0].series?g[0].series:g[0].title)}</div><div class="row-meta">${esc(g[0].type)} · ${g.length} item${g.length===1?'':'s'}</div>${g.length>1?`<div class="row-meta">${g.map(e=>`Episode ${e.episode??'?'} — ${esc(e.title)}`).join('<br>')}</div>`:''}</div><div class="admin-actions">${g.map(e=>`<button class="admin-btn" data-edit="${encodeURIComponent(String(e.id))}">EDIT${e.episode?' E'+e.episode:''}</button><button class="admin-btn danger" data-delete="${encodeURIComponent(String(e.id))}">DELETE${e.episode?' E'+e.episode:''}</button>`).join('')}</div></div>`).join(''):'<div class="empty">No dramas yet.</div>';list.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const d=rows.find(x=>String(x.id)===decodeURIComponent(b.dataset.edit));if(d)showForm(d)});list.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteDrama(decodeURIComponent(b.dataset.delete)))}
-function showForm(d=null){editingId=d?.id||null;editingImage=d?.image||"";$("adminApp").innerHTML=`<div class="admin-header"><div><div class="tag">${d?'EDIT DRAMA':'ADD DRAMA'}</div><h1>${d?'Edit '+esc(d.title):'Add New Drama'}</h1></div><button id="backBtn" class="admin-btn">← DASHBOARD</button></div><div class="admin-card"><div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button id="aiTopBtn" class="admin-btn gold" type="button">✦ AI AUTO-FILL FROM YOUTUBE</button></div><form id="dramaForm" class="admin-form"><div><label>English Title *</label><input id="title" required value="${esc(d?.title)}"></div><div><label>Urdu Title</label><input id="urdu" value="${esc(d?.urdu)}"></div><div><label>Year</label><input id="year" value="${esc(d?.year)}"></div><div><label>Category</label><select id="type"><option>Serial / Series</option><option>Long Play</option><option>Comedy</option><option>Shorts</option></select></div><div><label>Series Name (for episodes)</label><input id="series" value="${esc(d?.series)}" placeholder="e.g. Nuskha Hazir Hai"></div><div><label>Episode Number</label><input id="episode" type="number" min="1" value="${d?.episode??''}"></div><div><label>Writer</label><input id="writer" value="${esc(d?.writer)}"></div><div><label>Director</label><input id="director" value="${esc(d?.director)}"></div><div><label>Produced</label><input id="produced" value="${esc(d?.produced)}"></div><div class="full"><label>Cast</label><input id="cast" value="${esc(d?.cast)}"></div><div class="full"><label>Description</label><textarea id="description">${esc(d?.description)}</textarea></div><div class="full"><label>YouTube Link + AI</label><div class="ai-box"><h3>✦ AI AUTO-FILL</h3><p>Paste a Pak Spotlight YouTube video link. AI will identify the video and prepare the drama fields. Review everything before saving. Credits are left blank when the supplied metadata does not support them.</p><div class="ai-row"><input id="aiYoutube" type="url" value="${esc(d?.youtube)}" placeholder="https://youtu.be/..."><button id="aiFillBtn" class="admin-btn gold" type="button">AUTO-FILL DRAMA</button></div><div id="aiStatus" class="ai-status"></div></div><input id="youtube" type="url" value="${esc(d?.youtube)}" placeholder="https://youtu.be/..." style="display:none"></div><div class="full"><label>Thumbnail Image</label><input id="image" type="file" accept="image/*"><div class="meta" style="margin-top:6px">Leave empty when editing to keep the current thumbnail.</div></div><div class="full admin-actions"><button class="admin-btn gold" type="submit">SAVE DRAMA</button><button id="cancelBtn" class="admin-btn" type="button">CANCEL</button></div><div class="full admin-msg" id="formMsg"></div></form></div>`;$("type").value=d?.type||'Serial / Series';$("backBtn").onclick=showDashboard;$("cancelBtn").onclick=showDashboard;$("aiFillBtn").onclick=aiAutoFill;$("aiTopBtn").onclick=()=>{$("aiYoutube").scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>$("aiYoutube").focus(),250)};$("dramaForm").onsubmit=saveForm}
-async function aiAutoFill(){const btn=$("aiFillBtn"),status=$("aiStatus"),url=$("aiYoutube").value.trim();if(!url){status.className="ai-status err";status.textContent="Paste a YouTube video link first.";return}if(!authSession?.access_token){showLogin();return}btn.disabled=true;btn.textContent="AI WORKING…";status.className="ai-status";status.textContent="Checking the Pak Spotlight video and preparing the fields…";try{const r=await fetch("/api/ai-autofill",{method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+authSession.access_token},body:JSON.stringify({url})});const data=await r.json();if(!r.ok)throw new Error(data.error||"AI Auto-Fill failed.");const f=data.fields||{},set=(id,v)=>{if($(id)&&v!==undefined&&v!==null)$(id).value=String(v)};set("title",f.title);set("urdu",f.urdu_title);set("year",f.year);set("series",f.series_name);set("episode",f.episode_number);set("writer",f.writer);set("director",f.director);set("produced",f.produced);set("cast",f.cast);set("description",f.description);set("youtube",url);set("aiYoutube",url);if($("type")){const allowed=["Serial / Series","Long Play","Comedy","Shorts"];$("type").value=allowed.includes(f.type)?f.type:"Long Play"}status.className="ai-status ok";status.textContent="AI filled the form. Please review the fields before saving."}catch(e){status.className="ai-status err";status.textContent=e.message||String(e)}finally{btn.disabled=false;btn.textContent="AUTO-FILL DRAMA"}}
-async function saveForm(e){e.preventDefault();if(!authSession){showLogin();return}const msg=$("formMsg"),f=$("image").files[0];msg.className="full admin-msg";msg.textContent="Saving…";if(f&&f.size>3*1024*1024){msg.className="full admin-msg admin-error";msg.textContent="Thumbnail must be under 3 MB.";return}const payload={title:$("title").value.trim(),urdu_title:$("urdu").value.trim(),year:$("year").value.trim(),type:$("type").value,series_name:$("series").value.trim(),episode_number:$("episode").value?Number($("episode").value):null,writer:$("writer").value.trim(),director:$("director").value.trim(),produced:$("produced").value.trim(),cast:$("cast").value.trim(),description:$("description").value.trim(),youtube_url:$("youtube").value.trim()};let id=editingId;let q=editingId?await supabase.from('Drama').update(payload).eq('id',editingId):await supabase.from('Drama').insert(payload).select('id').single();if(q.error){msg.className="full admin-msg admin-error";msg.textContent="Save failed: "+q.error.message;return}if(!editingId)id=q.data.id;if(f){msg.textContent="Uploading thumbnail…";const ext=(f.type||'image/jpeg').split('/')[1]?.replace('jpeg','jpg')||'jpg';const path=`drama/${id}.${ext}`;const up=await supabase.storage.from('thumbnails').upload(path,f,{contentType:f.type||'image/jpeg',upsert:true,cacheControl:'31536000'});if(up.error){msg.className="full admin-msg admin-error";msg.textContent="Drama saved, but thumbnail upload failed: "+up.error.message;return}const pub=supabase.storage.from('thumbnails').getPublicUrl(path).data.publicUrl;const uq=await supabase.from('Drama').update({thumbnail_url:pub}).eq('id',id);if(uq.error){msg.className="full admin-msg admin-error";msg.textContent="Thumbnail uploaded, but database update failed: "+uq.error.message;return}}else if(editingId&&editingImage){await supabase.from('Drama').update({thumbnail_url:editingImage}).eq('id',id)}msg.className="full admin-msg admin-success";msg.textContent="Saved successfully.";setTimeout(showDashboard,700)}
-async function deleteDrama(id){const d=rows.find(x=>String(x.id)===String(id));if(!d||!confirm('Delete '+d.title+'?'))return;const q=await supabase.from('Drama').delete().eq('id',id);if(q.error){alert('Delete failed: '+q.error.message);return}await showDashboard()}
-async function testStorage(){const msg=$("storageMsg");msg.textContent="Testing thumbnails bucket…";try{const path=`_admin_test/${Date.now()}.txt`;const up=await supabase.storage.from('thumbnails').upload(path,new Blob(['Pak Spotlight Storage test'],{type:'text/plain'}),{contentType:'text/plain',upsert:false,cacheControl:'3600'});if(up.error)throw up.error;await supabase.storage.from('thumbnails').remove([path]);msg.className="admin-msg admin-success";msg.textContent="Storage test successful. The thumbnails bucket is working."}catch(e){msg.className="admin-msg admin-error";msg.textContent="Storage test failed: "+(e.message||e)}}
-supabase.auth.getSession().then(async({data})=>{authSession=data.session||null;if(authSession)await showDashboard();else showLogin()}).catch(e=>showLogin(e.message||"Could not initialize Supabase."));
-supabase.auth.onAuthStateChange((_event,session)=>{authSession=session||null});
+
+const SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
+const SUPABASE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let rows = [];
+let authSession = null;
+let editingId = null;
+let editingImage = "";
+let stagedAiThumbnailUrl = ""; // Holds the YouTube thumbnail URL to upload to Supabase
+
+function mapRow(r) {
+  return {
+    id: r.id,
+    title: r.title ?? r.Title ?? "",
+    urdu: r.urdu_title ?? r.urdu ?? r.Urdu ?? "",
+    year: r.year ?? "",
+    type: r.type ?? "Long Play",
+    writer: r.writer ?? "",
+    produced: r.produced ?? "",
+    director: r.director ?? "",
+    cast: r.cast ?? "",
+    description: r.description ?? "",
+    youtube: r.youtube_url ?? r.youtube ?? "",
+    image: r.thumbnail_url ?? r.image ?? r.thumbnail ?? "",
+    series: r.series_name ?? "",
+    episode: r.episode_number == null ? null : Number(r.episode_number)
+  };
+}
+
+async function loadData() {
+  let q = await supabase.from("Drama").select("id,title,urdu_title,year,type,writer,director,cast,description,youtube_url,series_name,episode_number,thumbnail_url");
+  if (q.error) {
+    console.warn("Retrying with select *", q.error);
+    q = await supabase.from("Drama").select("*");
+  }
+  if (q.error) throw q.error;
+  rows = (q.data || []).map(mapRow);
+  return rows;
+}
+
+// ----------------------
+// LOGIN VIEW
+// ----------------------
+function showLogin(msg = "") {
+  editingId = null;
+  stagedAiThumbnailUrl = "";
+  $("topbarActions").innerHTML = `<a class="btn btn-ghost btn-sm" href="/">← PUBLIC WEBSITE</a>`;
+  $("adminApp").innerHTML = `
+    <div class="auth-wrapper">
+      <div class="auth-header">
+        <img src="/logo.png" alt="Pak Spotlight">
+        <h1>Admin Sign In</h1>
+        <p>Enter your Supabase administrator credentials to manage dramas and media.</p>
+      </div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Admin Email</label>
+          <input id="loginEmail" type="email" autocomplete="username" required placeholder="admin@pakspotlight.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••">
+        </div>
+        <button class="btn btn-gold" style="width:100%;margin-top:10px" type="submit">SIGN IN TO DASHBOARD</button>
+        <div id="loginMsg" class="ai-status ${msg ? 'active err' : ''}" style="margin-top:14px">${esc(msg)}</div>
+      </form>
+    </div>
+  `;
+
+  $("loginForm").onsubmit = async e => {
+    e.preventDefault();
+    const status = $("loginMsg");
+    status.className = "ai-status active info";
+    status.textContent = "Authenticating session…";
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: $("loginEmail").value.trim(),
+      password: $("loginPassword").value
+    });
+
+    if (error) {
+      status.className = "ai-status active err";
+      status.textContent = "Sign-in failed: " + error.message;
+      return;
+    }
+
+    authSession = data.session;
+    await showDashboard();
+  };
+}
+
+// ----------------------
+// DASHBOARD VIEW
+// ----------------------
+async function showDashboard() {
+  if (!authSession) { showLogin(); return; }
+
+  $("topbarActions").innerHTML = `
+    <span style="font-size:12px;color:var(--text-muted);display:none;align-items:center;gap:6px" id="userEmailSpan">
+      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--success)"></span>
+      ${esc(authSession.user.email || 'Admin')}
+    </span>
+    <a class="btn btn-ghost btn-sm" href="/" target="_blank">VIEW ARCHIVE ↗</a>
+    <button class="btn btn-danger btn-sm" id="logoutBtn">LOG OUT</button>
+  `;
+  $("logoutBtn").onclick = async () => {
+    await supabase.auth.signOut();
+    authSession = null;
+    showLogin();
+  };
+
+  $("adminApp").innerHTML = `
+    <div style="text-align:center;padding:60px;color:var(--text-muted)">
+      Loading drama archive…
+    </div>
+  `;
+
+  try {
+    await loadData();
+  } catch (e) {
+    $("adminApp").innerHTML = `
+      <div class="panel">
+        <h2 style="color:var(--danger)">Database Connection Error</h2>
+        <p style="margin-top:8px;color:var(--text-muted)">${esc(e.message || String(e))}</p>
+        <button class="btn btn-gold" style="margin-top:16px" onclick="location.reload()">RELOAD</button>
+      </div>
+    `;
+    return;
+  }
+
+  // Calculate metrics
+  const totalDramas = rows.length;
+  const serialsCount = rows.filter(r => ["Serial / Series", "Series", "Serial"].includes(r.type)).length;
+  const longPlaysCount = rows.filter(r => r.type === "Long Play").length;
+  const missingThumbs = rows.filter(r => !r.image || !r.image.trim()).length;
+
+  $("adminApp").innerHTML = `
+    <div class="dash-header">
+      <div class="dash-title">
+        <h1>Catalog Management</h1>
+        <p>Manage classic PTV drama entries, episode series, and high-resolution thumbnails.</p>
+      </div>
+      <button class="btn btn-gold" id="addDramaBtn">+ ADD NEW DRAMA</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Total Preserved</span>
+        <span class="stat-value">${totalDramas}</span>
+        <span class="stat-desc">Dramas & telefilms in database</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Drama Serials</span>
+        <span class="stat-value">${serialsCount}</span>
+        <span class="stat-desc">Multi-episode series entries</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Long Plays</span>
+        <span class="stat-value">${longPlaysCount}</span>
+        <span class="stat-desc">Standalone classic telefilms</span>
+      </div>
+      <div class="stat-card ${missingThumbs > 0 ? 'alert' : ''}">
+        <span class="stat-label">Missing Thumbnails</span>
+        <span class="stat-value" style="color:${missingThumbs > 0 ? 'var(--danger)' : 'var(--success)'}">${missingThumbs}</span>
+        <span class="stat-desc">${missingThumbs > 0 ? 'Dramas need thumbnail sync' : 'All dramas have thumbnails!'}</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">All Catalog Items (${totalDramas})</div>
+        <div class="panel-controls">
+          <input class="search-input" id="tableSearch" placeholder="Search by title, writer, cast...">
+        </div>
+      </div>
+      <div class="drama-list" id="dramaList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Supabase Storage Verification</div>
+      </div>
+      <div class="storage-box">
+        <div>
+          <div style="font-weight:700;margin-bottom:4px">thumbnails Bucket Status</div>
+          <div style="font-size:12px;color:var(--text-muted)">Verify your Supabase Storage bucket allows uploads and reading.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn btn-ghost btn-sm" id="testStorageBtn">TEST BUCKET UPLOAD</button>
+        </div>
+      </div>
+      <div id="storageMsg" class="ai-status" style="margin-top:12px"></div>
+    </div>
+  `;
+
+  $("addDramaBtn").onclick = () => showForm();
+  $("testStorageBtn").onclick = testStorage;
+
+  const searchInput = $("tableSearch");
+  searchInput.oninput = () => {
+    const q = searchInput.value.toLowerCase().trim();
+    renderDramaItems(rows.filter(r => 
+      (r.title + " " + r.urdu + " " + r.writer + " " + r.director + " " + r.cast + " " + r.year + " " + r.type + " " + r.series).toLowerCase().includes(q)
+    ));
+  };
+
+  renderDramaItems(rows);
+}
+
+function renderDramaItems(list) {
+  const container = $("dramaList");
+  if (!list.length) {
+    container.innerHTML = `
+      <div style="padding:32px;text-align:center;color:var(--text-muted);border:1px dashed var(--border);border-radius:8px">
+        No dramas found.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = list.map(d => {
+    const hasThumb = !!d.image && d.image.trim().length > 0;
+    const isSer = ["Serial / Series", "Series", "Serial", "Comedy"].includes(d.type);
+
+    return `
+      <div class="drama-item">
+        <div class="drama-thumb-box">
+          ${hasThumb ? `<img src="${esc(d.image)}" alt="${esc(d.title)}" loading="lazy">` : `<span class="no-thumb">NO THUMB</span>`}
+        </div>
+        <div class="drama-info">
+          <div class="drama-title-row">
+            <span class="drama-title">${esc(d.title)}</span>
+            ${d.urdu ? `<span class="drama-urdu">${esc(d.urdu)}</span>` : ''}
+          </div>
+          <div class="drama-meta">
+            <span class="pill pill-gold">${esc(d.type)}</span>
+            ${d.year ? `<span class="pill">${esc(d.year)}</span>` : ''}
+            ${d.episode ? `<span class="pill">Episode ${d.episode}</span>` : ''}
+            ${d.writer ? `<span>Writer: ${esc(d.writer)}</span>` : ''}
+            ${d.cast ? `<span>Cast: ${esc(d.cast.slice(0, 40))}${d.cast.length > 40 ? '…' : ''}</span>` : ''}
+            ${!hasThumb ? `<span class="pill pill-missing">Missing Thumbnail</span>` : ''}
+          </div>
+        </div>
+        <div class="drama-actions">
+          ${!hasThumb && d.youtube ? `
+            <button class="btn btn-ghost btn-sm" title="Auto-fetch YouTube thumbnail to Supabase" onclick="syncMissingThumbnail(${d.id}, '${esc(d.youtube)}')">
+              ✦ SYNC THUMB
+            </button>
+          ` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="editDrama(${d.id})">EDIT</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteDrama(${d.id}, '${esc(d.title)}')">DELETE</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ----------------------
+// FORM VIEW (ADD / EDIT)
+// ----------------------
+function showForm(d = null) {
+  editingId = d?.id || null;
+  editingImage = d?.image || "";
+  stagedAiThumbnailUrl = "";
+
+  $("adminApp").innerHTML = `
+    <div class="dash-header">
+      <div class="dash-title">
+        <h1>${d ? 'Edit Drama: ' + esc(d.title) : 'Add New Classic Drama'}</h1>
+        <p>${d ? 'Update catalog metadata or refresh media thumbnails' : 'Add a new PTV classic drama with optional AI YouTube auto-detect'}</p>
+      </div>
+      <button class="btn btn-ghost" id="cancelFormTopBtn">← BACK TO DASHBOARD</button>
+    </div>
+
+    <!-- AI Autofill Assistant -->
+    <div class="ai-card">
+      <div class="ai-header">
+        <span class="ai-badge">✦ AI ASSISTANT</span>
+        <span class="ai-title">Auto-Detect & Fill from YouTube</span>
+      </div>
+      <p class="ai-desc">
+        Paste a YouTube video link. AI will analyze the video metadata, extract the clean title, authentic Urdu title, release year, category, credits (writer, director, cast), synopsis, and <b>automatically stage the high-resolution YouTube thumbnail to be stored in your Supabase bucket</b>.
+      </p>
+      <div class="ai-input-row">
+        <input id="aiUrlInput" type="url" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." value="${esc(d?.youtube || '')}">
+        <button class="btn btn-gold" id="aiDetectBtn" type="button">✦ AUTO-DETECT & FILL</button>
+      </div>
+      <div id="aiStatusMsg" class="ai-status"></div>
+    </div>
+
+    <!-- Main Metadata Form -->
+    <div class="panel">
+      <form id="dramaForm">
+        <div class="form-grid">
+          <div>
+            <label>English Title *</label>
+            <input id="f_title" required value="${esc(d?.title || '')}" placeholder="e.g. Dhoop Kinare or AAPA">
+          </div>
+          <div>
+            <label>Urdu Title (اردو عنوان)</label>
+            <input id="f_urdu" class="urdu-input" value="${esc(d?.urdu || '')}" placeholder="دھوپ کنارے / آپا">
+          </div>
+
+          <div>
+            <label>Release Year</label>
+            <input id="f_year" value="${esc(d?.year || '')}" placeholder="e.g. 1987">
+          </div>
+          <div>
+            <label>Category</label>
+            <select id="f_type">
+              <option value="Long Play">Long Play (Telefilm / Single Episode)</option>
+              <option value="Serial / Series">Serial / Series (Multi-episode)</option>
+              <option value="Comedy">Comedy / Satire</option>
+              <option value="Shorts">Shorts / Clips</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Series Name (for episode series)</label>
+            <input id="f_series" value="${esc(d?.series || '')}" placeholder="e.g. Dhoop Kinare or Nuskha Hazir Hai">
+          </div>
+          <div>
+            <label>Episode Number (optional)</label>
+            <input id="f_episode" type="number" min="1" value="${d?.episode ?? ''}" placeholder="1, 2, 3...">
+          </div>
+
+          <div>
+            <label>Playwright / Writer</label>
+            <input id="f_writer" value="${esc(d?.writer || '')}" placeholder="e.g. Haseena Moin, Ashfaq Ahmed">
+          </div>
+          <div>
+            <label>Director</label>
+            <input id="f_director" value="${esc(d?.director || '')}" placeholder="e.g. Sahira Kazmi, Yawar Hayat">
+          </div>
+
+          <div class="full">
+            <label>Produced / PTV Center</label>
+            <input id="f_produced" value="${esc(d?.produced || '')}" placeholder="e.g. PTV Lahore, PTV Karachi">
+          </div>
+
+          <div class="full">
+            <label>Star Cast (comma separated)</label>
+            <input id="f_cast" value="${esc(d?.cast || '')}" placeholder="e.g. Rahat Kazmi, Marina Khan, Badar Khalil">
+          </div>
+
+          <div class="full">
+            <label>Drama Synopsis / Description</label>
+            <textarea id="f_description" placeholder="Write a synopsis of the drama...">${esc(d?.description || '')}</textarea>
+          </div>
+
+          <div class="full">
+            <label>YouTube Link (Watch Stream)</label>
+            <input id="f_youtube" type="url" value="${esc(d?.youtube || '')}" placeholder="https://youtu.be/...">
+          </div>
+
+          <!-- Thumbnail Section -->
+          <div class="full">
+            <label>Thumbnail & Poster</label>
+            
+            <!-- Live Thumbnail Preview Box -->
+            <div id="thumbPreviewBox" class="thumb-preview-card" style="${editingImage ? '' : 'display:none'}">
+              <div class="thumb-img-wrap">
+                <img id="thumbPreviewImg" src="${esc(editingImage || '')}" alt="Thumbnail preview">
+              </div>
+              <div class="thumb-details">
+                <div class="thumb-badge" id="thumbPreviewBadge">
+                  ${editingImage ? '✓ Current Supabase Thumbnail' : '✦ AI Detected YouTube Thumbnail'}
+                </div>
+                <div class="thumb-note" id="thumbPreviewNote">
+                  ${editingImage ? 'This thumbnail is currently live in the archive.' : 'Will be automatically downloaded and saved to your Supabase thumbnails bucket when you click Save.'}
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <label style="font-size:11px;color:var(--text-dim)">OR CHOOSE CUSTOM IMAGE FILE (OVERWRITE)</label>
+              <input id="f_file" type="file" accept="image/*">
+              <div style="font-size:11px;color:var(--text-dim);margin-top:4px">
+                Supports JPG, PNG, WEBP (Max 4MB). Leaving this empty retains the AI-detected or current thumbnail.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-gold" id="saveDramaBtn" type="submit">SAVE DRAMA TO ARCHIVE</button>
+          <button class="btn btn-ghost" id="cancelFormBtn" type="button">CANCEL</button>
+          <div id="formMsg" class="ai-status" style="flex:1"></div>
+        </div>
+      </form>
+    </div>
+  `;
+
+  if (d?.type) $("f_type").value = d.type;
+
+  $("cancelFormTopBtn").onclick = showDashboard;
+  $("cancelFormBtn").onclick = showDashboard;
+  $("aiDetectBtn").onclick = runAiAutofill;
+  $("dramaForm").onsubmit = handleSaveDrama;
+
+  // File preview trigger
+  $("f_file").onchange = () => {
+    const file = $("f_file").files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        $("thumbPreviewBox").style.display = "flex";
+        $("thumbPreviewImg").src = e.target.result;
+        $("thumbPreviewBadge").innerHTML = "📁 Custom Local File Selected";
+        $("thumbPreviewNote").textContent = `File "${file.name}" ready to upload to Supabase storage.`;
+        stagedAiThumbnailUrl = ""; // custom file overrides AI thumbnail
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+}
+
+// ----------------------
+// AI AUTOFILL LOGIC
+// ----------------------
+async function runAiAutofill() {
+  const btn = $("aiDetectBtn");
+  const status = $("aiStatusMsg");
+  const url = $("aiUrlInput").value.trim();
+
+  if (!url) {
+    status.className = "ai-status active err";
+    status.textContent = "Please paste a valid YouTube video URL first.";
+    return;
+  }
+
+  if (!authSession?.access_token) {
+    showLogin("Please sign in again to use AI features.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "✦ ANALYZING VIDEO…";
+  status.className = "ai-status active info";
+  status.textContent = "Fetching video details and consulting catalog AI archivist…";
+
+  try {
+    const res = await fetch("/api/ai-autofill", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": "Bearer " + authSession.access_token
+      },
+      body: JSON.stringify({ url })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "AI auto-fill request failed.");
+
+    const f = data.fields || {};
+    const setVal = (id, val) => {
+      if ($(id) && val !== undefined && val !== null) $(id).value = String(val);
+    };
+
+    setVal("f_title", f.title);
+    setVal("f_urdu", f.urdu_title);
+    setVal("f_year", f.year);
+    setVal("f_series", f.series_name);
+    setVal("f_episode", f.episode_number);
+    setVal("f_writer", f.writer);
+    setVal("f_director", f.director);
+    setVal("f_produced", f.produced);
+    setVal("f_cast", f.cast);
+    setVal("f_description", f.description);
+    setVal("f_youtube", url);
+
+    if ($("f_type") && f.type) {
+      const allowed = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
+      $("f_type").value = allowed.includes(f.type) ? f.type : "Long Play";
+    }
+
+    // AI Thumbnail Detection & Staging
+    const detectedThumb = f.thumbnail || data.video?.thumbnail;
+    if (detectedThumb) {
+      stagedAiThumbnailUrl = detectedThumb;
+      $("thumbPreviewBox").style.display = "flex";
+      $("thumbPreviewImg").src = detectedThumb;
+      $("thumbPreviewBadge").innerHTML = "✦ AI Detected YouTube Thumbnail";
+      $("thumbPreviewNote").textContent = "High-res thumbnail ready. It will be stored in your Supabase bucket upon saving.";
+    }
+
+    status.className = "ai-status active ok";
+    status.textContent = "✓ AI successfully filled fields and detected thumbnail. Review details below and click SAVE.";
+  } catch (err) {
+    status.className = "ai-status active err";
+    status.textContent = "AI Auto-fill error: " + (err.message || String(err));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "✦ AUTO-DETECT & FILL";
+  }
+}
+
+// ----------------------
+// SAVE DRAMA & UPLOAD THUMBNAIL TO SUPABASE
+// ----------------------
+async function handleSaveDrama(e) {
+  e.preventDefault();
+  if (!authSession) { showLogin(); return; }
+
+  const btn = $("saveDramaBtn");
+  const msg = $("formMsg");
+  const fileInput = $("f_file");
+  const localFile = fileInput.files[0];
+
+  btn.disabled = true;
+  msg.className = "ai-status active info";
+  msg.textContent = "Saving drama record to database…";
+
+  const payload = {
+    title: $("f_title").value.trim(),
+    urdu_title: $("f_urdu").value.trim(),
+    year: $("f_year").value.trim(),
+    type: $("f_type").value,
+    series_name: $("f_series").value.trim() || null,
+    episode_number: $("f_episode").value ? Number($("f_episode").value) : null,
+    writer: $("f_writer").value.trim(),
+    director: $("f_director").value.trim(),
+    produced: $("f_produced").value.trim(),
+    cast: $("f_cast").value.trim(),
+    description: $("f_description").value.trim(),
+    youtube_url: $("f_youtube").value.trim()
+  };
+
+  let dramaId = editingId;
+
+  try {
+    // 1. Insert or Update row in Drama table
+    if (editingId) {
+      const q = await supabase.from("Drama").update(payload).eq("id", editingId);
+      if (q.error) throw q.error;
+    } else {
+      const q = await supabase.from("Drama").insert(payload).select("id").single();
+      if (q.error) throw q.error;
+      dramaId = q.data.id;
+    }
+
+    // 2. Handle Thumbnail Storage Upload
+    if (localFile) {
+      // Case A: Custom local file selected
+      msg.textContent = "Uploading custom thumbnail to Supabase Storage…";
+      const ext = (localFile.type || "image/jpeg").split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+      const storagePath = `drama/${dramaId}.${ext}`;
+
+      const { error: upErr } = await supabase.storage.from("thumbnails").upload(storagePath, localFile, {
+        contentType: localFile.type || "image/jpeg",
+        upsert: true,
+        cacheControl: "31536000"
+      });
+      if (upErr) throw new Error("Storage upload failed: " + upErr.message);
+
+      const pubUrl = supabase.storage.from("thumbnails").getPublicUrl(storagePath).data.publicUrl;
+      const { error: patchErr } = await supabase.from("Drama").update({ thumbnail_url: pubUrl }).eq("id", dramaId);
+      if (patchErr) throw new Error("Database thumbnail update failed: " + patchErr.message);
+
+    } else if (stagedAiThumbnailUrl) {
+      // Case B: AI Detected YouTube Thumbnail
+      msg.textContent = "Transferring AI YouTube thumbnail to Supabase Storage bucket…";
+      let uploadedSuccessfully = false;
+
+      // Strategy 1: Fetch binary via Cloudflare Worker proxy and upload via client supabase SDK
+      try {
+        const proxyUrl = `/api/proxy-thumbnail?url=${encodeURIComponent(stagedAiThumbnailUrl)}`;
+        const imgRes = await fetch(proxyUrl);
+        if (imgRes.ok) {
+          const imgBlob = await imgRes.blob();
+          const storagePath = `drama/${dramaId}.jpg`;
+          const { error: upErr } = await supabase.storage.from("thumbnails").upload(storagePath, imgBlob, {
+            contentType: "image/jpeg",
+            upsert: true,
+            cacheControl: "31536000"
+          });
+
+          if (!upErr) {
+            const pubUrl = `${supabase.storage.from("thumbnails").getPublicUrl(storagePath).data.publicUrl}?t=${Date.now()}`;
+            await supabase.from("Drama").update({ thumbnail_url: pubUrl }).eq("id", dramaId);
+            uploadedSuccessfully = true;
+          }
+        }
+      } catch (proxyErr) {
+        console.warn("Client proxy upload attempt failed, falling back to server store endpoint", proxyErr);
+      }
+
+      // Strategy 2: Direct Worker backend storage endpoint fallback
+      if (!uploadedSuccessfully) {
+        msg.textContent = "Finalizing thumbnail storage via backend worker…";
+        const storeRes = await fetch("/api/store-thumbnail", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "authorization": "Bearer " + authSession.access_token
+          },
+          body: JSON.stringify({
+            dramaId,
+            imageUrl: stagedAiThumbnailUrl
+          })
+        });
+
+        const storeData = await storeRes.json();
+        if (!storeRes.ok || storeData.error) {
+          throw new Error("Could not store AI thumbnail to bucket: " + (storeData.error || storeRes.statusText));
+        }
+      }
+    } else if (editingId && editingImage) {
+      // Retain existing thumbnail if neither was supplied
+      await supabase.from("Drama").update({ thumbnail_url: editingImage }).eq("id", dramaId);
+    }
+
+    msg.className = "ai-status active ok";
+    msg.textContent = "✓ Drama and thumbnail saved successfully to Supabase!";
+    setTimeout(() => showDashboard(), 800);
+
+  } catch (err) {
+    console.error("Save error:", err);
+    msg.className = "ai-status active err";
+    msg.textContent = "Save failed: " + (err.message || String(err));
+    btn.disabled = false;
+  }
+}
+
+// ----------------------
+// HELPER ACTIONS
+// ----------------------
+window.editDrama = function(id) {
+  const d = rows.find(r => r.id === id);
+  if (d) showForm(d);
+};
+
+window.deleteDrama = async function(id, title) {
+  if (!confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) return;
+
+  const { error } = await supabase.from("Drama").delete().eq("id", id);
+  if (error) {
+    alert("Delete failed: " + error.message);
+    return;
+  }
+  await showDashboard();
+};
+
+window.syncMissingThumbnail = async function(id, youtubeUrl) {
+  if (!youtubeUrl) return;
+  if (!confirm(`Fetch YouTube thumbnail for this drama and save directly to your Supabase bucket?`)) return;
+
+  const statusBox = $("storageMsg") || $("loginMsg");
+  try {
+    let vid = "";
+    try {
+      const u = new URL(youtubeUrl);
+      vid = u.searchParams.get("v") || u.pathname.split("/").pop();
+    } catch {
+      const m = youtubeUrl.match(/[A-Za-z0-9_-]{11}/);
+      vid = m ? m[0] : "";
+    }
+    if (!vid) throw new Error("Could not extract YouTube video ID.");
+
+    const maxres = `https://i.ytimg.com/vi/${vid}/maxresdefault.jpg`;
+    const res = await fetch("/api/store-thumbnail", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": "Bearer " + authSession.access_token
+      },
+      body: JSON.stringify({ dramaId: id, imageUrl: maxres })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Sync failed");
+
+    alert("✓ Thumbnail successfully stored in Supabase!");
+    await showDashboard();
+  } catch (err) {
+    alert("Thumbnail sync failed: " + (err.message || err));
+  }
+};
+
+async function testStorage() {
+  const msg = $("storageMsg");
+  msg.className = "ai-status active info";
+  msg.textContent = "Running test upload to thumbnails bucket…";
+
+  try {
+    const testPath = `_test/${Date.now()}.txt`;
+    const blob = new Blob(["Pak Spotlight Storage Test " + new Date().toISOString()], { type: "text/plain" });
+
+    const { error: upErr } = await supabase.storage.from("thumbnails").upload(testPath, blob, {
+      contentType: "text/plain",
+      upsert: true
+    });
+
+    if (upErr) throw upErr;
+
+    // Clean up test file
+    await supabase.storage.from("thumbnails").remove([testPath]);
+
+    msg.className = "ai-status active ok";
+    msg.textContent = "✓ Success! The 'thumbnails' bucket is fully accessible and writable.";
+  } catch (err) {
+    msg.className = "ai-status active err";
+    msg.textContent = "Storage Test Failed: " + (err.message || String(err));
+  }
+}
+
+// ----------------------
+// INITIALIZATION
+// ----------------------
+supabase.auth.getSession().then(async ({ data }) => {
+  authSession = data.session || null;
+  if (authSession) await showDashboard();
+  else showLogin();
+}).catch(err => {
+  showLogin("Supabase initialization note: " + (err.message || String(err)));
+});
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  authSession = session || null;
+});
 </script>
-</body></html>
+</body>
+</html>
