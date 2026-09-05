@@ -256,22 +256,29 @@ input, select, textarea { font-family: inherit; }
   margin-bottom: 16px;
   backdrop-filter: blur(8px);
 }
+.billboard-titles-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
 .billboard-title {
   font-family: var(--font-serif);
-  font-size: clamp(36px, 5.5vw, 64px);
+  font-size: clamp(32px, 5vw, 60px);
   font-weight: 900;
   line-height: 1.05;
   color: #fff;
   letter-spacing: 1px;
-  margin-bottom: 6px;
+  margin-bottom: 0;
   text-shadow: 0 4px 18px rgba(0,0,0,0.8);
 }
 .billboard-urdu {
   font-family: var(--font-urdu);
-  font-size: clamp(24px, 3.5vw, 36px);
+  font-size: clamp(22px, 3.2vw, 34px);
   color: var(--gold);
   direction: rtl;
-  margin-bottom: 14px;
+  margin-bottom: 0;
   text-shadow: 0 2px 10px rgba(0,0,0,0.7);
 }
 .billboard-meta {
@@ -388,12 +395,14 @@ input, select, textarea { font-family: inherit; }
 }
 .row-count-badge {
   font-size: 11px;
-  font-weight: 700;
-  color: var(--gold);
-  background: rgba(245, 197, 66, 0.1);
-  border: 1px solid rgba(245, 197, 66, 0.3);
+  font-weight: 600;
+  font-family: var(--font-sans);
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 2px 8px;
   border-radius: 999px;
+  letter-spacing: 0.2px;
 }
 .row-see-all {
   font-size: 12px;
@@ -1137,10 +1146,300 @@ footer {
   gap: 20px;
 }
 
+/* ============================================================
+   TOPBAR AUTH & ACCOUNT DROPDOWN
+   ============================================================ */
+.btn-signin {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-gold);
+  color: #fff;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.btn-signin:hover {
+  background: rgba(245, 197, 66, 0.12);
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 12px rgba(245, 197, 66, 0.2);
+}
+.account-menu-wrap {
+  position: relative;
+}
+.account-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  padding: 4px 12px 4px 5px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.account-btn:hover {
+  border-color: var(--gold);
+  background: rgba(245, 197, 66, 0.08);
+}
+.account-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold) 0%, #a88418 100%);
+  color: #0b110e;
+  font-weight: 800;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.account-email {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-arrow {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), 0 0 20px rgba(245, 197, 66, 0.15);
+  min-width: 210px;
+  padding: 8px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 300;
+}
+.account-dropdown.open {
+  display: flex;
+}
+.account-dropdown-header {
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.account-dropdown-item {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.account-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.account-dropdown-item.gold {
+  color: var(--gold);
+}
+.account-dropdown-item.gold:hover {
+  background: rgba(245, 197, 66, 0.12);
+}
+
+/* Auth Modal Card */
+.auth-modal-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  max-width: 420px;
+  width: 100%;
+  padding: 32px;
+  position: relative;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(245, 197, 66, 0.15);
+  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.auth-modal-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.auth-modal-header img {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+}
+.auth-modal-header h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.auth-modal-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.auth-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.auth-form-group label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--gold);
+}
+.auth-form-group input {
+  background: #080f0c;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  width: 100%;
+}
+.auth-form-group input:focus {
+  border-color: var(--gold);
+  background: #0c1711;
+  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.15);
+}
+.auth-submit-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--gold) 0%, #a88418 100%);
+  color: #0b110e;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.auth-submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(245, 197, 66, 0.35);
+}
+.auth-status-msg {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  display: none;
+}
+.auth-status-msg.err {
+  display: block;
+  background: rgba(229, 62, 62, 0.12);
+  border: 1px solid rgba(229, 62, 62, 0.3);
+  color: #ff8a80;
+}
+.auth-status-msg.ok {
+  display: block;
+  background: rgba(56, 161, 105, 0.12);
+  border: 1px solid rgba(56, 161, 105, 0.3);
+  color: #68d391;
+}
+
 @media (max-width: 850px) {
   .nav-links { display: none; }
   .mobile-nav-strip { display: flex; }
-  .billboard { min-height: 70vh; padding: 110px 5% 50px; }
+
+  .billboard {
+    min-height: 480px;
+    padding: 100px 16px 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background-position: center 20%;
+  }
+  .billboard::before {
+    background: 
+      linear-gradient(180deg, rgba(6, 11, 8, 0.72) 0%, rgba(6, 11, 8, 0.45) 25%, rgba(6, 11, 8, 0.9) 65%, #060b08 98%) !important;
+  }
+  .billboard-content {
+    background: rgba(6, 11, 8, 0.85);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(245, 197, 66, 0.25);
+    border-radius: 14px;
+    padding: 18px 16px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 25px rgba(245, 197, 66, 0.08);
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .billboard-badge {
+    font-size: 10px;
+    padding: 4px 10px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .billboard-titles-wrap {
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .billboard-title {
+    font-size: clamp(22px, 5.5vw, 28px);
+    line-height: 1.15;
+    margin-bottom: 0;
+  }
+  .billboard-urdu {
+    font-size: clamp(18px, 4.5vw, 22px);
+    margin-bottom: 0;
+  }
+  .billboard-meta {
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 11px;
+  }
+  .meta-chip {
+    padding: 2px 7px;
+    font-size: 10px;
+  }
+  .billboard-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+    color: rgba(255, 255, 255, 0.78);
+    -webkit-line-clamp: 2;
+  }
+  .billboard-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .billboard-actions .btn-play,
+  .billboard-actions .btn-info {
+    flex: 1;
+    justify-content: center;
+    padding: 11px 10px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
   .modal-card { margin: 10px; max-height: 92vh; border-radius: 12px; }
   .modal-body { padding: 20px 16px; }
   .search-input { width: 140px; font-size: 12px; padding: 7px 30px; }
@@ -1151,23 +1450,108 @@ footer {
 }
 
 @media (max-width: 600px) {
-  .topbar { padding: 10px 4%; }
-  .brand-logo { width: 36px; height: 36px; }
-  .brand-name { font-size: 15px; letter-spacing: 1px; }
-  .brand-sub { font-size: 8px; }
-  .billboard { min-height: 65vh; padding: 100px 4% 36px; }
-  .billboard-title { font-size: clamp(24px, 6.5vw, 36px); }
-  .billboard-urdu { font-size: clamp(18px, 5vw, 24px); }
-  .billboard-desc { font-size: 13px; -webkit-line-clamp: 2; margin-bottom: 16px; }
-  .btn-play, .btn-info { padding: 10px 18px; font-size: 13px; }
-  .netflix-card { flex: 0 0 200px; }
-  .browse-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .card-info { padding: 10px 12px; }
-  .card-title { font-size: 13px; }
-  .card-urdu { font-size: 12px; }
+  .topbar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .brand-group {
+    gap: 8px;
+  }
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+  }
+  .brand-name {
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .brand-sub {
+    display: none; /* Hide subtitle on mobile so it doesn't push the search and auth buttons */
+  }
+  .topbar-right {
+    gap: 6px;
+    flex: 1;
+    justify-content: flex-end;
+  }
+  .search-wrapper {
+    flex: 1;
+    max-width: 135px;
+    min-width: 65px;
+  }
+  .search-input {
+    width: 100%;
+    font-size: 11px;
+    padding: 6px 20px 6px 26px;
+  }
+  .search-input:focus {
+    width: 100%;
+  }
+  .search-icon-svg {
+    left: 8px;
+    width: 12px;
+    height: 12px;
+  }
+  .btn-signin {
+    padding: 5px 8px;
+    font-size: 11px;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .btn-signin svg {
+    width: 12px;
+    height: 12px;
+  }
+  .account-email { display: none; }
+
+  .mobile-nav-strip {
+    padding: 6px 12px;
+    gap: 6px;
+    top: 48px;
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 88%, transparent 100%);
+  }
+  .m-pill {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
+  .rows-container {
+    padding: 12px 14px 40px;
+    gap: 24px;
+  }
+  .row-title {
+    font-size: 17px;
+  }
+  .carousel-track {
+    scroll-snap-type: x mandatory;
+    gap: 12px;
+    padding-bottom: 6px;
+  }
+  .netflix-card {
+    flex: 0 0 clamp(170px, 58vw, 230px);
+    scroll-snap-align: start;
+  }
+  .browse-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .card-info {
+    padding: 8px 10px;
+  }
+  .card-title {
+    font-size: 12px;
+  }
+  .card-urdu {
+    font-size: 11px;
+  }
+  .card-tag {
+    font-size: 9px;
+  }
+
   .modal-close-btn { top: 10px; right: 10px; width: 32px; height: 32px; font-size: 14px; }
   .episodes-list { max-height: 240px; }
   .credits-box { grid-template-columns: 1fr; }
+  .auth-modal-card { padding: 24px 18px; margin: 12px; }
 }
 </style>
 </head>
@@ -1200,6 +1584,15 @@ footer {
       <input class="search-input" id="globalSearch" placeholder="Search classics, cast, writers..." aria-label="Search">
       <button class="search-clear-btn" id="searchClear">✕</button>
     </div>
+    <div id="topbarAuthArea">
+      <button class="btn-signin" id="signInBtn" onclick="openAuthModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        Sign In
+      </button>
+    </div>
   </div>
 </header>
 
@@ -1216,6 +1609,30 @@ footer {
 <main id="app">
   <!-- Rendered dynamically -->
 </main>
+
+<!-- Sign In / Admin Authentication Modal -->
+<div class="modal-overlay" id="authModal">
+  <div class="auth-modal-card">
+    <button class="modal-close-btn" id="authModalClose">✕</button>
+    <div class="auth-modal-header">
+      <img src="/logo.png" alt="Pak Spotlight">
+      <h2>Sign In</h2>
+      <p>Access your Pak Spotlight account & curation studio</p>
+    </div>
+    <form id="authModalForm">
+      <div class="auth-form-group">
+        <label>Admin / Account Email</label>
+        <input id="authEmail" type="email" autocomplete="username" required placeholder="admin@pakspotlight.com">
+      </div>
+      <div class="auth-form-group">
+        <label>Password</label>
+        <input id="authPassword" type="password" autocomplete="current-password" required placeholder="••••••••">
+      </div>
+      <button class="auth-submit-btn" type="submit">SIGN IN</button>
+      <div id="authStatusMsg" class="auth-status-msg"></div>
+    </form>
+  </div>
+</div>
 
 <!-- Footer -->
 <footer>
@@ -1246,6 +1663,12 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function cleanDescription(desc) {
+  if (!desc) return "A celebrated masterpiece from the golden archive of Pakistani television, renowned for its brilliant writing and legendary performances.";
+  const cleaned = String(desc).replace(/#\S+/g, "").replace(/\s+/g, " ").trim();
+  return cleaned || "A celebrated masterpiece from the golden archive of Pakistani television.";
+}
 
 let rows = [];
 let viewMode = "home"; // "home" | "category" | "search" | "watch"
@@ -1443,15 +1866,17 @@ function renderNetflixHome() {
     <section class="billboard" style="background-image: url('${featured.image || '/logo.png'}')">
       <div class="billboard-content">
         <div class="billboard-badge">★ PTV GOLDEN ERA SPOTLIGHT</div>
-        <h1 class="billboard-title">${esc(fTitle)}</h1>
-        ${featured.urdu ? `<div class="billboard-urdu">${esc(featured.urdu)}</div>` : ''}
+        <div class="billboard-titles-wrap">
+          <h1 class="billboard-title">${esc(fTitle)}</h1>
+          ${featured.urdu ? `<div class="billboard-urdu">${esc(featured.urdu)}</div>` : ''}
+        </div>
         <div class="billboard-meta">
           <span class="meta-chip meta-chip-gold">${esc(featured.type)}</span>
           ${featured.year ? `<span class="meta-chip meta-chip-outline">${esc(featured.year)}</span>` : ''}
           ${isSer && featured.episode ? `<span class="meta-chip meta-chip-outline">Episode ${featured.episode}</span>` : ''}
           ${featured.writer ? `<span style="color:var(--text-muted)">Writer: ${esc(featured.writer)}</span>` : ''}
         </div>
-        <p class="billboard-desc">${esc(featured.description || "A celebrated masterpiece from the golden archive of Pakistani television, renowned for its brilliant writing and legendary performances.")}</p>
+        <p class="billboard-desc">${esc(cleanDescription(featured.description))}</p>
         <div class="billboard-actions">
           <button class="btn-play" onclick="openWatchPage(${featured.id})">
             ▶ PLAY NOW
@@ -1664,7 +2089,7 @@ window.openWatchPage = function(id) {
             ${d.urdu ? `<div class="watch-urdu">${esc(d.urdu)}</div>` : ''}
           </div>
 
-          <p class="watch-synopsis">${esc(d.description || "A celebrated masterpiece from the golden archive of Pakistan Television, renowned for its brilliant writing, timeless characters, and memorable cultural resonance.")}</p>
+          <p class="watch-synopsis">${esc(cleanDescription(d.description))}</p>
 
           <div class="watch-credits-panel">
             ${d.writer ? `<div class="credit-chip"><b>Playwright / Writer</b><span>${esc(d.writer)}</span></div>` : ''}
@@ -1877,6 +2302,132 @@ window.addEventListener("popstate", () => {
 });
 window.addEventListener("hashchange", checkUrlRoute);
 
+// ----------------------
+// AUTHENTICATION & ADMIN SIGN-IN
+// ----------------------
+window.openAuthModal = function() {
+  const modal = $("authModal");
+  if (!modal) return;
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+  const msg = $("authStatusMsg");
+  if (msg) {
+    msg.className = "auth-status-msg";
+    msg.textContent = "";
+  }
+  setTimeout(() => $("authEmail")?.focus(), 50);
+};
+
+window.closeAuthModal = function() {
+  const modal = $("authModal");
+  if (modal) modal.classList.remove("open");
+  document.body.style.overflow = "";
+};
+
+window.toggleAccountMenu = function() {
+  const dd = $("accountDropdown");
+  if (dd) dd.classList.toggle("open");
+};
+
+window.addEventListener("click", e => {
+  if (!e.target.closest(".account-menu-wrap")) {
+    const dd = $("accountDropdown");
+    if (dd) dd.classList.remove("open");
+  }
+});
+
+const authModalClose = $("authModalClose");
+if (authModalClose) authModalClose.onclick = closeAuthModal;
+
+const authModal = $("authModal");
+if (authModal) {
+  authModal.onclick = e => {
+    if (e.target === authModal) closeAuthModal();
+  };
+}
+
+const authForm = $("authModalForm");
+if (authForm) {
+  authForm.onsubmit = async e => {
+    e.preventDefault();
+    const status = $("authStatusMsg");
+    const email = $("authEmail").value.trim();
+    const password = $("authPassword").value;
+
+    status.className = "auth-status-msg ok";
+    status.textContent = "Verifying account credentials…";
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        status.className = "auth-status-msg err";
+        status.textContent = error.message || "Invalid login credentials.";
+        return;
+      }
+
+      status.className = "auth-status-msg ok";
+      status.textContent = "✓ Signed in! Opening Admin Studio…";
+      updateAuthUi(data.session);
+
+      // If account is authenticated, immediately open admin studio
+      setTimeout(() => {
+        window.location.href = "/admin.html";
+      }, 500);
+    } catch (err) {
+      status.className = "auth-status-msg err";
+      status.textContent = "Sign in error: " + (err.message || String(err));
+    }
+  };
+}
+
+window.handleSignOut = async function() {
+  await supabase.auth.signOut();
+  updateAuthUi(null);
+};
+
+function updateAuthUi(session) {
+  const container = $("topbarAuthArea");
+  if (!container) return;
+
+  if (session?.user) {
+    const email = session.user.email || "Admin";
+    const initial = email.charAt(0).toUpperCase();
+    const shortName = email.split("@")[0];
+
+    container.innerHTML = `
+      <div class="account-menu-wrap">
+        <button class="account-btn" id="accountMenuBtn" onclick="toggleAccountMenu()">
+          <span class="account-avatar">${initial}</span>
+          <span class="account-email">${esc(shortName)}</span>
+          <span class="account-arrow">▾</span>
+        </button>
+        <div class="account-dropdown" id="accountDropdown">
+          <div class="account-dropdown-header">
+            <div style="font-weight:700;color:#fff;font-size:12px;overflow:hidden;text-overflow:ellipsis">${esc(email)}</div>
+            <div style="font-size:10px;color:var(--gold);margin-top:2px;font-weight:700">AUTHORIZED ADMIN</div>
+          </div>
+          <a class="account-dropdown-item gold" href="/admin.html">
+            ⚙ Admin Studio
+          </a>
+          <button class="account-dropdown-item" onclick="handleSignOut()">
+            🚪 Sign Out
+          </button>
+        </div>
+      </div>
+    `;
+  } else {
+    container.innerHTML = `
+      <button class="btn-signin" id="signInBtn" onclick="openAuthModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        Sign In
+      </button>
+    `;
+  }
+}
+
 // Initialize
 Promise.all([loadData(), loadCategories()]).then(() => {
   renderNavCategories();
@@ -1885,6 +2436,14 @@ Promise.all([loadData(), loadCategories()]).then(() => {
 }).catch(e => {
   console.error("Initialization error:", e);
   renderNetflixHome();
+});
+
+supabase.auth.getSession().then(({ data }) => {
+  updateAuthUi(data.session);
+});
+
+supabase.auth.onAuthStateChange((event, session) => {
+  updateAuthUi(session);
 });
 </script>
 </body>
