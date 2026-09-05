@@ -217,8 +217,7 @@ async function saveForm(e) {
     episode_number: $("episode").value ? Number($("episode").value) : null,
     writer: $("writer").value.trim(), director: $("director").value.trim(),
     produced: $("produced").value.trim(), cast: $("cast").value.trim(),
-    description: $("description").value.trim(), youtube_url: $("youtube").value.trim(),
-    seo_title: $("seo_title")?.value.trim() || "", seo_description: $("seo_description")?.value.trim() || ""
+    description: $("description").value.trim(), youtube_url: $("youtube").value.trim()
   };
   let id = editingId;
   let q = editingId ? await supabase.from('Drama').update(payload).eq('id', editingId) : await supabase.from('Drama').insert(payload).select('id').single();
