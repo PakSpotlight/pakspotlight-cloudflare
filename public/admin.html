@@ -232,8 +232,15 @@ async function saveForm(e) {
     const pub = supabase.storage.from('thumbnails').getPublicUrl(path).data.publicUrl;
     const uq = await supabase.from('Drama').update({ thumbnail_url: pub }).eq('id', id);
     if (uq.error) { msg.className = "full admin-msg admin-error"; msg.textContent = "Thumbnail uploaded, but database update failed: " + uq.error.message; return; }
-  } else if (editingId && editingImage) {
-    await supabase.from('Drama').update({ thumbnail_url: editingImage }).eq('id', id);
+  } else {
+    const preview = $("thumbPreview");
+    const previewSrc = preview?.src || "";
+    if (previewSrc && previewSrc.startsWith("http") && previewSrc !== editingImage) {
+      const uq = await supabase.from('Drama').update({ thumbnail_url: previewSrc }).eq('id', id);
+      if (uq.error) { msg.className = "full admin-msg admin-error"; msg.textContent = "Drama saved, but thumbnail URL save failed: " + uq.error.message; return; }
+    } else if (editingId && editingImage) {
+      await supabase.from('Drama').update({ thumbnail_url: editingImage }).eq('id', id);
+    }
   }
   msg.className = "full admin-msg admin-success"; msg.textContent = "Saved successfully.";
   setTimeout(showDashboard, 400);
