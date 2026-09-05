@@ -103,18 +103,28 @@ async function aiAutofill(video, env) {
 
   var prompt =
     "You are preparing a catalog entry for Pak Spotlight, a Pakistani classic PTV drama archive.\n\n" +
-    "You have web search available. Use it to look up additional information about this drama when the YouTube metadata is incomplete. Search for the drama title along with terms like \"PTV drama\", \"Pakistani drama cast writer director\" to find credits.\n\n" +
-    "From the YouTube metadata AND any web search results, extract these fields. Only return facts you found — do not fabricate credits.\n\n" +
-    "Choose category from exactly one of: Serial / Series, Long Play, Comedy, Shorts.\n" +
-    "For episode number, only return a number when clearly indicated (Episode 3, Ep 3, E03).\n" +
-    "For year, only return a year when explicitly stated or confirmed.\n\n" +
-    "Also generate SEO-optimized content:\n" +
-    "- seo_title: A search-engine-friendly title (e.g. \"Drama Name (Year) - PTV Classic | Pak Spotlight\")\n" +
-    "- seo_description: A 150-160 character meta description for search engines, summarizing the drama with key credits.\n\n" +
-    "Return JSON with these exact string fields: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description, seo_title, seo_description. episode_number may be an empty string.\n\n" +
+    "You have web search available. Search ONCE for the drama title to find credits (writer, director, cast, year) if the YouTube metadata is incomplete.\n\n" +
+    "From the YouTube metadata AND web search results, extract these fields. Only return facts — do not fabricate.\n\n" +
+    "Choose category: Serial / Series, Long Play, Comedy, or Shorts.\n" +
+    "Episode number: only if clearly indicated. Year: only if explicitly stated.\n\n" +
+    "Generate SEO content:\n" +
+    "- seo_title: Search-engine-friendly title (e.g. \"Drama Name (Year) - PTV Classic | Pak Spotlight\")\n" +
+    "- seo_description: 150-160 char meta description summarizing the drama with key credits.\n\n" +
+    "IMPORTANT: Return ONLY a valid JSON object, nothing else. No markdown, no explanation.\n" +
+    "JSON fields: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description, seo_title, seo_description.\n\n" +
     "YouTube title: " + video.title + "\n" +
     "YouTube description:\n" + video.description.slice(0, 12000) + "\n" +
     "Published date: " + video.publishedAt;
+
+  var requestBody = {
+    model: model,
+    messages: [
+      { role: "system", content: "Return ONLY valid JSON. Search the web once for drama credits if needed. Never fabricate facts." },
+      { role: "user", content: prompt }
+    ],
+    tools: [{ type: "openrouter:web_search", max_results: 5, max_total_results: 5 }],
+    temperature: 0
+  };
 
   var response = await fetch(OPENROUTER_API_URL, {
     method: "POST",
@@ -124,15 +134,7 @@ async function aiAutofill(video, env) {
       "HTTP-Referer": "https://pakspotlight.com",
       "X-Title": "Pak Spotlight"
     },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        { role: "system", content: "You have web search available. Use it to find accurate information about Pakistani PTV dramas. Return only valid JSON. Never fabricate credits or historical facts — only return what you found." },
-        { role: "user", content: prompt }
-      ],
-      tools: [{ type: "openrouter:web_search" }],
-      temperature: 0
-    })
+    body: JSON.stringify(requestBody)
   });
 
   if (!response.ok) {
@@ -143,11 +145,88 @@ async function aiAutofill(video, env) {
 
   var data = await response.json();
   var out = {};
+  var rawContent = "";
+
+  // Extract content from the response — handle tool call responses
+  // OpenRouter may return multiple choices; check all of them
+  if (data.choices) {
+    for (var i = data.choices.length - 1; i >= 0; i--) {
+      var choice = data.choices[i];
+      var msg = choice?.message;
+      if (!msg) continue;
+
+      // Check direct content
+      if (msg.content && msg.content.trim()) {
+        rawContent = msg.content;
+        break;
+      }
+
+      // Check tool_calls — the model may have returned the JSON as a tool call argument
+      if (msg.tool_calls) {
+        for (var tc of msg.tool_calls) {
+          var arg = tc?.function?.arguments;
+          if (arg && arg.trim().startsWith("{")) {
+            rawContent = arg;
+            break;
+          }
+        }
+        if (rawContent) break;
+      }
+    }
+  }
+
+  // If still no content, check choices array at top level (some providers put content there)
+  if (!rawContent && data.choices?.length === 1) {
+    rawContent = data.choices[0]?.message?.content || "";
+  }
+
+  if (!rawContent) {
+    // Fallback: retry WITHOUT web search — the tool may have broken the response
+    console.warn("AI returned empty content with web search. Retrying without tools...");
+    delete requestBody.tools;
+    var retryResp = await fetch(OPENROUTER_API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + apiKey,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://pakspotlight.com",
+        "X-Title": "Pak Spotlight"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    if (retryResp.ok) {
+      var retryData = await retryResp.json();
+      rawContent = retryData.choices?.[0]?.message?.content || "";
+    }
+  }
+
+  // Extract JSON from the raw content
+  rawContent = rawContent.trim();
+
+  // Try direct parse first
   try {
-    var content = data.choices?.[0]?.message?.content || "";
-    out = JSON.parse(content);
-  } catch {
-    throw new Error("AI returned an invalid result. Please try again.");
+    out = JSON.parse(rawContent);
+  } catch (e) {
+    // Try extracting from markdown code blocks
+    var codeBlockMatch = rawContent.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    if (codeBlockMatch) {
+      try { out = JSON.parse(codeBlockMatch[1].trim()); } catch {}
+    }
+
+    // Try finding a JSON object in the text
+    if (!out.title) {
+      var braceStart = rawContent.indexOf("{");
+      var braceEnd = rawContent.lastIndexOf("}");
+      if (braceStart >= 0 && braceEnd > braceStart) {
+        try { out = JSON.parse(rawContent.slice(braceStart, braceEnd + 1)); } catch {}
+      }
+    }
+
+    // Last resort: if nothing parsed, throw with raw content for debugging
+    if (!out.title) {
+      console.error("All JSON parsing failed. Raw content:", rawContent.slice(0, 500));
+      throw new Error("AI returned unreadable content. Please try again. Raw: " + rawContent.slice(0, 200));
+    }
   }
 
   return {
