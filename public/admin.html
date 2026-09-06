@@ -993,6 +993,7 @@ footer {
   .drama-list { gap: 8px; }
   .drama-item {
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     padding: 8px 10px;
@@ -1000,8 +1001,10 @@ footer {
   .drama-thumb-box { width: 76px; height: 46px; flex-shrink: 0; }
   .drama-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
   .drama-info { flex: 1; min-width: 0; }
+  .drama-info { flex: 1; min-width: 0; }
+  .drama-title-row { min-width: 0; }
   .drama-title { font-size: 13px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .drama-urdu { font-size: 12px; }
+  .drama-urdu { font-size: 12px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .drama-meta { gap: 5px; font-size: 11px; margin-top: 3px; }
   .drama-meta .meta-extra { display: none; }
   .drama-meta .pill { font-size: 9px; padding: 1px 6px; }
