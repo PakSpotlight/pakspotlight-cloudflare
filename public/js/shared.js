@@ -400,7 +400,7 @@ function renderPosterCard(d, epCount = 1) {
     <div class="netflix-card" onclick="window.location.href='/watch.html?id=${d.id}'" title="${esc(title)}">
       <div class="card-media">
         ${d.image ? `
-          <img src="${esc(d.image)}" alt="${esc(title)}" loading="lazy">
+          <img src="${esc(d.image)}" alt="${esc(title)}" loading="lazy" onerror="this.onerror=null; this.src='/logo.png';">
         ` : `
           <div class="card-fallback">
             <span>🎬</span>

@@ -1,0 +1,302 @@
+/* ============================================================
+   PAK SPOTLIGHT — ADMIN STUDIO CONSOLE COMPONENTS
+   Series Accordion, Episodes Table, Ingest Studio & Modals
+   ============================================================ */
+
+/* Netflix-Style Series Accordion */
+.series-accordion-card {
+  background: var(--surface-studio);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.series-accordion-card:hover {
+  border-color: var(--border-gold);
+}
+.series-accordion-card.open {
+  border-color: var(--gold-ptv);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+.series-card-header {
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 20px;
+  align-items: center;
+  cursor: pointer;
+}
+.series-poster-box {
+  width: 80px;
+  aspect-ratio: 16/9;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.series-poster-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.series-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.series-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.series-title-text {
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+}
+.series-urdu-text {
+  font-family: var(--font-urdu);
+  color: var(--gold-ptv);
+  font-size: 14px;
+  direction: rtl;
+}
+.series-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.series-meta-credits {
+  font-size: 12px;
+  color: var(--ink-dim);
+  margin-top: 2px;
+}
+.series-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Episodes Tray Inside Series */
+.series-episodes-tray {
+  display: none;
+  background: var(--canvas-void);
+  border-top: 1px solid var(--border-subtle);
+  padding: 16px 20px;
+}
+.series-accordion-card.open .series-episodes-tray {
+  display: block;
+}
+.episodes-tray-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.episodes-tray-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink-subtle);
+}
+
+/* Episodes Table */
+.episodes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.episodes-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink-dim);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.episodes-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  vertical-align: middle;
+}
+.episodes-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+.ep-num-badge {
+  font-weight: 800;
+  color: var(--gold-ptv);
+  background: var(--gold-glow);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.ep-thumb-preview {
+  width: 72px;
+  aspect-ratio: 16/9;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #000;
+}
+
+/* Ingestion Subtabs */
+.ingest-subtabs-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 12px;
+}
+.ingest-tab-btn {
+  background: var(--surface-studio);
+  color: var(--ink-subtle);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid var(--border-subtle);
+}
+.ingest-tab-btn.active {
+  background: var(--gold-glow);
+  color: var(--gold-ptv);
+  border-color: var(--border-gold);
+}
+
+/* YouTube Search Grid */
+.yt-search-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+.yt-search-card {
+  background: var(--surface-studio);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.yt-search-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  background: #000;
+}
+.yt-search-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.yt-search-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+}
+.yt-search-meta {
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+.yt-search-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+/* Forms & Inputs */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-grid .full { grid-column: 1 / -1; }
+.form-group label, .form-grid label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-subtle);
+  margin-bottom: 6px;
+}
+.urdu-input {
+  font-family: var(--font-urdu);
+  direction: rtl;
+  font-size: 16px;
+}
+
+/* Modals */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-backdrop.open { display: flex; }
+.modal-dialog {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  max-width: 680px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  padding: 26px;
+  position: relative;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.modal-title { font-size: 18px; font-weight: 800; color: #fff; }
+.modal-close {
+  background: transparent;
+  color: var(--ink-subtle);
+  font-size: 20px;
+  cursor: pointer;
+}
+.modal-close:hover { color: #fff; }
+
+.thumb-staging-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface-studio);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+.thumb-staging-preview {
+  width: 100px;
+  aspect-ratio: 16/9;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #000;
+}
+
+@media (max-width: 850px) {
+  .series-card-header {
+    grid-template-columns: 70px 1fr;
+    gap: 12px;
+  }
+  .series-card-actions {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+  }
+  .form-grid { grid-template-columns: 1fr; }
+}

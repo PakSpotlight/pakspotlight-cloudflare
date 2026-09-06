@@ -271,64 +271,35 @@
       });
 
       app.innerHTML = `
-        <!-- Desktop Billboard Hero (Desktop Only) -->
-        <section class="hero-slider-wrap desktop-only">
-          <div class="hero-slide active" style="background-image: url('${esc(featured.image || '/logo.png')}')">
-            <div class="hero-vignette"></div>
-            <div class="hero-overlay-content">
-              <div class="hero-badge">★ PTV Golden Era Spotlight</div>
-              <div class="hero-title-row">
-                <h1 class="hero-title">${esc(fTitle)}</h1>
-                ${featured.urdu ? `<div class="hero-urdu">${esc(featured.urdu)}</div>` : ''}
-              </div>
-              <div class="hero-meta">
-                <span class="m-badge gold">${esc(featured.type)}</span>
-                ${featured.year ? `<span class="m-badge">${esc(featured.year)}</span>` : ''}
-                ${isSer && featured.episode ? `<span class="m-badge">Episode ${featured.episode}</span>` : ''}
-                ${featured.writer ? `<span style="color:var(--text-muted);font-size:12px">Writer: ${esc(featured.writer)}</span>` : ''}
-              </div>
-              <p class="hero-desc">${esc(cleanDescription(featured.description))}</p>
-              <div class="hero-actions">
-                <button class="btn-play-netflix" onclick="window.location.href='/watch.html?id=${featured.id}'">
-                  ▶ Play Now
-                </button>
-                <button class="btn-info-netflix" onclick="window.location.href='/watch.html?id=${featured.id}'">
-                  ⓘ More Details
-                </button>
-              </div>
+        <!-- Cinematic Netflix Hero Billboard -->
+        <section class="hero-billboard">
+          <div class="hero-backdrop" style="background-image: url('${esc(featured.image || '/logo.png')}')"></div>
+          <div class="hero-vignette"></div>
+          <div class="hero-foreground">
+            <div class="hero-tag">★ PTV Spotlight</div>
+            <div class="hero-title-row">
+              <h1 class="hero-title">${esc(fTitle)}</h1>
+              ${featured.urdu ? `<span class="hero-urdu">${esc(featured.urdu)}</span>` : ''}
             </div>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             MOBILE NETFLIX FRAMED HERO CARD (SCREEN 1 REFERENCE)
-             ============================================================ -->
-        <section class="m-hero-container mobile-only">
-          <div class="m-hero-card" onclick="window.location.href='/watch.html?id=${featured.id}'">
-            <div class="m-hero-card-img" style="background-image: url('${esc(featured.image || '/logo.png')}')">
-              <div class="m-hero-card-vignette"></div>
-              <div class="m-hero-card-info">
-                <div class="m-hero-series-tag">PTV SPOTLIGHT</div>
-                <h1 class="m-hero-title">${esc(fTitle)}</h1>
-                ${featured.urdu ? `<div class="m-hero-urdu">${esc(featured.urdu)}</div>` : ''}
-                <div class="m-hero-genres">${esc(featured.type)} • ${esc(featured.year || 'Classic')}</div>
-              </div>
+            <div class="hero-meta">
+              <span class="m-badge gold">${esc(featured.type || 'Drama')}</span>
+              ${featured.year ? `<span class="m-badge">${esc(featured.year)}</span>` : ''}
+              ${isSer && featured.episode ? `<span class="m-badge">Episode ${featured.episode}</span>` : ''}
+              ${featured.writer ? `<span class="hero-meta-credit">Writer: ${esc(featured.writer)}</span>` : ''}
             </div>
-          </div>
-
-          <!-- 3-Item Action Bar below framed card -->
-          <div class="m-hero-action-bar">
-            <button class="m-hero-action-btn" id="mHeroMyListBtn" onclick="const added=toggleMyList(${featured.id}); $('mHeroMyListIcon').textContent=added?'✓':'＋'; $('mHeroMyListLabel').textContent=added?'In List':'My List';">
-              <span class="m-hero-action-icon" id="mHeroMyListIcon">${isInMyList(featured.id) ? '✓' : '＋'}</span>
-              <span class="m-hero-action-label" id="mHeroMyListLabel">${isInMyList(featured.id) ? 'In List' : 'My List'}</span>
-            </button>
-            <button class="m-hero-play-pill" onclick="window.location.href='/watch.html?id=${featured.id}'">
-              ▶ Play
-            </button>
-            <button class="m-hero-action-btn" onclick="window.location.href='/watch.html?id=${featured.id}'">
-              <span class="m-hero-action-icon">ⓘ</span>
-              <span class="m-hero-action-label">Info</span>
-            </button>
+            <p class="hero-desc">${esc(cleanDescription(featured.description))}</p>
+            <div class="hero-actions">
+              <a href="/watch.html?id=${featured.id}" class="hero-btn-play">
+                ▶ Play
+              </a>
+              <button class="hero-btn-mylist" id="heroMyListBtn" onclick="const added=toggleMyList(${featured.id}); $('heroMyListIcon').textContent=added?'✓':'＋'; $('heroMyListLabel').textContent=added?'In List':'My List';">
+                <span id="heroMyListIcon">${isInMyList(featured.id) ? '✓' : '＋'}</span>
+                <span id="heroMyListLabel">${isInMyList(featured.id) ? 'In List' : 'My List'}</span>
+              </button>
+              <a href="/watch.html?id=${featured.id}" class="hero-btn-info">
+                ⓘ More Details
+              </a>
+            </div>
           </div>
         </section>
 
