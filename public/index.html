@@ -213,7 +213,8 @@
       }
     }
 
-    function renderCarouselRow(title, rowId, groupList) {
+    function renderCarouselRow(title, rowId, groupList, seeAllUrl) {
+      const seeAll = seeAllUrl || `/browse.html?cat=${encodeURIComponent(title)}`;
       return `
         <section class="carousel-row">
           <div class="row-header">
@@ -221,7 +222,7 @@
               <h2 class="row-title">${esc(title)}</h2>
               <span class="row-count-badge">${groupList.length}</span>
             </div>
-            <a class="row-see-all" href="/browse.html?cat=${encodeURIComponent(title)}">See all &gt;</a>
+            <a class="row-see-all" href="${esc(seeAll)}">See all &gt;</a>
           </div>
           <div class="carousel-wrap">
             <button class="carousel-btn left desktop-only" onclick="scrollCarousel('${rowId}', -1)" aria-label="Scroll left">‹</button>
@@ -248,7 +249,12 @@
       const featured = heroPick();
       const isSer = isSeries(featured) && !!featured.series;
       const fTitle = isSer ? featured.series : featured.title;
+      const heroWatchId = seriesStartId(featured) || featured.id;
       const allGroups = groupDramas(rows);
+
+      // Newest titles first (series keyed by their first episode's id)
+      const recentGroups = [...allGroups].sort((a, b) => b[0].id - a[0].id);
+      const recentTop = recentGroups.slice(0, 20);
 
       // Build rows based on categories
       const categoryRowsHtml = categories.map(cat => {
@@ -289,14 +295,14 @@
             </div>
             <p class="hero-desc">${esc(cleanDescription(featured.description))}</p>
             <div class="hero-actions">
-              <a href="/watch.html?id=${featured.id}" class="hero-btn-play">
+              <a href="/watch.html?id=${heroWatchId}" class="hero-btn-play">
                 ▶ Play
               </a>
               <button class="hero-btn-mylist" id="heroMyListBtn" onclick="const added=toggleMyList(${featured.id}); $('heroMyListIcon').textContent=added?'✓':'＋'; $('heroMyListLabel').textContent=added?'In List':'My List';">
                 <span id="heroMyListIcon">${isInMyList(featured.id) ? '✓' : '＋'}</span>
                 <span id="heroMyListLabel">${isInMyList(featured.id) ? 'In List' : 'My List'}</span>
               </button>
-              <a href="/watch.html?id=${featured.id}" class="hero-btn-info">
+              <a href="/watch.html?id=${heroWatchId}" class="hero-btn-info">
                 ⓘ More Details
               </a>
             </div>
@@ -305,9 +311,10 @@
 
         <!-- Horizontal Category Carousels (Pure artwork poster cards on mobile) -->
         <div class="rows-container">
+          ${recentTop.length > 5 ? renderCarouselRow("Recently Added", "recent", recentTop, "/browse.html") : ''}
           ${categoryRowsHtml}
-          ${goldenAge.length ? renderCarouselRow("Golden Age: 70s, 80s & 90s Classics", "vintage", goldenAge) : ''}
-          ${renderCarouselRow("Complete Masterpiece Collection", "all", allGroups)}
+          ${goldenAge.length ? renderCarouselRow("Golden Age: 70s, 80s & 90s Classics", "vintage", goldenAge, "/browse.html") : ''}
+          ${renderCarouselRow("Complete Masterpiece Collection", "all", allGroups, "/browse.html")}
         </div>
       `;
     }

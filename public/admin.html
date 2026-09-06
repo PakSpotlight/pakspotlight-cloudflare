@@ -3,61 +3,76 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pak Spotlight — Admin Studio Console</title>
+<title>Vault — Pak Spotlight</title>
+<meta name="description" content="Catalog management for the Pak Spotlight classic PTV archive.">
+<meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Noto+Nastaliq+Urdu:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/admin.css">
-<link rel="stylesheet" href="/css/admin-components.css">
 </head>
 <body>
 
-  <!-- Studio Topbar -->
-  <header class="studio-topbar">
-    <div class="brand-lockup">
-      <a href="/index.html" title="Go to Public Archive">
-        <img class="brand-logo" src="/logo.png" alt="Pak Spotlight">
-      </a>
-      <div class="brand-text">
-        <h1>PAK SPOTLIGHT <span class="badge-studio">STUDIO</span></h1>
-        <span class="brand-sub">Classic PTV Archive Management Console</span>
-      </div>
-    </div>
-    <div class="topbar-actions" id="topbarAuthActions">
-      <a class="btn btn-ghost btn-sm" href="/index.html">← Public Site</a>
+  <!-- Vault masthead -->
+  <header class="vault-topbar">
+    <a class="vault-brand" href="/index.html" title="Open the public archive">
+      <img src="/logo.png" alt="" class="vault-brand-logo">
+      <span class="vault-brand-name">Pak Spotlight</span>
+      <span class="vault-brand-tag">Vault</span>
+    </a>
+    <div class="vault-topbar-actions" id="topbarAuthActions">
+      <a class="btn btn-quiet btn-sm" href="/index.html">Open site</a>
     </div>
   </header>
 
-  <!-- Main Studio Shell -->
-  <main class="studio-main" id="studioApp">
-    <div style="padding: 100px 20px; text-align: center; color: var(--ink-subtle);">
-      <div style="font-size: 36px; margin-bottom: 12px;">📼</div>
-      <p>Authenticating studio console…</p>
+  <!-- Section tabs (desktop) -->
+  <nav class="vault-tabs" id="vaultTabs" hidden>
+    <button class="vault-tab" data-tab="catalog" type="button">Catalog</button>
+    <button class="vault-tab" data-tab="add" type="button">Add content</button>
+    <button class="vault-tab" data-tab="curation" type="button">Curation</button>
+  </nav>
+
+  <!-- Panes -->
+  <main class="vault-main" id="studioApp">
+    <div class="vault-boot" id="vaultBoot">
+      <p>Opening the vault…</p>
     </div>
   </main>
 
-  <!-- Modals Container -->
-  <div class="modal-backdrop" id="studioModalBackdrop">
-    <div class="modal-dialog" id="studioModalDialog"></div>
+  <!-- Section tabs (mobile, thumb bar) -->
+  <nav class="vault-bottomnav" id="vaultBottomnav" hidden>
+    <button class="vnav-item" data-tab="catalog" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Catalog</span>
+    </button>
+    <button class="vnav-item" data-tab="add" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+      <span>Add</span>
+    </button>
+    <button class="vnav-item" data-tab="curation" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.26L21 9.27l-5 4.87L17.18 21 12 17.77 6.82 21 8 14.14l-5-4.87 6.1-1.01z"/></svg>
+      <span>Curation</span>
+    </button>
+  </nav>
+
+  <!-- Sheet / dialog root -->
+  <div class="sheet-backdrop" id="studioModalBackdrop" onclick="handleBackdropClick(event)">
+    <div class="sheet" id="studioModalDialog" role="dialog" aria-modal="true"></div>
   </div>
 
   <!-- Supabase CDN (defines window.supabase) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Modular Studio Scripts -->
+  <!-- Vault scripts -->
   <script src="/js/admin/state.js"></script>
-  <script src="/js/admin/series.js"></script>
-  <script src="/js/admin/plays.js"></script>
-  <script src="/js/admin/ingest.js"></script>
-  <script src="/js/admin/tools.js"></script>
+  <script src="/js/admin/catalog.js"></script>
+  <script src="/js/admin/add.js"></script>
+  <script src="/js/admin/curation.js"></script>
   <script src="/js/admin/modals.js"></script>
 
   <script>
-    // Bootstrap Admin Studio
-    document.addEventListener("DOMContentLoaded", () => {
-      checkAuth();
-    });
+    document.addEventListener("DOMContentLoaded", () => { checkAuth(); });
   </script>
 </body>
 </html>

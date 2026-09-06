@@ -1,11 +1,10 @@
 /**
- * Pak Spotlight Admin Studio — State, Auth & Core Dashboard Shell
+ * Pak Spotlight Vault — state, auth & console shell
  */
 
 const SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
 
-// Safe initialization to avoid SyntaxError: Identifier 'supabase' has already been declared
 var sbClient = (window.supabase && typeof window.supabase.createClient === "function")
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
   : null;
@@ -13,6 +12,25 @@ window.sbClient = sbClient;
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// Inline icon set — one stroke style for the whole console
+const ICONS = {
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg>',
+  pinFilled: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg>',
+  pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>',
+  kebab: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  external: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+  import: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>'
+};
+const icon = name => ICONS[name] || "";
 
 function cleanDramaTitle(title) {
   return String(title || "")
@@ -41,17 +59,21 @@ function extractYouTubeId(url) {
   return m ? m[1] : "";
 }
 
-// Global State
+function isPlaylistUrl(url) {
+  const s = String(url || "").trim();
+  if (/[?&]list=/.test(s)) return true;
+  return /^https?:\/\/(www\.)?youtube\.com\/playlist\//i.test(s);
+}
+
+// Global state
 let authSession = null;
 let allDramas = [];
 let configuredCategories = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
 let configuredFeaturedIds = [];
-let activeStudioTab = "series";
-let seriesSearchTerm = "";
-let playsSearchTerm = "";
+let activeTab = "catalog";
 
 // ----------------------------------------------------
-// ARCHIVE DATA LOADING
+// DATA
 // ----------------------------------------------------
 async function fetchArchiveData() {
   if (!window.sbClient) return;
@@ -98,8 +120,15 @@ async function fetchArchiveData() {
   }
 }
 
+// Re-fetch data and re-render the open tab (keeps the current tab).
+async function refreshApp() {
+  await fetchArchiveData();
+  renderPanes();
+  syncTabUi();
+}
+
 // ----------------------------------------------------
-// AUTHENTICATION & LOGIN
+// AUTH
 // ----------------------------------------------------
 async function checkAuth() {
   if (!window.sbClient) return;
@@ -108,51 +137,60 @@ async function checkAuth() {
   if (!authSession) {
     renderLoginView();
   } else {
-    updateTopAuthUi();
-    await fetchArchiveData();
-    renderStudioDashboard();
+    await openConsole();
   }
 }
 
+async function openConsole() {
+  updateTopAuthUi();
+  await fetchArchiveData();
+  renderPanes();
+  document.body.classList.add("authed");
+  $("vaultTabs").hidden = false;
+  $("vaultBottomnav").hidden = false;
+  syncTabUi();
+}
+
 function updateTopAuthUi() {
-  const container = $("topbarAuthActions");
-  if (!container) return;
+  const box = $("topbarAuthActions");
+  if (!box) return;
   if (authSession?.user) {
-    container.innerHTML = `
-      <span class="topbar-user-email" style="font-size:12px;color:var(--ink-subtle);font-weight:600">👤 ${esc(authSession.user.email)}</span>
-      <a class="btn btn-ghost btn-sm" href="/index.html">← Public Site</a>
-      <button class="btn btn-ghost btn-sm" onclick="handleSignOut()">Sign Out</button>
+    box.innerHTML = `
+      <span class="vault-user-email">${esc(authSession.user.email)}</span>
+      <a class="btn btn-quiet btn-sm" href="/index.html">Open site</a>
+      <button class="btn btn-quiet btn-sm" onclick="handleSignOut()">Sign out</button>
     `;
   } else {
-    container.innerHTML = `<a class="btn btn-ghost btn-sm" href="/index.html">← Public Site</a>`;
+    box.innerHTML = `<a class="btn btn-quiet btn-sm" href="/index.html">Open site</a>`;
   }
 }
 
 async function handleSignOut() {
   if (window.sbClient) await window.sbClient.auth.signOut();
   authSession = null;
+  document.body.classList.remove("authed");
+  $("vaultTabs").hidden = true;
+  $("vaultBottomnav").hidden = true;
   renderLoginView();
 }
 
 function renderLoginView(errorMsg = "") {
   $("studioApp").innerHTML = `
-    <div style="max-width:420px;margin:80px auto;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:32px;box-shadow:0 12px 36px rgba(0,0,0,0.6)">
-      <div style="text-align:center;margin-bottom:24px">
-        <img src="/logo.png" alt="" style="width:54px;height:54px;margin-bottom:12px">
-        <h2 style="font-family:var(--font-serif);font-size:20px;letter-spacing:1px;color:#fff">Admin Sign In</h2>
-        <p style="font-size:12px;color:var(--ink-subtle);margin-top:4px">Pak Spotlight Master Studio Console</p>
-      </div>
+    <div class="login-card">
+      <img src="/logo.png" alt="">
+      <div class="login-title">Vault sign-in</div>
+      <div class="login-sub">Catalog access for Pak Spotlight admins</div>
       <form id="studioLoginForm">
-        <div class="form-group" style="margin-bottom:14px">
-          <label>Email Address</label>
+        <div class="field">
+          <label for="loginEmail">Email</label>
           <input type="email" id="loginEmail" required placeholder="admin@pakspotlight.com" autocomplete="username">
         </div>
-        <div class="form-group" style="margin-bottom:20px">
-          <label>Password</label>
+        <div class="field">
+          <label for="loginPass">Password</label>
           <input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password">
         </div>
-        <button class="btn btn-gold" type="submit" style="width:100%">Authorize & Sign In</button>
-        <div class="status-banner ${errorMsg ? 'show err' : ''}" id="loginStatus">${esc(errorMsg)}</div>
+        <button class="btn btn-primary" type="submit">Sign in</button>
+        <div class="status ${errorMsg ? 'show err' : ''}" id="loginStatus">${esc(errorMsg)}</div>
       </form>
     </div>
   `;
@@ -160,143 +198,58 @@ function renderLoginView(errorMsg = "") {
   $("studioLoginForm").onsubmit = async e => {
     e.preventDefault();
     const stat = $("loginStatus");
-    stat.className = "status-banner show info";
-    stat.textContent = "Authenticating…";
+    stat.className = "status show info";
+    stat.textContent = "Checking credentials…";
     const email = $("loginEmail").value.trim();
     const password = $("loginPass").value;
     const { data, error } = await window.sbClient.auth.signInWithPassword({ email, password });
     if (error) {
-      stat.className = "status-banner show err";
+      stat.className = "status show err";
       stat.textContent = error.message;
     } else {
       authSession = data.session;
-      updateTopAuthUi();
-      await fetchArchiveData();
-      renderStudioDashboard();
+      await openConsole();
     }
   };
 }
 
 // ----------------------------------------------------
-// MASTER STUDIO DASHBOARD SHELL
+// CONSOLE SHELL
 // ----------------------------------------------------
-function renderStudioDashboard() {
-  const seriesGroups = getSeriesGroups();
-  const standalonePlays = getStandalonePlays();
-  const missingPhotos = allDramas.filter(d => !d.thumbnail_url || !d.thumbnail_url.trim()).length;
-
-  $("studioApp").innerHTML = `
-    <!-- Metrics Strip -->
-    <div class="metrics-strip">
-      <div class="metric-card">
-        <span class="metric-label">Drama Series</span>
-        <span class="metric-value">${seriesGroups.length}</span>
-        <span class="metric-desc">Grouped drama sagas</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-label">Total Episodes</span>
-        <span class="metric-value">${allDramas.length}</span>
-        <span class="metric-desc">In entire video archive</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-label">Single Plays</span>
-        <span class="metric-value">${standalonePlays.length}</span>
-        <span class="metric-desc">Long plays & telefilms</span>
-      </div>
-      <div class="metric-card ${missingPhotos > 0 ? 'alert' : ''}">
-        <span class="metric-label">Missing Photos</span>
-        <span class="metric-value">${missingPhotos}</span>
-        <span class="metric-desc">${missingPhotos > 0 ? 'Use Toolkit to sync photos' : 'All videos have artwork'}</span>
-      </div>
-    </div>
-
-    <!-- Primary Navigation Tabs -->
-    <div class="studio-tabs-bar">
-      <button class="tab-btn ${activeStudioTab === 'series' ? 'active' : ''}" onclick="switchStudioTab('series')">
-        📺 Drama Series <span class="tab-count">${seriesGroups.length}</span>
-      </button>
-      <button class="tab-btn ${activeStudioTab === 'plays' ? 'active' : ''}" onclick="switchStudioTab('plays')">
-        🎬 Single Plays <span class="tab-count">${standalonePlays.length}</span>
-      </button>
-      <button class="tab-btn ${activeStudioTab === 'ingest' ? 'active' : ''}" onclick="switchStudioTab('ingest')">
-        ⚡ Quick Ingest &amp; AI
-      </button>
-      <button class="tab-btn ${activeStudioTab === 'tools' ? 'active' : ''}" onclick="switchStudioTab('tools')">
-        🛠 Archive Toolkit
-      </button>
-      <button class="tab-btn ${activeStudioTab === 'showcase' ? 'active' : ''}" onclick="switchStudioTab('showcase')">
-        ⭐ Hero Showcase <span class="tab-count">${configuredFeaturedIds.length}</span>
-      </button>
-      <button class="tab-btn ${activeStudioTab === 'categories' ? 'active' : ''}" onclick="switchStudioTab('categories')">
-        📁 Groups <span class="tab-count">${configuredCategories.length}</span>
-      </button>
-    </div>
-
-    <!-- TAB PANES -->
-    <div id="tabContent-series" class="tab-pane ${activeStudioTab === 'series' ? 'active' : ''}">
-      ${renderSeriesTabHtml(seriesGroups)}
-    </div>
-
-    <div id="tabContent-plays" class="tab-pane ${activeStudioTab === 'plays' ? 'active' : ''}">
-      ${renderPlaysTabHtml(standalonePlays)}
-    </div>
-
-    <div id="tabContent-ingest" class="tab-pane ${activeStudioTab === 'ingest' ? 'active' : ''}">
-      ${renderIngestTabHtml()}
-    </div>
-
-    <div id="tabContent-tools" class="tab-pane ${activeStudioTab === 'tools' ? 'active' : ''}">
-      ${renderToolsTabHtml()}
-    </div>
-
-    <div id="tabContent-showcase" class="tab-pane ${activeStudioTab === 'showcase' ? 'active' : ''}">
-      ${renderShowcaseTabHtml()}
-    </div>
-
-    <div id="tabContent-categories" class="tab-pane ${activeStudioTab === 'categories' ? 'active' : ''}">
-      ${renderCategoriesTabHtml()}
-    </div>
+function renderPanes() {
+  const app = $("studioApp");
+  app.innerHTML = `
+    <section class="vault-pane ${activeTab === 'catalog' ? 'active' : ''}" id="pane-catalog">
+      ${renderCatalogPane()}
+    </section>
+    <section class="vault-pane ${activeTab === 'add' ? 'active' : ''}" id="pane-add">
+      ${renderAddPane()}
+    </section>
+    <section class="vault-pane ${activeTab === 'curation' ? 'active' : ''}" id="pane-curation">
+      ${renderCurationPane()}
+    </section>
   `;
-
-  bindStudioEvents();
+  bindCatalogEvents();
+  bindAddEvents();
 }
 
-function switchStudioTab(tab) {
-  activeStudioTab = tab;
-  document.querySelectorAll(".studio-tabs-bar .tab-btn").forEach(b => {
-    b.classList.toggle("active", b.textContent.includes(tab) ||
-      (tab === 'series' && b.textContent.includes('Series')) ||
-      (tab === 'plays' && b.textContent.includes('Single')) ||
-      (tab === 'ingest' && b.textContent.includes('Ingest')) ||
-      (tab === 'tools' && b.textContent.includes('Toolkit')) ||
-      (tab === 'showcase' && b.textContent.includes('Hero')) ||
-      (tab === 'categories' && b.textContent.includes('Groups')));
+function switchTab(tab) {
+  activeTab = tab;
+  syncTabUi();
+}
+
+function syncTabUi() {
+  document.querySelectorAll(".vault-tab, .vnav-item").forEach(b => {
+    b.classList.toggle("active", b.dataset.tab === activeTab);
   });
-  document.querySelectorAll(".tab-pane").forEach(p => {
-    p.classList.toggle("active", p.id === `tabContent-${tab}`);
+  document.querySelectorAll(".vault-pane").forEach(p => {
+    p.classList.toggle("active", p.id === `pane-${activeTab}`);
   });
 }
 
-function bindStudioEvents() {
-  const sInput = $("seriesSearchInput");
-  if (sInput) {
-    sInput.addEventListener("input", e => {
-      seriesSearchTerm = e.target.value.trim();
-      renderStudioDashboard();
-      const next = $("seriesSearchInput");
-      if (next) { next.focus(); next.selectionStart = next.selectionEnd = next.value.length; }
-    });
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-tab]");
+  if (t && (t.classList.contains("vault-tab") || t.classList.contains("vnav-item"))) {
+    switchTab(t.dataset.tab);
   }
-
-  const pInput = $("playsSearchInput");
-  if (pInput) {
-    pInput.addEventListener("input", e => {
-      playsSearchTerm = e.target.value.trim();
-      renderStudioDashboard();
-      const next = $("playsSearchInput");
-      if (next) { next.focus(); next.selectionStart = next.selectionEnd = next.value.length; }
-    });
-  }
-
-  bindIngestFormEvents();
-}
+});

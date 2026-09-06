@@ -232,6 +232,15 @@ function getDramaSeriesEpisodes(drama) {
     .sort((a, b) => (a.episode ?? 9999) - (b.episode ?? 9999));
 }
 
+// Where a "play this title" link should land: episode 1 of a serial
+// (first playable one), or the title itself for standalone videos.
+function seriesStartId(drama) {
+  if (!drama) return null;
+  const eps = getDramaSeriesEpisodes(drama);
+  if (eps.length <= 1) return drama.id;
+  return (eps.find(e => extractYouTubeId(e.youtube)) || eps[0]).id;
+}
+
 function getRecommendations(currentDrama, limit = 10) {
   if (!currentDrama) return [];
   const currentKey = isSeries(currentDrama) ? normalize(currentDrama.series) : String(currentDrama.id);
@@ -398,10 +407,10 @@ function handleMobileSearchInput() {
 // ----------------------
 function renderPosterCard(d, epCount = 1) {
   const title = isSeries(d) && d.series ? d.series : d.title;
-  const countBadge = epCount > 1 ? `${epCount} Episodes` : "";
+  const playId = seriesStartId(d) || d.id;
 
   return `
-    <div class="netflix-card" onclick="window.location.href='/watch.html?id=${d.id}'" title="${esc(title)}">
+    <div class="netflix-card" onclick="window.location.href='/watch.html?id=${playId}'" title="${esc(title)}">
       <div class="card-media">
         ${d.image ? `
           <img src="${esc(d.image)}" alt="${esc(title)}" loading="lazy" onerror="this.onerror=null; this.src='/logo.png';">
