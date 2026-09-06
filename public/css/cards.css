@@ -332,6 +332,115 @@
   gap: 18px 14px;
 }
 
+/* ============================================================
+   POLISHED SEARCH BAR & SUGGESTIONS STYLES
+   ============================================================ */
+.browse-search-container {
+  margin-bottom: 24px;
+}
+
+.browse-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 680px;
+  width: 100%;
+}
+
+.browse-search-input {
+  width: 100%;
+  background: rgba(14, 23, 18, 0.95);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  padding: 12px 42px 12px 44px;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.browse-search-input:focus {
+  border-color: var(--gold);
+  background: #09110c;
+  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.15), 0 8px 30px rgba(0, 0, 0, 0.6);
+}
+
+.browse-search-icon {
+  position: absolute;
+  left: 16px;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.browse-search-clear {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  display: none;
+}
+
+.browse-search-clear.visible {
+  display: block;
+}
+
+.search-suggestion-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.search-suggestion-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 3px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.search-suggestion-chip:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(245, 197, 66, 0.1);
+}
+
+.search-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.search-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 14px;
+  color: var(--text-muted);
+  grid-column: 1 / -1;
+}
+
+.search-empty-icon {
+  font-size: 48px;
+}
+
 @media (max-width: 850px) {
   .browse-view {
     padding: 68px 14px 40px;
@@ -351,3 +460,5 @@
     display: none !important;
   }
 }
+
+

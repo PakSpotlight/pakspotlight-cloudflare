@@ -27,18 +27,15 @@
       <span></span><span></span><span></span>
     </button>
     <div class="brand-group">
-      <a href="/" class="brand">
+      <a href="/index.html" class="brand">
         <img src="/logo.png" alt="Pak Spotlight Logo" class="brand-logo">
         <div class="brand-titles">
           <span class="brand-name">PAK SPOTLIGHT</span>
           <span class="brand-sub">Classic PTV Archive</span>
         </div>
       </a>
-      <nav class="nav-links desktop-only">
-        <a href="/" class="nav-link active">Home</a>
-        <a href="/browse?cat=Serial%20%2F%20Series" class="nav-link">TV Shows</a>
-        <a href="/browse?cat=Long%20Play" class="nav-link">Movies</a>
-        <a href="/browse?view=mylist" class="nav-link">My List</a>
+      <nav class="nav-links desktop-only" id="desktopNavLinks">
+        <a href="/index.html" class="nav-link active">Home</a>
       </nav>
     </div>
     <div class="topbar-right">
@@ -46,20 +43,17 @@
         <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input type="text" class="search-input" id="desktopSearchInput" placeholder="Search archive..." onkeydown="if(event.key==='Enter') window.location.href='/browse?q='+encodeURIComponent(this.value)">
+        <input type="text" class="search-input" id="desktopSearchInput" placeholder="Search archive..." onkeydown="if(event.key==='Enter') window.location.href='/browse.html?q='+encodeURIComponent(this.value)">
       </div>
       <div id="topbarAuthArea"></div>
     </div>
   </header>
 
   <!-- ============================================================
-       MOBILE CATEGORY SUB-NAV STRIP (NETFLIX SCREEN 1: 4 CLEAN ITEMS)
+       DYNAMIC MOBILE CATEGORY SUB-NAV STRIP
        ============================================================ -->
   <nav class="mobile-nav-strip mobile-only" id="mobileNavStrip">
-    <button class="m-pill active" onclick="window.location.href='/'">All</button>
-    <button class="m-pill" onclick="window.location.href='/browse?cat=Serial%20%2F%20Series'">TV Shows</button>
-    <button class="m-pill" onclick="window.location.href='/browse?cat=Long%20Play'">Movies</button>
-    <button class="m-pill" onclick="window.location.href='/browse?view=mylist'">My List</button>
+    <button class="m-pill active" onclick="window.location.href='/index.html'">All</button>
   </nav>
 
   <!-- ============================================================
@@ -91,27 +85,27 @@
        MOBILE BOTTOM NAVIGATION BAR (GOLD ACCENTS)
        ============================================================ -->
   <nav class="mobile-bottom-nav">
-    <button class="m-bottom-nav-item active" onclick="window.location.href='/'">
+    <button class="m-bottom-nav-item active" onclick="window.location.href='/index.html'">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
         <polyline points="9 22 9 12 15 12 15 22"></polyline>
       </svg>
       <span>Home</span>
     </button>
-    <button class="m-bottom-nav-item" onclick="openMobileSearch()">
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse.html?search=1'">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
       <span>Search</span>
     </button>
-    <button class="m-bottom-nav-item" onclick="window.location.href='/browse?view=mylist'">
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse.html?view=mylist'">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
       </svg>
       <span>My List</span>
     </button>
-    <button class="m-bottom-nav-item" onclick="window.location.href='/browse'">
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse.html'">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="8" y1="6" x2="21" y2="6"></line>
         <line x1="8" y1="12" x2="21" y2="12"></line>
@@ -128,23 +122,15 @@
   <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop" onclick="toggleMobileDrawer(false)"></div>
   <div class="mobile-drawer" id="mobileDrawer">
     <div class="drawer-header">
-      <a href="/" class="brand" style="gap:8px">
+      <a href="/index.html" class="brand" style="gap:8px">
         <img src="/logo.png" alt="" style="width:28px;height:28px">
         <span style="font-family:var(--font-serif);font-size:14px;font-weight:900;letter-spacing:1.5px;color:#fff">PAK SPOTLIGHT</span>
       </a>
       <button class="drawer-close-btn" onclick="toggleMobileDrawer(false)">✕</button>
     </div>
-    <div class="drawer-content">
+    <div class="drawer-content" id="drawerLinksBox">
       <div class="drawer-section-title">Browse Archive</div>
-      <a href="/" class="drawer-link active">🏠 Home</a>
-      <a href="/browse?cat=Serial%20%2F%20Series" class="drawer-link">📺 TV Shows</a>
-      <a href="/browse?cat=Long%20Play" class="drawer-link">🎬 Movies</a>
-      <a href="/browse?cat=Comedy" class="drawer-link">😂 Comedy Masterpieces</a>
-      <a href="/browse?cat=Shorts" class="drawer-link">🎞 Shorts &amp; Moments</a>
-      <div class="drawer-divider"></div>
-      <a href="/browse?view=mylist" class="drawer-link gold">★ My List (Saved)</a>
-      <div class="drawer-divider"></div>
-      <button class="drawer-link" onclick="openAuthModal(); toggleMobileDrawer(false);">🔐 Admin Studio</button>
+      <a href="/index.html" class="drawer-link active">🏠 Home</a>
     </div>
     <div class="drawer-footer">
       <span>Preserving the Golden Age of Pakistani Television · Free Cultural Archive</span>
@@ -200,6 +186,48 @@
   <script src="/js/shared.js"></script>
 
   <script>
+    function renderCategoryNavigation() {
+      // 1. Desktop Nav Links
+      const deskNav = $("desktopNavLinks");
+      if (deskNav) {
+        deskNav.innerHTML = `
+          <a href="/index.html" class="nav-link active">Home</a>
+          ${categories.map(c => `
+            <a href="/browse.html?cat=${encodeURIComponent(c)}" class="nav-link">${esc(c)}</a>
+          `).join("")}
+          <a href="/browse.html?view=mylist" class="nav-link">My List</a>
+        `;
+      }
+
+      // 2. Mobile Sub-nav Strip
+      const mobileNav = $("mobileNavStrip");
+      if (mobileNav) {
+        mobileNav.innerHTML = `
+          <button class="m-pill active" onclick="window.location.href='/index.html'">All</button>
+          ${categories.map(c => `
+            <button class="m-pill" onclick="window.location.href='/browse.html?cat=${encodeURIComponent(c)}'">${esc(c)}</button>
+          `).join("")}
+          <button class="m-pill" onclick="window.location.href='/browse.html?view=mylist'">My List</button>
+        `;
+      }
+
+      // 3. Mobile Drawer
+      const drawer = $("drawerLinksBox");
+      if (drawer) {
+        drawer.innerHTML = `
+          <div class="drawer-section-title">Browse Archive</div>
+          <a href="/index.html" class="drawer-link active">🏠 Home</a>
+          ${categories.map(c => `
+            <a href="/browse.html?cat=${encodeURIComponent(c)}" class="drawer-link">📁 ${esc(c)}</a>
+          `).join("")}
+          <div class="drawer-divider"></div>
+          <a href="/browse.html?view=mylist" class="drawer-link gold">★ My List</a>
+          <div class="drawer-divider"></div>
+          <button class="drawer-link" onclick="openAuthModal(); toggleMobileDrawer(false);">🔐 Admin Studio</button>
+        `;
+      }
+    }
+
     function renderCarouselRow(title, rowId, groupList) {
       return `
         <section class="carousel-row">
@@ -208,7 +236,7 @@
               <h2 class="row-title">${esc(title)}</h2>
               <span class="row-count-badge">${groupList.length}</span>
             </div>
-            <a class="row-see-all" href="/browse?cat=${encodeURIComponent(title)}">See all &gt;</a>
+            <a class="row-see-all" href="/browse.html?cat=${encodeURIComponent(title)}">See all &gt;</a>
           </div>
           <div class="carousel-wrap">
             <button class="carousel-btn left desktop-only" onclick="scrollCarousel('${rowId}', -1)" aria-label="Scroll left">‹</button>
@@ -276,10 +304,10 @@
               </div>
               <p class="hero-desc">${esc(cleanDescription(featured.description))}</p>
               <div class="hero-actions">
-                <button class="btn-play-netflix" onclick="window.location.href='/watch?id=${featured.id}'">
+                <button class="btn-play-netflix" onclick="window.location.href='/watch.html?id=${featured.id}'">
                   ▶ Play Now
                 </button>
-                <button class="btn-info-netflix" onclick="window.location.href='/watch?id=${featured.id}'">
+                <button class="btn-info-netflix" onclick="window.location.href='/watch.html?id=${featured.id}'">
                   ⓘ More Details
                 </button>
               </div>
@@ -291,7 +319,7 @@
              MOBILE NETFLIX FRAMED HERO CARD (SCREEN 1 REFERENCE)
              ============================================================ -->
         <section class="m-hero-container mobile-only">
-          <div class="m-hero-card" onclick="window.location.href='/watch?id=${featured.id}'">
+          <div class="m-hero-card" onclick="window.location.href='/watch.html?id=${featured.id}'">
             <div class="m-hero-card-img" style="background-image: url('${esc(featured.image || '/logo.png')}')">
               <div class="m-hero-card-vignette"></div>
               <div class="m-hero-card-info">
@@ -309,10 +337,10 @@
               <span class="m-hero-action-icon" id="mHeroMyListIcon">${isInMyList(featured.id) ? '✓' : '＋'}</span>
               <span class="m-hero-action-label" id="mHeroMyListLabel">${isInMyList(featured.id) ? 'In List' : 'My List'}</span>
             </button>
-            <button class="m-hero-play-pill" onclick="window.location.href='/watch?id=${featured.id}'">
+            <button class="m-hero-play-pill" onclick="window.location.href='/watch.html?id=${featured.id}'">
               ▶ Play
             </button>
-            <button class="m-hero-action-btn" onclick="window.location.href='/watch?id=${featured.id}'">
+            <button class="m-hero-action-btn" onclick="window.location.href='/watch.html?id=${featured.id}'">
               <span class="m-hero-action-icon">ⓘ</span>
               <span class="m-hero-action-label">Info</span>
             </button>
@@ -330,6 +358,7 @@
 
     // Initialize Home Page
     Promise.all([loadData(), loadCategories()]).then(() => {
+      renderCategoryNavigation();
       renderHome();
       initAuth();
     }).catch(err => {

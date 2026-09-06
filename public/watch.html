@@ -23,8 +23,8 @@
        MOBILE STICKY TOPBAR (NETFLIX SCREEN 2)
        ============================================================ -->
   <header class="m-watch-topbar mobile-only">
-    <button class="m-watch-back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/'" aria-label="Go Back">‹</button>
-    <a href="/" class="m-watch-brand">
+    <button class="m-watch-back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/index.html'" aria-label="Go Back">‹</button>
+    <a href="/index.html" class="m-watch-brand">
       <img src="/logo.png" alt="Pak Spotlight">
       <span>PAK SPOTLIGHT</span>
     </a>
@@ -36,18 +36,15 @@
        ============================================================ -->
   <header class="topbar desktop-only" id="topbar">
     <div class="brand-group">
-      <a href="/" class="brand">
+      <a href="/index.html" class="brand">
         <img src="/logo.png" alt="Pak Spotlight Logo" class="brand-logo">
         <div class="brand-titles">
           <span class="brand-name">PAK SPOTLIGHT</span>
           <span class="brand-sub">Classic PTV Archive</span>
         </div>
       </a>
-      <nav class="nav-links">
-        <a href="/" class="nav-link">Home</a>
-        <a href="/browse?cat=Serial%20%2F%20Series" class="nav-link">TV Shows</a>
-        <a href="/browse?cat=Long%20Play" class="nav-link">Movies</a>
-        <a href="/browse?view=mylist" class="nav-link">My List</a>
+      <nav class="nav-links" id="desktopNavLinks">
+        <a href="/index.html" class="nav-link">Home</a>
       </nav>
     </div>
 
@@ -56,7 +53,7 @@
         <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input type="text" class="search-input" id="desktopSearchInput" placeholder="Search archive..." onkeydown="if(event.key==='Enter') window.location.href='/browse?q='+encodeURIComponent(this.value)">
+        <input type="text" class="search-input" id="desktopSearchInput" placeholder="Search archive..." onkeydown="if(event.key==='Enter') window.location.href='/browse.html?q='+encodeURIComponent(this.value)">
       </div>
       <div id="topbarAuthArea"></div>
     </div>
@@ -101,27 +98,27 @@
        MOBILE BOTTOM NAVIGATION BAR
        ============================================================ -->
   <nav class="mobile-bottom-nav">
-    <button class="m-bottom-nav-item" onclick="window.location.href='/'">
+    <button class="m-bottom-nav-item" onclick="window.location.href='/index.html'">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
         <polyline points="9 22 9 12 15 12 15 22"></polyline>
       </svg>
       <span>Home</span>
     </button>
-    <button class="m-bottom-nav-item" onclick="openMobileSearch()">
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse.html?search=1'">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
       <span>Search</span>
     </button>
-    <button class="m-bottom-nav-item" onclick="window.location.href='/browse?view=mylist'">
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse.html?view=mylist'">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
       </svg>
       <span>My List</span>
     </button>
-    <button class="m-bottom-nav-item" onclick="window.location.href='/browse'">
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse.html'">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="8" y1="6" x2="21" y2="6"></line>
         <line x1="8" y1="12" x2="21" y2="12"></line>
@@ -187,6 +184,19 @@
     let currentEpisodes = [];
     let currentEp = null;
 
+    function renderCategoryNav() {
+      const deskNav = $("desktopNavLinks");
+      if (deskNav) {
+        deskNav.innerHTML = `
+          <a href="/index.html" class="nav-link">Home</a>
+          ${categories.map(c => `
+            <a href="/browse.html?cat=${encodeURIComponent(c)}" class="nav-link">${esc(c)}</a>
+          `).join("")}
+          <a href="/browse.html?view=mylist" class="nav-link">My List</a>
+        `;
+      }
+    }
+
     function handleToggleWatchList() {
       if (!currentDrama) return;
       const added = toggleMyList(currentDrama.id);
@@ -227,7 +237,7 @@
             <div style="font-size: 48px; margin-bottom: 12px;">🔍</div>
             <h2 style="color: #fff; margin-bottom: 8px;">Drama Not Found</h2>
             <p>The classic title requested could not be located in the archive.</p>
-            <a href="/" style="display: inline-block; margin-top: 16px; padding: 10px 20px; background: var(--gold); color: #060b08; font-weight: 700; border-radius: 8px;">Return to Archive</a>
+            <a href="/index.html" style="display: inline-block; margin-top: 16px; padding: 10px 20px; background: var(--gold); color: #060b08; font-weight: 700; border-radius: 8px;">Return to Archive</a>
           </div>
         `;
         return;
@@ -246,13 +256,13 @@
       container.innerHTML = `
         <!-- Desktop Navigation Bar -->
         <div class="watch-nav-bar desktop-only">
-          <button class="watch-back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/'">
+          <button class="watch-back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/index.html'">
             ← Back to Archive
           </button>
           <div class="watch-breadcrumbs">
             <span>PTV Archive</span>
             <span>›</span>
-            <a href="/browse?cat=${encodeURIComponent(currentDrama.type)}" style="color: var(--gold)">${esc(currentDrama.type)}</a>
+            <a href="/browse.html?cat=${encodeURIComponent(currentDrama.type)}" style="color: var(--gold)">${esc(currentDrama.type)}</a>
             <span>›</span>
             <span style="color: #fff; font-weight: 700">${esc(pageTitle)}</span>
           </div>
@@ -423,7 +433,8 @@
     const urlParams = new URLSearchParams(window.location.search);
     const dramaId = urlParams.get("id") || urlParams.get("watch");
 
-    loadData().then(() => {
+    Promise.all([loadData(), loadCategories()]).then(() => {
+      renderCategoryNav();
       if (dramaId) {
         currentDrama = getDramaById(dramaId);
         if (currentDrama) {

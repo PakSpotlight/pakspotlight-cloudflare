@@ -232,11 +232,12 @@
     display: none !important;
   }
 
-  /* Sub-Navigation Strip (Screen 1: All | TV Shows | Movies | My List) */
+  /* Sub-Navigation Strip (Dynamic Categories) */
   .mobile-nav-strip {
     display: flex !important;
     align-items: center;
-    justify-content: space-around;
+    justify-content: flex-start;
+    gap: 20px;
     padding: 10px 16px 8px;
     background: rgba(6, 11, 8, 0.98);
     backdrop-filter: blur(16px);
@@ -245,7 +246,12 @@
     position: sticky;
     top: 50px;
     z-index: 180;
-    overflow: hidden;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-nav-strip::-webkit-scrollbar {
+    display: none;
   }
 
   .m-pill {
