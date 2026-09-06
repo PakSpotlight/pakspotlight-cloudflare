@@ -863,11 +863,18 @@ var index_default = {
       }
     }
 
-    // Rewrite /watch to /index.html so clean watch URLs work directly
+    // Rewrite /watch to /watch.html so clean watch URLs work directly
     if (url.pathname === "/watch") {
       const watchUrl = new URL(request.url);
-      watchUrl.pathname = "/index.html";
+      watchUrl.pathname = "/watch.html";
       return env.ASSETS.fetch(new Request(watchUrl, request));
+    }
+
+    // Rewrite /browse to /browse.html
+    if (url.pathname === "/browse") {
+      const browseUrl = new URL(request.url);
+      browseUrl.pathname = "/browse.html";
+      return env.ASSETS.fetch(new Request(browseUrl, request));
     }
 
     // Static assets fallback

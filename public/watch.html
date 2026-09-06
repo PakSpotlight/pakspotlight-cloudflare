@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watch Drama — Pak Spotlight</title>
+<meta name="description" content="Watch classic Pakistani television (PTV) dramas, long plays, and telefilms in high quality.">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet">
+<!-- Modular CSS -->
+<link rel="stylesheet" href="/css/variables.css">
+<link rel="stylesheet" href="/css/navbar.css">
+<link rel="stylesheet" href="/css/watch.css">
+<link rel="stylesheet" href="/css/cards.css">
+<link rel="stylesheet" href="/css/bottom-nav.css">
+<link rel="stylesheet" href="/css/modals.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       MOBILE STICKY TOPBAR (NETFLIX SCREEN 2)
+       ============================================================ -->
+  <header class="m-watch-topbar mobile-only">
+    <button class="m-watch-back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/'" aria-label="Go Back">‹</button>
+    <a href="/" class="m-watch-brand">
+      <img src="/logo.png" alt="Pak Spotlight">
+      <span>PAK SPOTLIGHT</span>
+    </a>
+    <button class="m-watch-heart-btn" id="mWatchHeartBtn" onclick="handleToggleWatchList()" aria-label="Toggle My List">♡</button>
+  </header>
+
+  <!-- ============================================================
+       DESKTOP TOPBAR
+       ============================================================ -->
+  <header class="topbar desktop-only" id="topbar">
+    <div class="brand-group">
+      <a href="/" class="brand">
+        <img src="/logo.png" alt="Pak Spotlight Logo" class="brand-logo">
+        <div class="brand-titles">
+          <span class="brand-name">PAK SPOTLIGHT</span>
+          <span class="brand-sub">Classic PTV Archive</span>
+        </div>
+      </a>
+      <nav class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/browse?cat=Serial%20%2F%20Series" class="nav-link">TV Shows</a>
+        <a href="/browse?cat=Long%20Play" class="nav-link">Movies</a>
+        <a href="/browse?view=mylist" class="nav-link">My List</a>
+      </nav>
+    </div>
+
+    <div class="topbar-right">
+      <div class="search-wrapper">
+        <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" class="search-input" id="desktopSearchInput" placeholder="Search archive..." onkeydown="if(event.key==='Enter') window.location.href='/browse?q='+encodeURIComponent(this.value)">
+      </div>
+      <div id="topbarAuthArea"></div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       MAIN WATCH VIEW CONTAINER
+       ============================================================ -->
+  <main class="watch-page-container" id="watchContainer">
+    <div style="padding: 100px 20px; text-align: center; color: var(--text-muted);" id="watchLoading">
+      <div style="font-size: 36px; margin-bottom: 12px;">📽</div>
+      <p>Loading classic masterpiece stream…</p>
+    </div>
+  </main>
+
+  <!-- ============================================================
+       MORE LIKE THIS RECOMMENDATIONS
+       ============================================================ -->
+  <section class="rows-container" id="recomContainer" style="display: none;">
+    <div class="row-header">
+      <div class="row-title-wrap">
+        <h2 class="row-title">More Like This</h2>
+      </div>
+    </div>
+    <div class="carousel-track" id="recomTrack"></div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="/logo.png" alt="Pak Spotlight" style="width: 24px; height: 24px;">
+        <span style="font-weight: 700; color: #fff;">Pak Spotlight</span>
+        <span>•</span>
+        <span>PTV Golden Era Stream & Archive</span>
+      </div>
+      <div>Dedicated to preserving Pakistan's cultural legacy.</div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       MOBILE BOTTOM NAVIGATION BAR
+       ============================================================ -->
+  <nav class="mobile-bottom-nav">
+    <button class="m-bottom-nav-item" onclick="window.location.href='/'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </button>
+    <button class="m-bottom-nav-item" onclick="openMobileSearch()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <span>Search</span>
+    </button>
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse?view=mylist'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span>My List</span>
+    </button>
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      <span>Categories</span>
+    </button>
+  </nav>
+
+  <!-- Mobile Fullscreen Search Modal -->
+  <div class="mobile-search-modal" id="mobileSearchModal">
+    <div class="m-search-header">
+      <div class="m-search-input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="mobileSearchInput" placeholder="Search classics, writers, cast..." autocomplete="off">
+        <button class="m-search-clear" id="mSearchClear" onclick="clearMobileSearch()" style="display:none">✕</button>
+      </div>
+      <button class="m-search-cancel" onclick="closeMobileSearch()">Done</button>
+    </div>
+    <div class="m-search-results" id="mSearchResults">
+      <div class="m-search-prompt">
+        <span>🔍</span>
+        <p>Search classics by title, Urdu name, writer, or star cast.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sign In / Auth Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="auth-modal-card">
+      <button class="modal-close-btn" onclick="closeAuthModal()">✕</button>
+      <div class="auth-modal-header">
+        <img src="/logo.png" alt="Pak Spotlight">
+        <h2>Admin Studio</h2>
+        <p>Sign in with your authorized admin credentials</p>
+      </div>
+      <form id="authModalForm">
+        <div class="auth-form-group">
+          <label for="authEmail">Email Address</label>
+          <input type="email" id="authEmail" required autocomplete="username" placeholder="admin@pakspotlight.com">
+        </div>
+        <div class="auth-form-group">
+          <label for="authPassword">Password</label>
+          <input type="password" id="authPassword" required autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <button type="submit" class="auth-submit-btn">Authorize &amp; Sign In</button>
+        <div class="auth-status-msg" id="authStatusMsg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Supabase CDN + Shared Utilities -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/shared.js"></script>
+
+  <script>
+    let currentDrama = null;
+    let currentEpisodes = [];
+    let currentEp = null;
+
+    function handleToggleWatchList() {
+      if (!currentDrama) return;
+      const added = toggleMyList(currentDrama.id);
+      const heart = $("mWatchHeartBtn");
+      if (heart) heart.textContent = added ? "♥" : "♡";
+      const actionIcon = $("mActionMyListIcon");
+      const actionText = $("mActionMyListText");
+      if (actionIcon) actionIcon.textContent = added ? "✓" : "＋";
+      if (actionText) actionText.textContent = added ? "In My List" : "My List";
+    }
+
+    function switchEpisode(ytId, epId) {
+      const frame = $("watchPlayerFrame");
+      if (frame && ytId) {
+        frame.innerHTML = `
+          <iframe id="watchIframe" src="https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1" title="${esc(currentDrama.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        `;
+      }
+      // Update active rows
+      document.querySelectorAll(".m-episode-row").forEach(r => {
+        const isThis = r.getAttribute("data-epid") === String(epId);
+        r.classList.toggle("active", isThis);
+        const playIcon = r.querySelector(".m-ep-thumb-play");
+        if (playIcon) playIcon.textContent = isThis ? "❚❚" : "▶";
+      });
+      document.querySelectorAll(".playlist-item").forEach(r => {
+        r.classList.toggle("active", r.getAttribute("data-epid") === String(epId));
+      });
+      // Scroll smoothly to player
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderWatchPage() {
+      const container = $("watchContainer");
+      if (!currentDrama) {
+        container.innerHTML = `
+          <div style="padding: 100px 20px; text-align: center; color: var(--text-muted);">
+            <div style="font-size: 48px; margin-bottom: 12px;">🔍</div>
+            <h2 style="color: #fff; margin-bottom: 8px;">Drama Not Found</h2>
+            <p>The classic title requested could not be located in the archive.</p>
+            <a href="/" style="display: inline-block; margin-top: 16px; padding: 10px 20px; background: var(--gold); color: #060b08; font-weight: 700; border-radius: 8px;">Return to Archive</a>
+          </div>
+        `;
+        return;
+      }
+
+      const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim();
+      const pageTitle = isSer ? currentDrama.series : currentDrama.title;
+      document.title = `${pageTitle} — Watch Classic PTV | Pak Spotlight`;
+
+      const initialYt = extractYouTubeId(currentEp.youtube);
+      const inList = isInMyList(currentDrama.id);
+
+      const heart = $("mWatchHeartBtn");
+      if (heart) heart.textContent = inList ? "♥" : "♡";
+
+      container.innerHTML = `
+        <!-- Desktop Navigation Bar -->
+        <div class="watch-nav-bar desktop-only">
+          <button class="watch-back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/'">
+            ← Back to Archive
+          </button>
+          <div class="watch-breadcrumbs">
+            <span>PTV Archive</span>
+            <span>›</span>
+            <a href="/browse?cat=${encodeURIComponent(currentDrama.type)}" style="color: var(--gold)">${esc(currentDrama.type)}</a>
+            <span>›</span>
+            <span style="color: #fff; font-weight: 700">${esc(pageTitle)}</span>
+          </div>
+          <div class="watch-nav-actions">
+            <button class="watch-action-btn" onclick="navigator.clipboard.writeText(window.location.href); showToast('Link copied to clipboard!');">
+              🔗 Copy Link
+            </button>
+            ${currentEp.youtube ? `
+              <a class="watch-action-btn" href="${esc(currentEp.youtube)}" target="_blank" rel="noopener">
+                Watch on YouTube ↗
+              </a>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- Main Cinema Screen -->
+        <div class="watch-theater-wrap" id="watchTheaterWrap">
+          <div class="watch-player-frame" id="watchPlayerFrame">
+            ${initialYt ? `
+              <iframe id="watchIframe" src="https://www.youtube.com/embed/${initialYt}?rel=0&autoplay=1" title="${esc(currentDrama.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            ` : `
+              <div class="watch-no-stream">
+                <span>🎬</span>
+                <p>This classic masterpiece video stream is currently being digitized.</p>
+              </div>
+            `}
+          </div>
+        </div>
+
+        <!-- ============================================================
+             MOBILE QUICK META & 3-ACTION CLUSTER (NETFLIX SCREEN 2)
+             ============================================================ -->
+        <div class="m-watch-meta-block mobile-only">
+          <div class="m-watch-title-group">
+            <h1 class="m-watch-title">${esc(pageTitle)}</h1>
+            ${currentDrama.urdu ? `<div class="m-watch-urdu">${esc(currentDrama.urdu)}</div>` : ''}
+          </div>
+
+          <div class="m-watch-badges-row">
+            ${currentDrama.year ? `<span class="m-badge">${esc(currentDrama.year)}</span>` : ''}
+            <span class="m-badge gold">${esc(currentDrama.type)}</span>
+            ${isSer && currentEpisodes.length > 1 ? `<span class="m-badge">${currentEpisodes.length} Episodes</span>` : ''}
+            <span class="m-badge">PTV Classic</span>
+          </div>
+
+          <!-- 5 Gold Stars Rating (Screen 2) -->
+          <div class="m-star-rating">
+            <span class="m-stars">★★★★★</span>
+            <span class="m-rating-text">PTV Golden Era Masterpiece</span>
+          </div>
+
+          <!-- 3-Action Cluster: + My List | Big Round Play | Share -->
+          <div class="m-actions-cluster">
+            <button class="m-action-item" onclick="handleToggleWatchList()">
+              <span class="m-action-icon" id="mActionMyListIcon">${inList ? '✓' : '＋'}</span>
+              <span class="m-action-text" id="mActionMyListText">${inList ? 'In My List' : 'My List'}</span>
+            </button>
+
+            <button class="m-action-play-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" aria-label="Play Video">
+              ▶
+            </button>
+
+            <button class="m-action-item" onclick="navigator.clipboard.writeText(window.location.href); showToast('Link copied to clipboard!');">
+              <span class="m-action-icon">ⓘ</span>
+              <span class="m-action-text">Share</span>
+            </button>
+          </div>
+
+          <p class="m-watch-synopsis">${esc(cleanDescription(currentDrama.description))}</p>
+        </div>
+
+        <!-- ============================================================
+             MOBILE EPISODES SECTION (NETFLIX SCREEN 2)
+             ============================================================ -->
+        ${isSer && currentEpisodes.length > 1 ? `
+          <div class="m-episodes-section mobile-only">
+            <div class="m-episodes-header">
+              <span class="m-season-title">Season 1</span>
+              <span class="m-ep-total">${currentEpisodes.length} Episodes</span>
+            </div>
+            <div class="m-episodes-list">
+              ${currentEpisodes.map((ep, idx) => {
+                const epYt = extractYouTubeId(ep.youtube);
+                const isPlaying = ep.id === currentEp.id;
+                const epThumb = ep.image || currentDrama.image || '/logo.png';
+                return `
+                  <div class="m-episode-row ${isPlaying ? 'active' : ''}" data-epid="${ep.id}" onclick="switchEpisode('${epYt}', ${ep.id})">
+                    <div class="m-ep-thumb-wrap">
+                      <img src="${esc(epThumb)}" alt="${esc(ep.title)}" loading="lazy">
+                      <div class="m-ep-thumb-play">${isPlaying ? '❚❚' : '▶'}</div>
+                    </div>
+                    <div class="m-ep-details">
+                      <div class="m-ep-title-line">
+                        <span class="m-ep-num">Ep ${ep.episode ?? (idx + 1)}</span>
+                        <span class="m-ep-name">${esc(ep.title)}</span>
+                      </div>
+                      <div class="m-ep-sub">${ep.year ? 'Year: ' + esc(ep.year) : 'PTV Archive'} · ${isPlaying ? '▶ Now Playing' : 'Click to Play'}</div>
+                    </div>
+                    <div class="m-ep-action ${isPlaying ? 'playing' : ''}">
+                      ${isPlaying ? '▶' : '›'}
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- ============================================================
+             DESKTOP DETAILS & PLAYLIST GRID
+             ============================================================ -->
+        <div class="watch-details-grid desktop-only ${isSer && currentEpisodes.length > 1 ? 'has-playlist' : 'single-video'}">
+          <div class="watch-info-column">
+            <div class="watch-meta-pills">
+              <span class="m-badge gold">${esc(currentDrama.type)}</span>
+              ${currentDrama.year ? `<span class="m-badge">${esc(currentDrama.year)}</span>` : ''}
+              ${isSer && currentEpisodes.length > 1 ? `<span class="m-badge">${currentEpisodes.length} Episodes</span>` : ''}
+              <span class="m-badge">PTV Gold</span>
+            </div>
+
+            <div>
+              <h1 class="watch-main-title">${esc(pageTitle)}</h1>
+              ${currentDrama.urdu ? `<div class="watch-urdu-title">${esc(currentDrama.urdu)}</div>` : ''}
+            </div>
+
+            <p class="watch-desc-text">${esc(cleanDescription(currentDrama.description))}</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-top: 12px; font-size: 12px;">
+              ${currentDrama.writer ? `<div><b style="color: var(--text-dim); display: block; font-size: 10px; text-transform: uppercase;">Writer</b><span style="color:#fff;">${esc(currentDrama.writer)}</span></div>` : ''}
+              ${currentDrama.director ? `<div><b style="color: var(--text-dim); display: block; font-size: 10px; text-transform: uppercase;">Director</b><span style="color:#fff;">${esc(currentDrama.director)}</span></div>` : ''}
+              ${currentDrama.cast ? `<div><b style="color: var(--text-dim); display: block; font-size: 10px; text-transform: uppercase;">Star Cast</b><span style="color:#fff;">${esc(currentDrama.cast)}</span></div>` : ''}
+              ${currentDrama.producer ? `<div><b style="color: var(--text-dim); display: block; font-size: 10px; text-transform: uppercase;">Producer</b><span style="color:#fff;">${esc(currentDrama.producer)}</span></div>` : ''}
+            </div>
+          </div>
+
+          ${isSer && currentEpisodes.length > 1 ? `
+            <div class="watch-playlist-column">
+              <div class="playlist-header">All Episodes (${currentEpisodes.length})</div>
+              ${currentEpisodes.map((ep, idx) => {
+                const epYt = extractYouTubeId(ep.youtube);
+                const isPlaying = ep.id === currentEp.id;
+                return `
+                  <div class="playlist-item ${isPlaying ? 'active' : ''}" data-epid="${ep.id}" onclick="switchEpisode('${epYt}', ${ep.id})">
+                    <span class="playlist-ep-num">${ep.episode ?? (idx + 1)}</span>
+                    <span class="playlist-ep-title">${esc(ep.title)}</span>
+                    <span style="font-size: 12px; color: var(--gold);">${isPlaying ? '▶' : ''}</span>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      // Render recommendations
+      const recoms = getRecommendations(currentDrama, 10);
+      if (recoms.length > 0) {
+        const recomContainer = $("recomContainer");
+        const recomTrack = $("recomTrack");
+        if (recomContainer && recomTrack) {
+          recomContainer.style.display = "block";
+          recomTrack.innerHTML = recoms.map(r => renderPosterCard(r)).join("");
+        }
+      }
+    }
+
+    // Initialize Watch Page
+    const urlParams = new URLSearchParams(window.location.search);
+    const dramaId = urlParams.get("id") || urlParams.get("watch");
+
+    loadData().then(() => {
+      if (dramaId) {
+        currentDrama = getDramaById(dramaId);
+        if (currentDrama) {
+          currentEpisodes = getDramaSeriesEpisodes(currentDrama);
+          currentEp = (extractYouTubeId(currentDrama.youtube) ? currentDrama : null) ||
+                      currentEpisodes.find(e => extractYouTubeId(e.youtube)) ||
+                      currentDrama;
+        }
+      }
+      renderWatchPage();
+      initAuth();
+    }).catch(err => {
+      console.error(err);
+      renderWatchPage();
+    });
+
+    const mInput = $("mobileSearchInput");
+    if (mInput) mInput.addEventListener("input", handleMobileSearchInput);
+  </script>
+</body>
+</html>

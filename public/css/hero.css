@@ -1,0 +1,334 @@
+/* ============================================================
+   PAK SPOTLIGHT — HERO BILLBOARD & MOBILE FEATURED CARD
+   ============================================================ */
+
+/* Desktop Billboard Slider */
+.hero-slider-wrap {
+  position: relative;
+  min-height: 82vh;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 20%;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: flex-end;
+  padding: 130px 5% 70px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.75s cubic-bezier(0.25, 1, 0.5, 1), transform 0.75s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.75s;
+  transform: scale(1.025);
+  pointer-events: none;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.hero-vignette {
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(0deg, #060b08 0%, rgba(6, 11, 8, 0.82) 22%, transparent 58%),
+    linear-gradient(90deg, #060b08 0%, rgba(6, 11, 8, 0.88) 35%, rgba(6, 11, 8, 0.3) 70%, transparent 100%),
+    linear-gradient(180deg, rgba(6, 11, 8, 0.75) 0%, transparent 22%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero-overlay-content {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  color: var(--gold);
+  text-transform: uppercase;
+  background: rgba(245, 197, 66, 0.12);
+  border: 1px solid rgba(245, 197, 66, 0.4);
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(8px);
+}
+
+.hero-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.hero-title {
+  font-family: var(--font-serif);
+  font-size: clamp(34px, 5vw, 56px);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+.hero-urdu {
+  font-family: var(--font-urdu);
+  font-size: clamp(24px, 3.5vw, 36px);
+  color: var(--gold);
+  text-shadow: 0 4px 15px rgba(245, 197, 66, 0.3);
+  direction: rtl;
+  font-weight: 700;
+}
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 620px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.btn-play-netflix {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #060b08;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 12px 28px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.btn-play-netflix:hover {
+  background: var(--gold);
+  color: #060b08;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(245, 197, 66, 0.4);
+}
+
+.btn-info-netflix {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 24px;
+  border-radius: 6px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.btn-info-netflix:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   NETFLIX SCREEN 1 MOBILE HERO POSTER CARD
+   ============================================================ */
+.m-hero-container {
+  display: none;
+}
+
+@media (max-width: 850px) {
+  .hero-slider-wrap.desktop-only {
+    display: none !important;
+  }
+
+  .m-hero-container {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    padding: 14px 16px 6px;
+    background: transparent;
+  }
+
+  /* Framed Portrait Artwork Card */
+  .m-hero-card {
+    width: 100%;
+    max-width: 340px;
+    height: 380px;
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+  }
+
+  .m-hero-card-img {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center 20%;
+    background-repeat: no-repeat;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .m-hero-card-vignette {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.15) 0%,
+      transparent 45%,
+      rgba(6, 11, 8, 0.8) 75%,
+      #060b08 100%
+    );
+    pointer-events: none;
+  }
+
+  .m-hero-card-info {
+    position: relative;
+    z-index: 2;
+    padding: 18px 16px 16px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .m-hero-series-tag {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  }
+
+  .m-hero-title {
+    font-family: var(--font-serif);
+    font-size: 23px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.15;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+    letter-spacing: -0.3px;
+  }
+
+  .m-hero-urdu {
+    font-family: var(--font-urdu);
+    font-size: 18px;
+    color: var(--gold);
+    line-height: 1.4;
+    direction: rtl;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .m-hero-genres {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* 3-Item Action Bar below framed card */
+  .m-hero-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 320px;
+    padding: 12px 10px 4px;
+    margin-top: 4px;
+  }
+
+  .m-hero-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    min-width: 60px;
+    padding: 4px 6px;
+    transition: transform 0.15s ease;
+  }
+
+  .m-hero-action-btn:active {
+    transform: scale(0.9);
+  }
+
+  .m-hero-action-icon {
+    font-size: 19px;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .m-hero-action-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .m-hero-play-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #ffffff;
+    color: #060b08;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 8px 24px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    transition: transform 0.15s ease;
+  }
+
+  .m-hero-play-pill:active {
+    transform: scale(0.95);
+    background: var(--gold);
+  }
+}

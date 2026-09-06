@@ -1,0 +1,572 @@
+/* ============================================================
+   PAK SPOTLIGHT — DEDICATED WATCH / THEATER PAGE
+   Matches Netflix Screen 2 Mobile Design Reference
+   ============================================================ */
+
+.watch-page-container {
+  padding: 85px 5% 60px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Desktop Top Navigation Bar */
+.watch-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.watch-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.watch-back-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(245, 197, 66, 0.1);
+}
+
+.watch-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.watch-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.watch-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.watch-action-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Cinema Theater Player Container */
+.watch-theater-wrap {
+  position: relative;
+  background: #000;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(245, 197, 66, 0.15);
+  border: 1px solid var(--border-gold);
+  margin-bottom: 28px;
+}
+
+.watch-player-frame {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+}
+
+.watch-player-frame iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.watch-no-stream {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: radial-gradient(circle at center, #101c15 0%, #060b08 80%);
+  gap: 12px;
+}
+
+.watch-no-stream span {
+  font-size: 48px;
+}
+
+.watch-no-stream p {
+  color: var(--text-muted);
+  font-size: 14px;
+  max-width: 400px;
+}
+
+/* Desktop Details & Episodes Grid */
+.watch-details-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  margin-bottom: 40px;
+}
+
+.watch-details-grid.single-video {
+  grid-template-columns: 1fr;
+}
+
+.watch-info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.watch-meta-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.watch-main-title {
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 3.5vw, 40px);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+}
+
+.watch-urdu-title {
+  font-family: var(--font-urdu);
+  font-size: clamp(20px, 3vw, 30px);
+  color: var(--gold);
+  direction: rtl;
+}
+
+.watch-desc-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.watch-playlist-column {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  max-height: 500px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.playlist-header {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+
+.playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.playlist-item:hover, .playlist-item.active {
+  border-color: var(--gold);
+  background: var(--bg-card-hover);
+}
+
+.playlist-item.active {
+  background: rgba(245, 197, 66, 0.12);
+}
+
+.playlist-ep-num {
+  font-weight: 800;
+  color: var(--gold);
+  font-size: 14px;
+  min-width: 24px;
+}
+
+.playlist-ep-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   NETFLIX SCREEN 2 MOBILE LAYOUT
+   ============================================================ */
+@media (max-width: 850px) {
+  .watch-page-container {
+    padding: 0 0 68px;
+    max-width: 100%;
+  }
+
+  .watch-nav-bar.desktop-only,
+  .watch-details-grid.desktop-only {
+    display: none !important;
+  }
+
+  /* Screen 2 Mobile Sticky Topbar (< PAK SPOTLIGHT ♡) */
+  .m-watch-topbar {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: rgba(6, 11, 8, 0.98);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    position: sticky;
+    top: 0;
+    z-index: 220;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .m-watch-back-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 8px;
+  }
+
+  .m-watch-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    color: #fff;
+  }
+
+  .m-watch-brand img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .m-watch-heart-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: var(--gold);
+    cursor: pointer;
+    padding: 2px 6px;
+    transition: transform 0.2s ease;
+  }
+
+  .m-watch-heart-btn:active {
+    transform: scale(1.25);
+  }
+
+  /* Cinema Player on Mobile */
+  .watch-theater-wrap {
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid rgba(245, 197, 66, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+  }
+
+  /* Screen 2 Meta Details Block */
+  .m-watch-meta-block {
+    display: flex !important;
+    flex-direction: column;
+    padding: 16px 16px 12px;
+    gap: 12px;
+  }
+
+  .m-watch-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .m-watch-title {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .m-watch-urdu {
+    font-family: var(--font-urdu);
+    font-size: 18px;
+    color: var(--gold);
+    direction: rtl;
+    line-height: 1.5;
+  }
+
+  .m-watch-badges-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .m-badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .m-badge.gold {
+    background: var(--gold);
+    color: #080e0a;
+    border-color: var(--gold);
+  }
+
+  /* 5 Gold Stars Rating */
+  .m-star-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gold);
+  }
+
+  .m-stars {
+    letter-spacing: 2px;
+    font-size: 15px;
+  }
+
+  .m-rating-text {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  /* 3 Action Buttons Cluster (+ My List | Big Round Play | Share) */
+  .m-actions-cluster {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 12px 0 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 4px 0;
+  }
+
+  .m-action-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 6px 12px;
+    transition: transform 0.15s;
+  }
+
+  .m-action-item:active {
+    transform: scale(0.92);
+  }
+
+  .m-action-icon {
+    font-size: 20px;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .m-action-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .m-action-play-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffd768 0%, #d4a024 100%);
+    color: #060b08;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 6px rgba(245, 197, 66, 0.22), 0 8px 24px rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s;
+    padding-left: 3px;
+  }
+
+  .m-action-play-btn:active {
+    transform: scale(0.92);
+  }
+
+  .m-watch-synopsis {
+    font-size: 13px;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 4px;
+  }
+
+  /* Episodes Section (Netflix Screen 2) */
+  .m-episodes-section {
+    display: block !important;
+    padding: 14px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .m-episodes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .m-season-title {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .m-ep-total {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .m-episodes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .m-episode-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: #0b140f;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .m-episode-row.active {
+    border-color: var(--gold);
+    background: rgba(245, 197, 66, 0.12);
+  }
+
+  .m-ep-thumb-wrap {
+    width: 100px;
+    height: 58px;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    background: #000;
+  }
+
+  .m-ep-thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .m-ep-thumb-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 16px;
+  }
+
+  .m-ep-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .m-ep-title-line {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .m-ep-num {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--gold);
+  }
+
+  .m-ep-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .m-ep-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .m-ep-action {
+    font-size: 18px;
+    color: var(--text-dim);
+    padding: 0 4px;
+  }
+
+  .m-ep-action.playing {
+    color: var(--gold);
+  }
+}
