@@ -1942,6 +1942,13 @@ function renderNetflixHome() {
   viewMode = "home";
   document.title = "Pak Spotlight — Classic PTV Drama Stream";
 
+  if (!rows.length) {
+    $("app").innerHTML = `
+      <div style="padding:120px 5% 60px;text-align:center;color:var(--text-muted)">
+        Nothing here yet. New dramas are being added.
+      </div>`;
+    return;
+  }
   const featured = rows.find(r => r.image && r.title && r.description) || rows[0] || {};
   const isSer = isSeries(featured) && !!featured.series;
   const fTitle = isSer ? featured.series : featured.title;
@@ -1969,27 +1976,30 @@ function renderNetflixHome() {
 
   $("app").innerHTML = `
     <!-- Billboard Hero -->
-    <section class="billboard" style="background-image: url('${featured.image || '/logo.png'}')">
-      <div class="billboard-content">
-        <div class="billboard-badge">★ PTV GOLDEN ERA SPOTLIGHT</div>
-        <div class="billboard-titles-wrap">
-          <h1 class="billboard-title">${esc(fTitle)}</h1>
-          ${featured.urdu ? `<div class="billboard-urdu">${esc(featured.urdu)}</div>` : ''}
-        </div>
-        <div class="billboard-meta">
-          <span class="meta-chip meta-chip-gold">${esc(featured.type)}</span>
-          ${featured.year ? `<span class="meta-chip meta-chip-outline">${esc(featured.year)}</span>` : ''}
-          ${isSer && featured.episode ? `<span class="meta-chip meta-chip-outline">Episode ${featured.episode}</span>` : ''}
-          ${featured.writer ? `<span style="color:var(--text-muted)">Writer: ${esc(featured.writer)}</span>` : ''}
-        </div>
-        <p class="billboard-desc">${esc(cleanDescription(featured.description))}</p>
-        <div class="billboard-actions">
-          <button class="btn-play" onclick="openWatchPage(${featured.id})">
-            ▶ PLAY NOW
-          </button>
-          <button class="btn-info" onclick="openWatchPage(${featured.id})">
-            ⓘ MORE DETAILS
-          </button>
+    <section class="hero-slider-wrap">
+      <div class="hero-slide active" style="background-image: url('${esc(featured.image || '/logo.png')}')">
+        <div class="hero-vignette"></div>
+        <div class="hero-overlay-content">
+          <div class="hero-badge">★ PTV Golden Era Spotlight</div>
+          <div class="hero-title-row">
+            <h1 class="hero-title">${esc(fTitle)}</h1>
+            ${featured.urdu ? `<div class="hero-urdu">${esc(featured.urdu)}</div>` : ''}
+          </div>
+          <div class="hero-meta">
+            <span class="meta-chip meta-chip-gold">${esc(featured.type)}</span>
+            ${featured.year ? `<span class="meta-chip meta-chip-outline">${esc(featured.year)}</span>` : ''}
+            ${isSer && featured.episode ? `<span class="meta-chip meta-chip-outline">Episode ${featured.episode}</span>` : ''}
+            ${featured.writer ? `<span style="color:var(--text-muted)">Writer: ${esc(featured.writer)}</span>` : ''}
+          </div>
+          <p class="hero-desc">${esc(cleanDescription(featured.description))}</p>
+          <div class="hero-actions">
+            <button class="btn-play-netflix" onclick="openWatchPage(${featured.id})">
+              ▶ Play Now
+            </button>
+            <button class="btn-info-netflix" onclick="openDramaModal(${featured.id})">
+              ⓘ More Details
+            </button>
+          </div>
         </div>
       </div>
     </section>
