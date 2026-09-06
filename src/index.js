@@ -640,7 +640,11 @@ var index_default = {
       try {
         const body = await request.json();
         const video = await identifyVideo(body.url, env);
-        return json(await aiAutofill(video, env, { authToken: auth.token }));
+        return json(await aiAutofill(video, env, {
+          authToken: auth.token,
+          forceSearch: body.forceSearch === true,
+          skipSearch: body.skipSearch === true
+        }));
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
       }

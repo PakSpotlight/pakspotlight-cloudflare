@@ -519,6 +519,88 @@ input, select, textarea { font-family: inherit; }
 .pl-result { font-size: 12.5px; padding: 8px 12px; border-radius: 8px; margin-top: 8px; }
 .pl-result.added { background: var(--success-bg); color: var(--success); }
 .pl-result.skipped, .pl-result.error { background: rgba(255,255,255,0.04); color: var(--text-muted); }
+/* Playlist wizard: step labels, tools, episode rows */
+.pl-step-label {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--border);
+  font-size: 13px; font-weight: 800; color: #fff; letter-spacing: 0.3px;
+}
+.pl-step-label:first-child { margin-top: 12px; padding-top: 0; border-top: none; }
+.pl-step-note { font-size: 11.5px; font-weight: 600; color: var(--text-muted); }
+.pl-tools { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.pl-row { align-items: flex-start; }
+.pl-row .pl-info { display: flex; flex-direction: column; gap: 2px; }
+.pl-computed { font-size: 11px; color: var(--text-muted); }
+.pl-dup {
+  display: inline-block; font-size: 10px; font-weight: 700; color: var(--gold);
+  background: rgba(245,197,66,0.1); border: 1px solid rgba(245,197,66,0.3);
+  border-radius: 4px; padding: 1px 6px; margin-top: 3px; width: fit-content;
+}
+.pl-ep-wrap { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; flex-shrink: 0; }
+.pl-ep-wrap label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-dim); }
+.pl-ep {
+  width: 64px; min-height: var(--control-h); background: #080e0a; border: 1px solid var(--border);
+  border-radius: 8px; color: #fff; font-size: 14px; font-weight: 700; text-align: center;
+}
+.pl-ep:focus { outline: none; border-color: var(--gold); }
+/* AI badge + skeleton + credits grid */
+.pl-ai-badge { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+.pl-ai-badge.found { color: var(--gold); }
+.pl-ai-badge.cached { color: var(--success); }
+.pl-ai-badge.failed { color: var(--danger); }
+.pl-skel {
+  border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px;
+}
+.pl-skel span {
+  display: block; height: 12px; border-radius: 6px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%; animation: plShimmer 1.2s infinite;
+}
+@keyframes plShimmer { to { background-position: -200% 0; } }
+.pl-ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pl-ai-grid .full { grid-column: 1 / -1; }
+.pl-ai-grid > div { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.pl-ai-grid label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--gold); }
+.pl-ai-grid input, .pl-ai-grid select, .pl-ai-grid textarea {
+  width: 100%; background: #080f0c; border: 1px solid var(--border); border-radius: 8px;
+  padding: 0 12px; min-height: var(--control-h); color: #fff; font-size: 13.5px; box-sizing: border-box;
+}
+.pl-ai-grid textarea { padding: 10px 12px; min-height: 64px; resize: vertical; line-height: 1.5; }
+.pl-ai-grid input:focus, .pl-ai-grid select:focus, .pl-ai-grid textarea:focus {
+  border-color: var(--gold); outline: none; box-shadow: 0 0 0 3px rgba(245,197,66,0.15);
+}
+/* Progress bar */
+.pl-progress {
+  height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border); overflow: hidden; margin-top: 12px;
+}
+.pl-progress-fill {
+  height: 100%; width: 0%; border-radius: 999px;
+  background: linear-gradient(90deg, #d4a024, var(--gold)); transition: width 0.25s ease;
+}
+.pl-progress-text { font-size: 12.5px; color: var(--text-muted); margin-top: 8px; }
+.pl-progress-text b { color: var(--gold); }
+/* Results summary + filter chips */
+.pl-summary {
+  border: 1px solid rgba(245,197,66,0.35); border-radius: 10px; padding: 14px;
+  margin-top: 12px; background: rgba(245,197,66,0.04);
+}
+.pl-summary-title { font-size: 14px; font-weight: 800; color: #fff; }
+.pl-summary-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.pl-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.pl-chip {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-muted);
+  font-size: 11.5px; font-weight: 700; padding: 7px 12px; border-radius: 999px; min-height: 36px;
+}
+.pl-chip.active { border-color: var(--gold); color: var(--gold); background: rgba(245,197,66,0.1); }
+.pl-summary-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.pl-summary-actions .btn { flex: 1; min-width: 140px; min-height: var(--control-h); }
+@media (max-width: 640px) {
+  .pl-ai-grid { grid-template-columns: 1fr; }
+  .pl-ep { width: 72px; min-height: 48px; }
+  .pl-row img { width: 80px; }
+}
 /* Sticky save bar on phones */
 @media (max-width: 640px) {
   .form-actions.sticky-mobile {
@@ -1647,6 +1729,22 @@ async function showDashboard() {
   };
 
   renderDramaItems(rows);
+
+  if (pendingCatalogSearch) {
+    const q = pendingCatalogSearch;
+    pendingCatalogSearch = "";
+    switchAdminTab("catalog");
+    const si = $("tableSearch");
+    if (si) {
+      si.value = q;
+      const needle = q.toLowerCase().trim();
+      renderDramaItems(rows.filter(r =>
+        (r.title + " " + r.urdu + " " + r.writer + " " + r.director + " " + r.cast + " " + r.year + " " + r.type + " " + r.series).toLowerCase().includes(needle)
+      ));
+    }
+    const cat = $("tabContent-catalog");
+    if (cat) cat.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
 function renderDramaItems(list) {
@@ -1708,6 +1806,10 @@ function showForm(d = null) {
   editingId = d?.id || null;
   editingImage = d?.image || "";
   stagedAiThumbnailUrl = "";
+  plPreviewItems = [];
+  plImporting = false;
+  plCancelled = false;
+  plLastSeries = "";
 
   $("adminApp").innerHTML = `
     <div class="dash-header">
@@ -1730,25 +1832,33 @@ function showForm(d = null) {
       <div id="aiStatusMsg" class="ai-status"></div>
     </div>
 
-    <!-- 2: Whole playlist -->
+    <!-- 2: Whole playlist — guided 3-step wizard -->
     <div class="add-card" id="playlistCard" style="${d ? 'display:none' : ''}">
       <div class="add-card-head"><span class="add-num">2</span><h2>Whole playlist</h2></div>
-      <p class="hint">Paste a playlist link to add every video at once. Use this for drama serials.</p>
+      <p class="hint">Paste a playlist link to add every episode at once. Review everything first — nothing is saved until you tap “Add to archive”.</p>
       <div class="add-row">
-        <input id="plUrlInput" type="url" inputmode="url" placeholder="Playlist link">
+        <input id="plUrlInput" type="url" inputmode="url" placeholder="Playlist link (…playlist?list=…)">
         <button class="btn btn-ghost" id="plPreviewBtn" type="button">See videos</button>
       </div>
       <div id="plPreviewBox" style="display:none">
-        <div class="add-row" style="margin-top:12px">
-          <input id="plSeriesInput" placeholder="Drama name">
-          <select id="plCatSelect">
-            ${configuredCategories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
-          </select>
+        <!-- Step 1: pick episodes -->
+        <div class="pl-step-label"><span>1 · Episodes</span><span id="plCountNote" class="pl-step-note"></span></div>
+        <div class="pl-tools">
+          <button class="btn btn-ghost btn-sm" id="plSelectAllBtn" type="button">Select all</button>
+          <button class="btn btn-ghost btn-sm" id="plSelectNoneBtn" type="button">Select none</button>
         </div>
         <div class="pl-list" id="plItemsList"></div>
-        <div class="add-row" style="margin-top:12px">
-          <button class="btn btn-gold" id="plImportBtn" type="button">Add all</button>
+        <!-- Step 2: series info, found by AI -->
+        <div class="pl-step-label"><span>2 · Series info</span><span id="plAiBadge" class="pl-ai-badge"></span></div>
+        <div id="plAiBox"></div>
+        <!-- Step 3: import -->
+        <div class="pl-step-label"><span>3 · Add to archive</span></div>
+        <div class="add-row form-actions sticky-mobile" id="plImportBar" style="margin-top:0">
+          <button class="btn btn-gold" id="plImportBtn" type="button">Add to archive</button>
+          <button class="btn btn-ghost" id="plCancelBtn" type="button" style="display:none">Cancel</button>
         </div>
+        <div class="pl-progress" id="plProgressBar" style="display:none"><div class="pl-progress-fill" id="plProgressFill"></div></div>
+        <div id="plProgressText" class="pl-progress-text" style="display:none"></div>
         <div id="plStatusMsg" class="ai-status"></div>
         <div id="plResultsBox"></div>
       </div>
@@ -1870,6 +1980,43 @@ function showForm(d = null) {
   $("aiDetectBtn").onclick = runAiAutofill;
   if ($("plPreviewBtn")) $("plPreviewBtn").onclick = runPlaylistPreview;
   if ($("plImportBtn")) $("plImportBtn").onclick = runPlaylistImport;
+  if ($("plSelectAllBtn")) $("plSelectAllBtn").onclick = () => {
+    plPreviewItems.forEach(x => { if (!x.dup) x.selected = true; });
+    document.querySelectorAll("[data-pl-check]").forEach(c => {
+      const i = Number(c.getAttribute("data-pl-check"));
+      if (!plPreviewItems[i]?.dup) c.checked = true;
+    });
+    plUpdateImportBtn();
+  };
+  if ($("plSelectNoneBtn")) $("plSelectNoneBtn").onclick = () => {
+    plPreviewItems.forEach(x => { x.selected = false; });
+    document.querySelectorAll("[data-pl-check]").forEach(c => { c.checked = false; });
+    plUpdateImportBtn();
+  };
+  if ($("plCancelBtn")) $("plCancelBtn").onclick = () => { plCancelled = true; };
+  if ($("plItemsList")) $("plItemsList").addEventListener("change", e => {
+    const t = e.target;
+    if (t.matches("[data-pl-check]")) {
+      const i = Number(t.getAttribute("data-pl-check"));
+      if (plPreviewItems[i]) plPreviewItems[i].selected = t.checked;
+      plUpdateImportBtn();
+    } else if (t.matches("[data-pl-ep]")) {
+      const i = Number(t.getAttribute("data-pl-ep"));
+      if (plPreviewItems[i] && t.value) plPreviewItems[i].ep = String(t.value);
+    }
+  });
+  if ($("plResultsBox")) $("plResultsBox").addEventListener("click", e => {
+    const chip = e.target.closest("[data-pl-filter]");
+    if (chip) { plFilterResults(chip.getAttribute("data-pl-filter")); return; }
+    const act = e.target.closest("[data-pl-action]");
+    if (!act) return;
+    if (act.getAttribute("data-pl-action") === "view") {
+      pendingCatalogSearch = plLastSeries;
+      showDashboard();
+    } else if (act.getAttribute("data-pl-action") === "again") {
+      plResetWizard();
+    }
+  });
   $("dramaForm").onsubmit = handleSaveDrama;
 
   // File preview trigger
@@ -1900,6 +2047,12 @@ async function runAiAutofill() {
   if (!url) {
     status.className = "ai-status active err";
     status.textContent = "Paste a YouTube link first.";
+    return;
+  }
+
+  if (/[?&]list=/.test(url)) {
+    status.className = "ai-status active err";
+    status.textContent = "That link is a playlist — use step 2 (Whole playlist) below instead.";
     return;
   }
 
@@ -1961,8 +2114,10 @@ async function runAiAutofill() {
 
     status.className = "ai-status active ok";
     status.textContent = data.cached
-      ? "Done — used before, no wait."
-      : "Done. Check below, then Save.";
+      ? "Done — AI reused earlier info (no wait)."
+      : data.searched
+        ? "Done — AI searched the web for this drama."
+        : "Done — AI filled from the YouTube info. Check below, then Save.";
   } catch (err) {
     status.className = "ai-status active err";
     status.textContent = "Problem: " + (err.message || String(err));
@@ -1973,9 +2128,133 @@ async function runAiAutofill() {
 }
 
 // ----------------------
-// PLAYLIST: SEE + ADD ALL
+// PLAYLIST WIZARD: preview -> editable AI series info -> import with progress
 // ----------------------
-let plPreviewItems = [];
+let plPreviewItems = []; // [{id,title,description,publishedAt,thumbnail,url,ep,selected,dup}]
+let plImporting = false;
+let plCancelled = false;
+let plLastSeries = "";
+let plSuggestedSeries = "";
+let pendingCatalogSearch = "";
+
+// Pure render helpers (only depend on esc / cleanDramaTitle / configuredCategories).
+function plRowHtml(it, i) {
+  const computed = cleanDramaTitle(it.title) || `Episode ${esc(it.ep || (i + 1))}`;
+  return `
+    <div class="pl-row" data-row="${i}">
+      <input type="checkbox" data-pl-check="${i}"${it.selected ? " checked" : ""} aria-label="Include this video">
+      <img src="${esc(it.thumbnail)}" alt="" loading="lazy">
+      <span class="pl-info">
+        <span class="pl-title">${esc(it.title)}</span>
+        <span class="pl-computed">Saves as “${esc(computed)}” · Ep ${esc(it.ep || (i + 1))}</span>
+        ${it.dup ? `<span class="pl-dup">Already in archive — unticked</span>` : ""}
+      </span>
+      <span class="pl-ep-wrap"><label>Ep</label><input class="pl-ep" data-pl-ep="${i}" type="number" min="1" inputmode="numeric" value="${esc(it.ep || (i + 1))}"></span>
+    </div>`;
+}
+
+function plAiBoxHtml(series, ai) {
+  const v = k => esc(ai?.[k] || "");
+  return `
+    <div class="pl-ai-grid">
+      <div>
+        <label>Drama name</label>
+        <input id="plSeriesInput" value="${esc(series || "")}" placeholder="Same for all episodes">
+      </div>
+      <div>
+        <label>Group</label>
+        <select id="plCatSelect">
+          ${configuredCategories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
+        </select>
+      </div>
+      <div>
+        <label>Urdu name</label>
+        <input id="plAiUrdu" class="urdu-input" value="${v("urdu_title")}" placeholder="اردو نام">
+      </div>
+      <div>
+        <label>Year</label>
+        <input id="plAiYear" value="${v("year")}" placeholder="e.g. 1987" inputmode="numeric">
+      </div>
+      <div>
+        <label>Writer</label>
+        <input id="plAiWriter" value="${v("writer")}" placeholder="Writer">
+      </div>
+      <div>
+        <label>Director</label>
+        <input id="plAiDirector" value="${v("director")}" placeholder="Director">
+      </div>
+      <div class="full">
+        <label>PTV center</label>
+        <input id="plAiProduced" value="${v("produced")}" placeholder="e.g. Lahore, Karachi">
+      </div>
+      <div class="full">
+        <label>Cast</label>
+        <input id="plAiCast" value="${v("cast")}" placeholder="Names, with commas">
+      </div>
+      <div class="full">
+        <label>About (shared by all episodes)</label>
+        <textarea id="plAiDesc" placeholder="What is this drama about?">${v("description")}</textarea>
+      </div>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn btn-ghost btn-sm" id="plAiRefreshBtn" type="button">↻ Ask AI again</button>
+    </div>`;
+}
+
+function plResultRowHtml(r) {
+  const icon = r.status === "added" ? "✓" : r.status === "skipped" ? "–" : "×";
+  return `<div class="pl-result ${r.status}" data-pl-status="${r.status}">${icon} ${esc(r.title)} (Ep ${esc(r.ep)})${r.note ? ` — ${esc(r.note)}` : ""}${r.status === "added" ? " added" : ""}</div>`;
+}
+
+function plSummaryHtml(s) {
+  const chip = (f, label, n) => n > 0 ? `<button class="pl-chip" data-pl-filter="${f}" type="button">${label} ${n}</button>` : "";
+  const headline = s.cancelled
+    ? `Stopped — ${s.added} added before cancel`
+    : s.failed > 0
+      ? `${s.added} of ${s.total} added`
+      : `All ${s.added} added ✓`;
+  return `
+    <div class="pl-summary">
+      <div class="pl-summary-title">${esc(headline)}</div>
+      <div class="pl-summary-sub">${esc(s.series || "")}${s.skipped ? ` · ${s.skipped} already in archive` : ""}${s.failed ? ` · ${s.failed} failed` : ""}</div>
+      <div class="pl-chips">
+        <button class="pl-chip active" data-pl-filter="all" type="button">All ${s.total}</button>
+        ${chip("added", "Added", s.added)}
+        ${chip("skipped", "Already there", s.skipped)}
+        ${chip("error", "Failed", s.failed)}
+      </div>
+      <div class="pl-summary-actions">
+        <button class="btn btn-gold btn-sm" data-pl-action="view" type="button">View in Dramas →</button>
+        <button class="btn btn-ghost btn-sm" data-pl-action="again" type="button">+ Add another</button>
+      </div>
+    </div>`;
+}
+
+function plSelected() {
+  const out = [];
+  plPreviewItems.forEach((it, i) => {
+    const check = document.querySelector(`[data-pl-check="${i}"]`);
+    const epInput = document.querySelector(`[data-pl-ep="${i}"]`);
+    const selected = check ? check.checked : !!it.selected;
+    let ep = epInput && epInput.value ? Number(epInput.value) : Number(it.ep) || (i + 1);
+    if (!(ep > 0)) ep = i + 1;
+    if (selected) out.push({ it, ep: String(ep) });
+  });
+  return out;
+}
+
+function plUpdateImportBtn() {
+  const btn = $("plImportBtn");
+  if (!btn) return;
+  const n = plSelected().length;
+  btn.textContent = n > 0 ? `Add ${n} to archive` : "Add to archive";
+  btn.disabled = plImporting || n === 0;
+  const note = $("plCountNote");
+  if (note) {
+    const dups = plPreviewItems.filter(x => x.dup).length;
+    note.textContent = `${plPreviewItems.length} videos${dups ? ` · ${dups} already in archive` : ""} · ${n} selected`;
+  }
+}
 
 async function runPlaylistPreview() {
   const btn = $("plPreviewBtn");
@@ -1984,6 +2263,11 @@ async function runPlaylistPreview() {
   if (!url) {
     status.className = "ai-status active err";
     status.textContent = "Paste a playlist link first.";
+    return;
+  }
+  if (/youtu\.?be/.test(url) && !/[?&]list=/.test(url)) {
+    status.className = "ai-status active err";
+    status.textContent = "That looks like a single video — use step 1 (Fill) above instead.";
     return;
   }
   if (!authSession?.access_token) { showLogin("Please sign in again."); return; }
@@ -2002,22 +2286,39 @@ async function runPlaylistPreview() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Could not read playlist.");
-    plPreviewItems = data.items || [];
+    plSuggestedSeries = data.suggestedSeries || "";
+    plPreviewItems = (data.items || []).map((it, i) => ({
+      ...it,
+      url: it.url || `https://www.youtube.com/watch?v=${it.id}`,
+      ep: it.episode || String(i + 1),
+      selected: true,
+      dup: false
+    }));
+    if (!plPreviewItems.length) throw new Error("No videos found in this playlist.");
+
+    // Pre-check duplicates in ONE query so the user sees them before importing.
+    try {
+      const urls = plPreviewItems.map(x => x.url);
+      const { data: existing } = await supabase.from("Drama").select("youtube_url").in("youtube_url", urls);
+      const have = new Set((existing || []).map(r => r.youtube_url));
+      plPreviewItems.forEach(x => {
+        if (have.has(x.url)) { x.dup = true; x.selected = false; }
+      });
+    } catch (e) {
+      console.warn("Duplicate pre-check failed, continuing", e);
+    }
+
     $("plPreviewBox").style.display = "block";
-    $("plSeriesInput").value = data.suggestedSeries || "";
-    $("plItemsList").innerHTML = plPreviewItems.map((it, i) => `
-      <label class="pl-row">
-        <input type="checkbox" data-pl-idx="${i}" checked>
-        <img src="${esc(it.thumbnail)}" alt="" loading="lazy">
-        <span class="pl-info">
-          <span class="pl-title">${esc(it.title)}</span>
-          <span class="pl-sub" style="display:block">Episode ${esc(it.episode || (i + 1))}</span>
-        </span>
-      </label>
-    `).join("");
+    $("plItemsList").innerHTML = plPreviewItems.map(plRowHtml).join("");
     $("plResultsBox").innerHTML = "";
+    $("plStatusMsg").className = "ai-status";
+    $("plStatusMsg").textContent = "";
+    setPlProgress(0, "");
+    plUpdateImportBtn();
     status.className = "ai-status active ok";
-    status.textContent = `${plPreviewItems.length} videos found. Untick any to skip, then Add all.`;
+    status.textContent = `${plPreviewItems.length} videos found. Fix episode numbers, review the AI info, then add.`;
+    $("playlistCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    fetchPlAiCredits(false);
   } catch (err) {
     status.className = "ai-status active err";
     status.textContent = "Problem: " + (err.message || String(err));
@@ -2027,124 +2328,192 @@ async function runPlaylistPreview() {
   }
 }
 
+function setPlAiBadge(state, text) {
+  const b = $("plAiBadge");
+  if (!b) return;
+  b.className = "pl-ai-badge" + (state ? " " + state : "");
+  b.textContent = text || "";
+}
+
+async function fetchPlAiCredits(isRefresh) {
+  const box = $("plAiBox");
+  if (!box) return;
+  if (!plPreviewItems.length) { box.innerHTML = ""; return; }
+  setPlAiBadge("", isRefresh ? "Asking AI…" : "Asking AI…");
+  if (!isRefresh || !box.querySelector(".pl-ai-grid")) {
+    box.innerHTML = `<div class="pl-skel"><span style="width:60%"></span><span></span><span style="width:80%"></span></div>`;
+  }
+  const first = plPreviewItems.find(x => !x.dup) || plPreviewItems[0];
+  const firstUrl = first.url || `https://www.youtube.com/watch?v=${first.id}`;
+  try {
+    if (!authSession?.access_token) throw new Error("Signed out.");
+    const aiRes = await fetch("/api/ai-autofill", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": "Bearer " + authSession.access_token
+      },
+      body: JSON.stringify({ url: firstUrl, forceSearch: true })
+    });
+    const aiData = await aiRes.json().catch(() => ({}));
+    if (!aiRes.ok) throw new Error(aiData.error || "AI request failed.");
+    const f = aiData.fields || {};
+    box.innerHTML = plAiBoxHtml(f.series_name || plSuggestedSeries || cleanDramaTitle(first.title), f);
+    if ($("plAiRefreshBtn")) $("plAiRefreshBtn").onclick = () => fetchPlAiCredits(true);
+    setPlAiBadge(
+      aiData.cached ? "cached" : "found",
+      aiData.cached ? "⚡ AI · reused earlier info, no cost" : aiData.searched ? "✨ AI · searched the web" : "✨ AI · filled from YouTube info"
+    );
+  } catch (err) {
+    console.warn("AI credits failed", err);
+    box.innerHTML = plAiBoxHtml(plSuggestedSeries || cleanDramaTitle(first.title), null);
+    if ($("plAiRefreshBtn")) $("plAiRefreshBtn").onclick = () => fetchPlAiCredits(true);
+    setPlAiBadge("failed", "AI unavailable — fill in yourself, then add");
+  }
+}
+
+function setPlProgress(pct, text) {
+  const bar = $("plProgressBar");
+  const fill = $("plProgressFill");
+  const t = $("plProgressText");
+  if (!bar || !fill || !t) return;
+  if (!text && pct <= 0) {
+    bar.style.display = "none";
+    t.style.display = "none";
+    return;
+  }
+  bar.style.display = "block";
+  t.style.display = "block";
+  fill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+  t.innerHTML = text || "";
+}
+
+function plFilterResults(f) {
+  document.querySelectorAll("#plResultsBox [data-pl-filter]").forEach(c => {
+    c.classList.toggle("active", c.getAttribute("data-pl-filter") === f);
+  });
+  document.querySelectorAll('#plResultsBox [data-pl-status]').forEach(r => {
+    r.style.display = (f === "all" || r.getAttribute("data-pl-status") === f) ? "" : "none";
+  });
+}
+
+function plResetWizard() {
+  plPreviewItems = [];
+  plImporting = false;
+  plCancelled = false;
+  plLastSeries = "";
+  $("plUrlInput").value = "";
+  $("plPreviewBox").style.display = "none";
+  $("plItemsList").innerHTML = "";
+  $("plAiBox").innerHTML = "";
+  setPlAiBadge("", "");
+  $("plResultsBox").innerHTML = "";
+  setPlProgress(0, "");
+  const s = $("plStatusMsgTop");
+  s.className = "ai-status";
+  s.textContent = "";
+  $("plUrlInput").focus();
+}
+
 async function runPlaylistImport() {
   const btn = $("plImportBtn");
+  const cancelBtn = $("plCancelBtn");
   const status = $("plStatusMsg");
   const box = $("plResultsBox");
-  const selectedItems = [];
-  document.querySelectorAll('[data-pl-idx]:checked').forEach(c => {
-    const idx = Number(c.getAttribute("data-pl-idx"));
-    if (plPreviewItems[idx]) selectedItems.push(plPreviewItems[idx]);
-  });
+  const selected = plSelected();
 
-  if (!selectedItems.length) {
+  if (!selected.length) {
     status.className = "ai-status active err";
-    status.textContent = "Tick at least one video.";
+    status.textContent = "Tick at least one video first.";
     return;
   }
+  if (!authSession?.access_token) { showLogin("Please sign in again."); return; }
 
-  if (!authSession?.access_token) {
-    showLogin("Please sign in again.");
-    return;
-  }
+  const seriesName = ($("plSeriesInput")?.value || "").trim()
+    || cleanDramaTitle(selected[0].it.title) || plSuggestedSeries || "Untitled serial";
+  const credits = {
+    category: $("plCatSelect")?.value || configuredCategories[0] || "Long Play",
+    urdu_title: ($("plAiUrdu")?.value || "").trim(),
+    year: ($("plAiYear")?.value || "").trim(),
+    writer: ($("plAiWriter")?.value || "").trim(),
+    director: ($("plAiDirector")?.value || "").trim(),
+    produced: ($("plAiProduced")?.value || "").trim(),
+    cast: ($("plAiCast")?.value || "").trim(),
+    description: ($("plAiDesc")?.value || "").trim()
+  };
 
+  plImporting = true;
+  plCancelled = false;
   btn.disabled = true;
   btn.textContent = "Adding…";
+  cancelBtn.style.display = "";
   status.className = "ai-status active info";
-  status.textContent = `Gathering drama info for ${selectedItems.length} videos…`;
+  status.textContent = `Adding ${selected.length} episodes of “${seriesName}”…`;
   box.innerHTML = "";
+  plUpdateImportBtn();
 
-  try {
-    const seriesName = $("plSeriesInput").value.trim() || cleanDramaTitle(selectedItems[0].title);
-    const category = $("plCatSelect").value;
+  let added = 0, skipped = 0, failed = 0;
+  const total = selected.length;
 
-    // 1. Fetch AI details once for episode 1 (or series) to share writer/director/cast/urdu
-    let sharedCredits = null;
+  for (let i = 0; i < selected.length; i++) {
+    if (plCancelled) break;
+    const { it, ep } = selected[i];
+    const epNum = Number(ep) || (i + 1);
+    setPlProgress(Math.round((i / total) * 100), `Adding <b>${i + 1} of ${total}</b> — Ep ${esc(epNum)}…`);
+
+    const videoUrl = it.url || `https://www.youtube.com/watch?v=${it.id}`;
     try {
-      const firstVidUrl = selectedItems[0].url || `https://www.youtube.com/watch?v=${selectedItems[0].id}`;
-      const aiRes = await fetch("/api/ai-autofill", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "authorization": "Bearer " + authSession.access_token
-        },
-        body: JSON.stringify({
-          url: firstVidUrl,
-          forceSearch: true
-        })
-      });
-      if (aiRes.ok) {
-        const aiData = await aiRes.json();
-        sharedCredits = aiData.fields || null;
-      }
-    } catch (e) {
-      console.warn("AI autofill failed for playlist, proceeding with basic metadata", e);
-    }
-
-    // 2. Iterate through each video one by one with live progress
-    let addedCount = 0;
-    let skippedCount = 0;
-
-    for (let i = 0; i < selectedItems.length; i++) {
-      const it = selectedItems[i];
-      const epNum = Number(it.episode) || (i + 1);
-      status.textContent = `Adding ${i + 1} of ${selectedItems.length}: Ep ${epNum}…`;
-
-      const videoUrl = it.url || `https://www.youtube.com/watch?v=${it.id}`;
-
-      // Check if duplicate already in database
       const { data: dupData } = await supabase.from("Drama").select("id").eq("youtube_url", videoUrl);
       if (dupData && dupData.length > 0) {
-        skippedCount++;
-        const row = document.createElement("div");
-        row.className = "pl-result skipped";
-        row.textContent = `– ${it.title} (Ep ${epNum}) — Already in archive`;
-        box.appendChild(row);
-        box.scrollTop = box.scrollHeight;
+        skipped++;
+        box.insertAdjacentHTML("beforeend", plResultRowHtml({ status: "skipped", title: it.title, ep: epNum, note: "Already in archive" }));
         continue;
       }
-
       const title = cleanDramaTitle(it.title) || `${seriesName} Ep ${epNum}`;
       const payload = {
         title,
-        urdu_title: sharedCredits?.urdu_title || "",
-        year: sharedCredits?.year || String(it.publishedAt || "").slice(0, 4),
-        type: category,
+        urdu_title: credits.urdu_title,
+        year: credits.year || String(it.publishedAt || "").slice(0, 4),
+        type: credits.category,
         series_name: seriesName,
         episode_number: epNum,
-        writer: sharedCredits?.writer || "",
-        director: sharedCredits?.director || "",
-        produced: sharedCredits?.produced || "",
-        cast: sharedCredits?.cast || "",
-        description: (it.description || sharedCredits?.description || "").slice(0, 800),
+        writer: credits.writer,
+        director: credits.director,
+        produced: credits.produced,
+        cast: credits.cast,
+        description: (it.description || credits.description).slice(0, 800),
         youtube_url: videoUrl,
         thumbnail_url: it.thumbnail || ""
       };
-
       const { error: insErr } = await supabase.from("Drama").insert(payload);
-      const row = document.createElement("div");
       if (insErr) {
-        row.className = "pl-result error";
-        row.textContent = `× ${it.title} (Ep ${epNum}) — ${insErr.message}`;
+        failed++;
+        box.insertAdjacentHTML("beforeend", plResultRowHtml({ status: "error", title: it.title, ep: epNum, note: insErr.message }));
       } else {
-        addedCount++;
-        row.className = "pl-result added";
-        row.textContent = `✓ ${it.title} (Ep ${epNum}) added`;
+        added++;
+        box.insertAdjacentHTML("beforeend", plResultRowHtml({ status: "added", title, ep: epNum }));
       }
-      box.appendChild(row);
-      box.scrollTop = box.scrollHeight;
+    } catch (e) {
+      failed++;
+      box.insertAdjacentHTML("beforeend", plResultRowHtml({ status: "error", title: it.title, ep: epNum, note: e.message || String(e) }));
     }
-
-    status.className = "ai-status active ok";
-    status.textContent = `Done: ${addedCount} added${skippedCount ? `, ${skippedCount} already there` : ""}.`;
-    await loadData();
-  } catch (err) {
-    status.className = "ai-status active err";
-    status.textContent = "Problem: " + (err.message || String(err));
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Add all";
   }
+
+  setPlProgress(plCancelled ? Math.round((added + skipped + failed) / total * 100) : 100,
+    plCancelled ? "Stopped." : `Finished — <b>${added}</b> added${skipped ? `, ${skipped} already there` : ""}${failed ? `, ${failed} failed` : ""}.`);
+  plLastSeries = seriesName;
+  box.insertAdjacentHTML("afterbegin", plSummaryHtml({ added, skipped, failed, total, series: seriesName, cancelled: plCancelled }));
+  box.querySelector(".pl-summary")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  status.className = failed && !added ? "ai-status active err" : "ai-status active ok";
+  status.textContent = failed && !added
+    ? "Nothing was added — see failures below."
+    : plCancelled ? "Stopped. What was added is saved." : "Saved. View them in Dramas or add another playlist.";
+
+  plImporting = false;
+  cancelBtn.style.display = "none";
+  plUpdateImportBtn();
+  btn.textContent = "Add to archive";
+  await loadData().catch(() => {});
 }
 
 // ----------------------
