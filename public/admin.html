@@ -1984,41 +1984,113 @@ async function runPlaylistImport() {
   const btn = $("plImportBtn");
   const status = $("plStatusMsg");
   const box = $("plResultsBox");
-  const url = $("plUrlInput").value.trim();
-  const checked = [...document.querySelectorAll('[data-pl-idx]:checked')].map(c => plPreviewItems[Number(c.getAttribute("data-pl-idx"))]?.id).filter(Boolean);
-  if (!checked.length) {
+  const selectedItems = [];
+  document.querySelectorAll('[data-pl-idx]:checked').forEach(c => {
+    const idx = Number(c.getAttribute("data-pl-idx"));
+    if (plPreviewItems[idx]) selectedItems.push(plPreviewItems[idx]);
+  });
+
+  if (!selectedItems.length) {
     status.className = "ai-status active err";
     status.textContent = "Tick at least one video.";
     return;
   }
+
+  if (!authSession?.access_token) {
+    showLogin("Please sign in again.");
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = "Adding…";
   status.className = "ai-status active info";
-  status.textContent = `Adding ${checked.length} videos… keep this open.`;
+  status.textContent = `Gathering drama info for ${selectedItems.length} videos…`;
   box.innerHTML = "";
+
   try {
-    const res = await fetch("/api/playlist-import", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": "Bearer " + authSession.access_token
-      },
-      body: JSON.stringify({
-        url,
-        videoIds: checked,
-        seriesName: $("plSeriesInput").value.trim(),
-        category: $("plCatSelect").value,
-        limit: 50
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Import failed.");
+    const seriesName = $("plSeriesInput").value.trim() || cleanDramaTitle(selectedItems[0].title);
+    const category = $("plCatSelect").value;
+
+    // 1. Fetch AI details once for episode 1 (or series) to share writer/director/cast/urdu
+    let sharedCredits = null;
+    try {
+      const firstVidUrl = selectedItems[0].url || `https://www.youtube.com/watch?v=${selectedItems[0].id}`;
+      const aiRes = await fetch("/api/ai-autofill", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "authorization": "Bearer " + authSession.access_token
+        },
+        body: JSON.stringify({
+          url: firstVidUrl,
+          forceSearch: true
+        })
+      });
+      if (aiRes.ok) {
+        const aiData = await aiRes.json();
+        sharedCredits = aiData.fields || null;
+      }
+    } catch (e) {
+      console.warn("AI autofill failed for playlist, proceeding with basic metadata", e);
+    }
+
+    // 2. Iterate through each video one by one with live progress
+    let addedCount = 0;
+    let skippedCount = 0;
+
+    for (let i = 0; i < selectedItems.length; i++) {
+      const it = selectedItems[i];
+      const epNum = Number(it.episode) || (i + 1);
+      status.textContent = `Adding ${i + 1} of ${selectedItems.length}: Ep ${epNum}…`;
+
+      const videoUrl = it.url || `https://www.youtube.com/watch?v=${it.id}`;
+
+      // Check if duplicate already in database
+      const { data: dupData } = await supabase.from("Drama").select("id").eq("youtube_url", videoUrl);
+      if (dupData && dupData.length > 0) {
+        skippedCount++;
+        const row = document.createElement("div");
+        row.className = "pl-result skipped";
+        row.textContent = `– ${it.title} (Ep ${epNum}) — Already in archive`;
+        box.appendChild(row);
+        box.scrollTop = box.scrollHeight;
+        continue;
+      }
+
+      const title = cleanDramaTitle(it.title) || `${seriesName} Ep ${epNum}`;
+      const payload = {
+        title,
+        urdu_title: sharedCredits?.urdu_title || "",
+        year: sharedCredits?.year || String(it.publishedAt || "").slice(0, 4),
+        type: category,
+        series_name: seriesName,
+        episode_number: epNum,
+        writer: sharedCredits?.writer || "",
+        director: sharedCredits?.director || "",
+        produced: sharedCredits?.produced || "",
+        cast: sharedCredits?.cast || "",
+        description: (it.description || sharedCredits?.description || "").slice(0, 800),
+        youtube_url: videoUrl,
+        thumbnail_url: it.thumbnail || ""
+      };
+
+      const { error: insErr } = await supabase.from("Drama").insert(payload);
+      const row = document.createElement("div");
+      if (insErr) {
+        row.className = "pl-result error";
+        row.textContent = `× ${it.title} (Ep ${epNum}) — ${insErr.message}`;
+      } else {
+        addedCount++;
+        row.className = "pl-result added";
+        row.textContent = `✓ ${it.title} (Ep ${epNum}) added`;
+      }
+      box.appendChild(row);
+      box.scrollTop = box.scrollHeight;
+    }
+
     status.className = "ai-status active ok";
-    status.textContent = `Done: ${data.added} added${data.skipped ? `, ${data.skipped} already there` : ""}.`;
-    box.innerHTML = (data.results || []).map(r => `
-      <div class="pl-result ${esc(r.status)}">${r.status === "added" ? "✓" : r.status === "skipped" ? "–" : "×"} ${esc(r.title)}${r.note ? ` — ${esc(r.note)}` : ""}</div>
-    `).join("");
-    loadData().catch(() => {});
+    status.textContent = `Done: ${addedCount} added${skippedCount ? `, ${skippedCount} already there` : ""}.`;
+    await loadData();
   } catch (err) {
     status.className = "ai-status active err";
     status.textContent = "Problem: " + (err.message || String(err));

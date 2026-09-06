@@ -6,9 +6,11 @@ const SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
 
 // Initialize Supabase Client
-const supabase = (window.supabase && typeof window.supabase.createClient === "function")
+var sbClient = (window.supabase && typeof window.supabase.createClient === "function")
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
+window.sbClient = sbClient;
+
 
 // DOM helper
 const $ = id => document.getElementById(id);
@@ -426,8 +428,8 @@ window.addEventListener("click", e => {
 });
 
 async function handleSignOut() {
-  if (supabase) {
-    await supabase.auth.signOut();
+  if (sbClient) {
+    await sbClient.auth.signOut();
   }
   updateAuthUi(null);
 }
@@ -476,7 +478,7 @@ function updateAuthUi(session) {
 }
 
 function initAuth() {
-  if (!supabase) return;
+  if (!sbClient) return;
   const form = $("authModalForm");
   if (form) {
     form.onsubmit = async e => {
@@ -489,7 +491,7 @@ function initAuth() {
       status.textContent = "Verifying account credentials…";
 
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
         if (error) {
           status.className = "auth-status-msg err";
           status.textContent = error.message || "Invalid login credentials.";
@@ -510,11 +512,11 @@ function initAuth() {
     };
   }
 
-  supabase.auth.getSession().then(({ data }) => {
+  sbClient.auth.getSession().then(({ data }) => {
     updateAuthUi(data?.session);
   });
 
-  supabase.auth.onAuthStateChange((event, session) => {
+  sbClient.auth.onAuthStateChange((event, session) => {
     updateAuthUi(session);
   });
 }
