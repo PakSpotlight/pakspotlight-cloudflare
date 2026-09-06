@@ -1188,7 +1188,7 @@ function renderHeroItems() {
   if (!configuredFeaturedIds.length) {
     container.innerHTML = `
       <div style="padding:32px;text-align:center;color:var(--text-muted);border:1px dashed var(--border);border-radius:8px">
-        No specific dramas pinned to the Hero Slider. The public homepage will automatically default to top catalog items with valid thumbnails.
+        Empty. Tap ☆ Top on a drama to pin it here.
       </div>
     `;
     return;
@@ -1203,7 +1203,7 @@ function renderHeroItems() {
         <img class="hero-item-thumb" src="${esc(d.image || '/logo.png')}" alt="${esc(d.title)}">
         <div class="hero-item-info">
           <div class="hero-item-title">${esc(d.title)} ${d.urdu ? `<span style="font-family:var(--font-urdu);color:var(--gold);font-size:12px;margin-left:6px">${esc(d.urdu)}</span>` : ''}</div>
-          <div class="hero-item-sub">${esc(d.type)} · ${d.year ? 'Year: ' + esc(d.year) : 'PTV Classic'} ${d.writer ? '· Playwright: ' + esc(d.writer) : ''}</div>
+          <div class="hero-item-sub">${esc(d.type)}${d.year ? ' · ' + esc(d.year) : ''}${d.writer ? ' · ' + esc(d.writer) : ''}</div>
         </div>
         <div class="hero-item-actions">
           <button class="btn-icon" title="Move Up" onclick="moveHeroItem(${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
@@ -1229,7 +1229,7 @@ window.removeHeroItem = function(index) {
   renderDramaItems(rows);
 };
 
-window.toggleHeroFeature = function(dramaId) {
+window.toggleHeroFeature = async function(dramaId) {
   const idx = configuredFeaturedIds.indexOf(dramaId);
   if (idx >= 0) {
     configuredFeaturedIds.splice(idx, 1);
@@ -1238,7 +1238,21 @@ window.toggleHeroFeature = function(dramaId) {
   }
   renderHeroItems();
   renderDramaItems(rows);
-  switchAdminTab('hero');
+  // Save right away so the home page changes without extra taps.
+  try {
+    const res = await fetch("/api/featured", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": "Bearer " + authSession.access_token
+      },
+      body: JSON.stringify({ featuredIds: configuredFeaturedIds })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) throw new Error(data.error || "Failed.");
+  } catch (err) {
+    alert("Problem: " + (err.message || String(err)));
+  }
 };
 
 async function saveFeaturedToServer() {

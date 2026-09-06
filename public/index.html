@@ -419,6 +419,8 @@ input, select, textarea { font-family: inherit; }
   border-color: var(--gold);
   transform: translateY(-50%) scale(1.08);
 }
+/* Center play badge — mobile only */
+.hero-play-center { display: none; }
 .hero-chevron-prev { left: 24px; }
 .hero-chevron-next { right: 24px; }
 
@@ -1658,6 +1660,49 @@ html, body { overflow-x: clip; }
   .watch-player-frame { margin: 0 -14px; border-radius: 0; }
   .watch-player-frame iframe { aspect-ratio: 16/9; height: auto; }
   .ep-name { font-size: 13px; }
+
+  /* Netflix mobile: full black, poster + overlay + titles + center play */
+  body { background-color: #000; background-image: none; }
+  .topbar, .topbar.scrolled { background: rgba(0,0,0,0.92); }
+  .mobile-nav-strip { background: #000; }
+  .hero-slider-wrap { min-height: 540px; background: #000; }
+  .hero-slide { padding: 90px 5% 28px; background-position: center 25%; }
+  .hero-vignette {
+    background:
+      linear-gradient(0deg, #000 4%, rgba(0,0,0,0.88) 32%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.45) 100%) !important;
+  }
+  .hero-overlay-content {
+    background: none;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    padding: 0;
+  }
+  .hero-badge { background: rgba(0,0,0,0.55); }
+  .hero-play-center {
+    display: flex;
+    position: absolute;
+    z-index: 3;
+    top: 34%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: #0b110e;
+    padding-left: 5px;
+    background: linear-gradient(135deg, #ffd768, #d4a024);
+    box-shadow: 0 0 0 6px rgba(245,197,66,0.22), 0 10px 30px rgba(0,0,0,0.6);
+  }
+  .hero-play-center:active { transform: translate(-50%,-50%) scale(0.93); }
+  .btn-play-netflix { display: none; }
+  .hero-actions { justify-content: center; }
+  .btn-info-netflix { padding: 10px 22px; font-size: 13px; }
+  .rows-container { background: #000; }
 }
 </style>
 </head>
@@ -1781,6 +1826,7 @@ let viewMode = "home"; // "home" | "category" | "search" | "watch"
 let activeCategory = "all";
 let currentDetailDrama = null;
 let currentPlayingYt = "";
+let featuredIds = [];
 let categories = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
 
 function sanitizeId(str) {
@@ -1894,7 +1940,22 @@ async function loadData() {
   if (q.error) q = await supabase.from("Drama").select("*");
   if (q.error) { console.error(q.error); return []; }
   rows = (q.data || []).map(mapRow);
+  try {
+    const fr = await fetch("/api/featured");
+    if (fr.ok) {
+      const fdata = await fr.json();
+      if (Array.isArray(fdata.featuredIds)) featuredIds = fdata.featuredIds.map(Number).filter(n => n > 0);
+    }
+  } catch (e) { console.warn("Hero list unavailable", e); }
   return rows;
+}
+
+function heroPick() {
+  for (const id of featuredIds) {
+    const d = rows.find(r => r.id === id && r.image && r.title);
+    if (d) return d;
+  }
+  return rows.find(r => r.image && r.title && r.description) || rows[0] || {};
 }
 
 // ----------------------
@@ -1949,7 +2010,7 @@ function renderNetflixHome() {
       </div>`;
     return;
   }
-  const featured = rows.find(r => r.image && r.title && r.description) || rows[0] || {};
+  const featured = heroPick();
   const isSer = isSeries(featured) && !!featured.series;
   const fTitle = isSer ? featured.series : featured.title;
   const allGroups = groupDramas(rows);
@@ -1979,6 +2040,7 @@ function renderNetflixHome() {
     <section class="hero-slider-wrap">
       <div class="hero-slide active" style="background-image: url('${esc(featured.image || '/logo.png')}')">
         <div class="hero-vignette"></div>
+        <button class="hero-play-center" onclick="openWatchPage(${featured.id})" aria-label="Play">▶</button>
         <div class="hero-overlay-content">
           <div class="hero-badge">★ PTV Golden Era Spotlight</div>
           <div class="hero-title-row">
