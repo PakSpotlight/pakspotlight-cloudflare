@@ -421,7 +421,6 @@ function renderPosterCard(d, epCount = 1) {
         <div class="card-meta-line">
           <span>${esc(d.type)}</span>
           ${d.year ? ` · <span>${esc(d.year)}</span>` : ''}
-          ${countBadge ? ` · <span class="card-ep-count">${countBadge}</span>` : ''}
         </div>
       </div>
     </div>

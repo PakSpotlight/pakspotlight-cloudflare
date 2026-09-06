@@ -68,6 +68,7 @@
 
 .carousel-track {
   display: flex;
+  align-items: flex-start;
   gap: 12px;
   overflow-x: auto;
   padding: 4px 5% 14px;
@@ -118,13 +119,18 @@
   border-radius: 8px 0 0 8px;
 }
 
-/* Netflix Artwork Poster Cards (2:3 Aspect Ratio) */
+/* Netflix Widescreen 16:9 Video Cards (Identical Uniform Dimensions) */
 .netflix-card {
-  flex: 0 0 160px;
+  flex: 0 0 220px;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
   border-radius: 8px;
   cursor: pointer;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .netflix-card:hover {
@@ -133,7 +139,8 @@
 }
 
 .card-media {
-  aspect-ratio: 2/3;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -143,6 +150,8 @@
 }
 
 .card-media img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -155,6 +164,8 @@
 }
 
 .card-fallback {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -178,9 +189,13 @@
   line-height: 1.3;
 }
 
-/* Desktop Captions */
+/* Captions */
 .card-info {
+  width: 100%;
   padding: 8px 2px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .card-title-line {
@@ -188,6 +203,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 6px;
+  width: 100%;
 }
 
 .card-title {
@@ -198,6 +214,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.3;
+  flex: 1;
+  min-width: 0;
 }
 
 .card-urdu {
@@ -209,6 +227,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   direction: rtl;
+  flex-shrink: 0;
+  max-width: 45%;
 }
 
 .card-meta-line {
@@ -218,6 +238,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 100%;
 }
 
 .card-ep-tag {
@@ -243,21 +264,21 @@
 }
 
 /* ============================================================
-   MOBILE OVERRIDES: PURE ARTWORK POSTER CARDS (NO TEXT UNDER CARDS)
+   MOBILE OVERRIDES: UNIFORM 16:9 NETFLIX VIDEO CARDS
    ============================================================ */
 @media (max-width: 850px) {
   .rows-container {
-    gap: 24px;
-    padding: 10px 0 28px;
+    gap: 16px;
+    padding: 8px 0 24px;
   }
 
   .row-header {
     padding: 0 16px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .row-title {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .row-see-all {
@@ -267,6 +288,7 @@
   .carousel-track {
     padding: 2px 16px 8px;
     gap: 10px;
+    align-items: flex-start;
   }
 
   .carousel-btn {
@@ -274,7 +296,10 @@
   }
 
   .netflix-card {
-    flex: 0 0 clamp(108px, 30vw, 128px);
+    flex: 0 0 160px;
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
     border-radius: 6px;
   }
 
@@ -283,16 +308,21 @@
   }
 
   .netflix-card:active {
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
 
   .card-media {
     border-radius: 6px;
+    width: 100%;
+    aspect-ratio: 16 / 9;
   }
 
   .card-info {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column;
+    width: 100%;
     padding: 6px 2px 0;
+    gap: 2px;
   }
 
   .card-title {
@@ -481,17 +511,19 @@
   }
 
   .browse-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .browse-grid .netflix-card {
     flex: none;
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .browse-grid .card-info {
-    display: none !important;
+    display: flex !important;
   }
 }
 
