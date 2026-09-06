@@ -38,8 +38,9 @@ function renderPlaysTabHtml(standalonePlays) {
         </div>
       </div>
 
-      <table class="episodes-table">
-        <thead>
+      <div class="table-responsive">
+        <table class="episodes-table">
+          <thead>
           <tr>
             <th style="width:80px">Poster</th>
             <th>Title</th>
@@ -90,6 +91,7 @@ function renderPlaysTabHtml(standalonePlays) {
           }).join("")}
         </tbody>
       </table>
+      </div>
     </div>
   `;
 }

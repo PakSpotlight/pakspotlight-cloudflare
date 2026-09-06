@@ -195,34 +195,36 @@ function openSeriesManager(seriesName) {
       </span>
     </div>
 
-    <table class="episodes-table">
-      <thead>
-        <tr>
-          <th style="width:45px">#</th>
-          <th style="width:70px">Photo</th>
-          <th>Title</th>
-          <th>Urdu</th>
-          <th style="text-align:right">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${series.episodes.map(ep => `
+    <div class="table-responsive">
+      <table class="episodes-table">
+        <thead>
           <tr>
-            <td><span class="ep-num-badge">${ep.episode_number ?? '–'}</span></td>
-            <td>
-              <img class="ep-thumb-preview" src="${esc(ep.thumbnail_url || '/logo.png')}" alt="" onerror="this.onerror=null; this.src='/logo.png';">
-            </td>
-            <td><span style="font-weight:700;color:#fff">${esc(ep.title)}</span></td>
-            <td><span style="font-family:var(--font-urdu);color:var(--gold-ptv);font-size:13px">${esc(ep.urdu)}</span></td>
-            <td style="text-align:right;white-space:nowrap">
-              <button class="btn btn-ghost btn-sm" onclick="openEditEpisodeModal(${ep.id})">Edit</button>
-              ${ep.youtube_url ? `<a class="btn btn-ghost btn-sm" href="${esc(ep.youtube_url)}" target="_blank">YT ↗</a>` : ''}
-              <button class="btn btn-danger btn-sm" onclick="deleteDramaRecord(${ep.id}, '${esc(ep.title)}', '${esc(series.name)}')">🗑 Delete</button>
-            </td>
+            <th style="width:45px">#</th>
+            <th style="width:70px">Photo</th>
+            <th>Title</th>
+            <th>Urdu</th>
+            <th style="text-align:right">Actions</th>
           </tr>
-        `).join("")}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          ${series.episodes.map(ep => `
+            <tr>
+              <td><span class="ep-num-badge">${ep.episode_number ?? '–'}</span></td>
+              <td>
+                <img class="ep-thumb-preview" src="${esc(ep.thumbnail_url || '/logo.png')}" alt="" onerror="this.onerror=null; this.src='/logo.png';">
+              </td>
+              <td><span style="font-weight:700;color:#fff">${esc(ep.title)}</span></td>
+              <td><span style="font-family:var(--font-urdu);color:var(--gold-ptv);font-size:13px">${esc(ep.urdu)}</span></td>
+              <td style="text-align:right;white-space:nowrap">
+                <button class="btn btn-ghost btn-sm" onclick="openEditEpisodeModal(${ep.id})">Edit</button>
+                ${ep.youtube_url ? `<a class="btn btn-ghost btn-sm" href="${esc(ep.youtube_url)}" target="_blank">YT ↗</a>` : ''}
+                <button class="btn btn-danger btn-sm" onclick="deleteDramaRecord(${ep.id}, '${esc(ep.title)}', '${esc(series.name)}')">🗑 Delete</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
   `);
 }
 

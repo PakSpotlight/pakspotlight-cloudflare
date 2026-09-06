@@ -119,7 +119,7 @@ function updateTopAuthUi() {
   if (!container) return;
   if (authSession?.user) {
     container.innerHTML = `
-      <span style="font-size:12px;color:var(--ink-subtle);font-weight:600">👤 ${esc(authSession.user.email)}</span>
+      <span class="topbar-user-email" style="font-size:12px;color:var(--ink-subtle);font-weight:600">👤 ${esc(authSession.user.email)}</span>
       <a class="btn btn-ghost btn-sm" href="/index.html">← Public Site</a>
       <button class="btn btn-ghost btn-sm" onclick="handleSignOut()">Sign Out</button>
     `;
