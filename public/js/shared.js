@@ -124,6 +124,10 @@ function groupDramas(list) {
   }
   return Array.from(groups.values()).map(arr => {
     arr.sort((a, b) => (a.episode ?? 9999) - (b.episode ?? 9999));
+    const rep = arr.find(x => !!x.image) || arr[0];
+    if (rep && !arr[0].image && rep.image) {
+      arr[0] = { ...arr[0], image: rep.image };
+    }
     return arr;
   });
 }
