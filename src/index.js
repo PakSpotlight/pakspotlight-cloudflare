@@ -428,13 +428,14 @@ const ctxRef = { waitUntil: null };
 
 function playlistIdFromUrl(value) {
   const s = String(value || "").trim();
+  const clean = v => String(v || "").replace(/^['"\s]+|['"\s]+$/g, "").trim();
   try {
     const u = new URL(s);
-    const p = u.searchParams.get("list");
+    const p = clean(u.searchParams.get("list"));
     if (p) return p;
   } catch {}
   const m = s.match(/(?:^|[^A-Za-z0-9_-])(PL[A-Za-z0-9_-]{10,}|UU[A-Za-z0-9_-]{10,}|[A-Za-z0-9_-]{13,})(?:[^A-Za-z0-9_-]|$)/);
-  return m ? m[1] : "";
+  return m ? clean(m[1]) : "";
 }
 
 async function fetchPlaylistMeta(playlistId, env) {

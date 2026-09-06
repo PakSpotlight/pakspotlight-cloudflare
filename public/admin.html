@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pak Spotlight — Admin Portal</title>
+<link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -27,6 +28,9 @@
   --success: #66bb6a;
   --success-bg: rgba(102, 187, 106, 0.12);
   --radius: 12px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --control-h: 46px;
   --font-serif: 'Cinzel', serif;
   --font-sans: 'Plus Jakarta Sans', sans-serif;
   --font-urdu: 'Noto Nastaliq Urdu', serif;
@@ -354,9 +358,10 @@ input, select, textarea { font-family: inherit; }
   background: #080e0a;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px 14px;
+  padding: 0 14px;
+  min-height: var(--control-h);
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   min-width: 240px;
 }
 .search-input:focus {
@@ -484,16 +489,19 @@ input, select, textarea { font-family: inherit; }
 }
 .add-card h2 { font-size: 15px; font-weight: 800; color: #fff; }
 .add-card p.hint { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; }
-.add-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.add-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
 .add-row input, .add-row select {
   flex: 1; min-width: 200px;
   background: #080e0a; border: 1px solid var(--border-gold);
-  border-radius: 8px; padding: 13px 14px; color: #fff; font-size: 14px;
+  border-radius: 8px; padding: 0 14px; min-height: var(--control-h); color: #fff; font-size: 14px;
 }
 .add-row input:focus, .add-row select:focus { border-color: var(--gold); outline: none; }
+.add-row .btn { min-height: var(--control-h); flex-shrink: 0; }
+#plCatSelect { flex: 0 0 200px; min-width: 160px; }
 @media (max-width: 640px) {
-  .add-row { flex-direction: column; }
-  .add-row input, .add-row select, .add-row button { width: 100%; min-width: 0; }
+  .add-row { flex-direction: column; align-items: stretch; }
+  .add-row input, .add-row select, .add-row .btn { width: 100%; min-width: 0; min-height: 48px; }
+  #plCatSelect { flex: 1 1 auto; }
   .add-card { padding: 16px 14px; }
 }
 /* Playlist preview list */
@@ -573,6 +581,7 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  align-items: stretch;
 }
 .ai-input-row input {
   flex: 1;
@@ -580,10 +589,12 @@ input, select, textarea { font-family: inherit; }
   background: #080e0a;
   border: 1px solid var(--border-gold);
   border-radius: 8px;
-  padding: 12px 16px;
+  padding: 0 16px;
+  min-height: var(--control-h);
   color: #fff;
   font-size: 14px;
 }
+.ai-input-row .btn { min-height: var(--control-h); }
 .ai-status {
   margin-top: 12px;
   font-size: 13px;
@@ -839,7 +850,19 @@ input, select, textarea { font-family: inherit; }
   color: var(--gold);
 }
 .form-grid input,
-.form-grid select,
+.form-grid select {
+  width: 100%;
+  background: #080f0c;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 14px;
+  min-height: var(--control-h);
+  color: #fff;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
 .form-grid textarea {
   width: 100%;
   background: #080f0c;
@@ -864,22 +887,31 @@ input, select, textarea { font-family: inherit; }
   outline: none;
   box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.15);
 }
-.form-grid select {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23f5c542' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  padding-right: 38px;
-}
-.form-grid select option {
-  background: #0e1712;
-  color: #fff;
-}
 .form-grid textarea {
   min-height: 110px;
   resize: vertical;
   line-height: 1.6;
+}
+/* One shared select look everywhere (hero picker, playlist group, drama group).
+   Must come AFTER the .add-row / .form-grid background shorthands above,
+   otherwise `background:` resets background-image to none. */
+select.search-input,
+.add-row select,
+.form-grid select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23f5c542' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+select.search-input option,
+.add-row select option,
+.form-grid select option {
+  background: #0e1712;
+  color: #fff;
 }
 .urdu-input {
   font-family: var(--font-urdu), serif !important;
@@ -987,7 +1019,7 @@ footer {
   .panel-header { margin-bottom: 12px; gap: 10px; }
   .panel-title { font-size: 16px; }
   .panel-controls, .panel-controls .search-input { width: 100%; }
-  .panel-controls .search-input { min-width: 0; padding: 12px 14px; font-size: 14px; }
+  .panel-controls .search-input { min-width: 0; padding: 0 14px; font-size: 14px; }
 
   /* Rows: thumb left, text middle, actions scroll in one line */
   .drama-list { gap: 8px; }
@@ -1000,7 +1032,6 @@ footer {
   }
   .drama-thumb-box { width: 76px; height: 46px; flex-shrink: 0; }
   .drama-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
-  .drama-info { flex: 1; min-width: 0; }
   .drama-info { flex: 1; min-width: 0; }
   .drama-title-row { min-width: 0; }
   .drama-title { font-size: 13px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1085,6 +1116,22 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// Mirror of the Worker's cleanDramaTitle: "Dhoop Kinare Ep 5 | PTV" -> "Dhoop Kinare".
+// Defined here because the form's playlist import runs in the browser.
+function cleanDramaTitle(title) {
+  return String(title || "")
+    .replace(/\s*\|\s*.*$/, "")
+    .replace(/\s*-\s*(PTV|Pak Spotlight|Classic|Full|Drama|Play|HD).*$/i, "")
+    .replace(/\s*\b(Ep|Episode|Part|Qist)\s*\.?\s*#?\s*\d+\b.*$/i, "")
+    .replace(/\s*[(\[]\s*\d{1,3}\s*[)\]]\s*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+// Alias for the alternate spelling used in older revisions.
+const clearDramaTitle = cleanDramaTitle;
+window.cleanDramaTitle = cleanDramaTitle;
+window.clearDramaTitle = clearDramaTitle;
 
 let rows = [];
 let authSession = null;
@@ -1498,8 +1545,8 @@ async function showDashboard() {
 
         <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
           <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--gold)">+ Add to home top</div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <select class="search-input" id="heroAddSelect" style="flex:1;min-width:240px">
+          <div class="add-row">
+            <select id="heroAddSelect">
               <option value="">-- Pick a drama --</option>
               ${rows.map(r => `<option value="${r.id}">${esc(r.title)} (${esc(r.year || 'Classic')}) · ${esc(r.type)}</option>`).join("")}
             </select>
@@ -1521,8 +1568,8 @@ async function showDashboard() {
           <button class="btn btn-gold btn-sm" id="saveCatsBtn" type="button">Save</button>
         </div>
         <div class="cat-chips-list" id="catChipsList"></div>
-        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-          <input class="search-input" id="newCatInput" placeholder="New group name…" style="flex:1;min-width:220px">
+        <div class="add-row" style="margin-top:16px">
+          <input id="newCatInput" placeholder="New group name…">
           <button class="btn btn-gold btn-sm" id="addCatBtn" type="button">+ Add</button>
         </div>
         <div id="catStatusMsg" class="ai-status" style="margin-top:12px"></div>
@@ -1693,8 +1740,8 @@ function showForm(d = null) {
       </div>
       <div id="plPreviewBox" style="display:none">
         <div class="add-row" style="margin-top:12px">
-          <input id="plSeriesInput" placeholder="Drama name" style="border-color:var(--border)">
-          <select id="plCatSelect" style="flex:0 1 180px;min-width:140px;border-color:var(--border)">
+          <input id="plSeriesInput" placeholder="Drama name">
+          <select id="plCatSelect">
             ${configuredCategories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
           </select>
         </div>
