@@ -196,11 +196,16 @@
     }
 
     function switchEpisode(ytId, epId) {
+      currentEp = currentEpisodes.find(e => e.id === Number(epId)) || currentEp;
       const frame = $("watchPlayerFrame");
       if (frame && ytId) {
         frame.innerHTML = `
           <iframe id="watchIframe" src="https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1" title="${esc(currentDrama.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
         `;
+      }
+      const ytLink = $("watchYtActionLink");
+      if (ytLink && currentEp.youtube) {
+        ytLink.href = currentEp.youtube;
       }
       // Update active rows
       document.querySelectorAll(".m-episode-row").forEach(r => {
@@ -258,7 +263,7 @@
               🔗 Copy Link
             </button>
             ${currentEp.youtube ? `
-              <a class="watch-action-btn" href="${esc(currentEp.youtube)}" target="_blank" rel="noopener">
+              <a class="watch-action-btn" id="watchYtActionLink" href="${esc(currentEp.youtube)}" target="_blank" rel="noopener">
                 Watch on YouTube ↗
               </a>
             ` : ''}

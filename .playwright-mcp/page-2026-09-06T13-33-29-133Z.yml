@@ -1,0 +1,30 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - generic [ref=f1e3]:
+      - link [ref=f1e4] [cursor=pointer]:
+        - /url: /
+        - img "Pak Spotlight" [ref=f1e5]
+      - generic [ref=f1e6]:
+        - generic [ref=f1e7]:
+          - text: PAK SPOTLIGHT
+          - generic [ref=f1e8]: ADMIN
+        - generic [ref=f1e9]: Classic PTV Drama Catalog
+    - link "← PUBLIC WEBSITE" [ref=f1e11] [cursor=pointer]:
+      - /url: /
+  - main [ref=f1e12]:
+    - generic [ref=f1e13]:
+      - generic [ref=f1e14]:
+        - img "Pak Spotlight" [ref=f1e15]
+        - heading "Admin Sign In" [level=1] [ref=f1e16]
+        - paragraph [ref=f1e17]: Sign in to add dramas.
+      - generic [ref=f1e18]:
+        - generic [ref=f1e19]:
+          - generic [ref=f1e20]: Email
+          - textbox "Email" [ref=f1e21]
+        - generic [ref=f1e22]:
+          - generic [ref=f1e23]: Password
+          - textbox "••••••••" [ref=f1e24]
+        - button "Sign in" [ref=f1e25] [cursor=pointer]
+  - contentinfo [ref=f1e26]:
+    - generic [ref=f1e27]: PAK SPOTLIGHT — old PTV dramas.
+    - generic [ref=f1e28]: Admin

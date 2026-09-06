@@ -110,8 +110,9 @@ function cleanDramaTitle(title) {
   return String(title || "")
     .replace(/\s*\|\s*.*$/, "")
     .replace(/\s*-\s*(PTV|Pak Spotlight|Classic|Full|Drama|Play|HD).*$/i, "")
-    .replace(/\s*\b(Ep|Episode|Part|Qist)\s*\.?\s*#?\s*\d+\b.*$/i, "")
+    .replace(/\s*\b(Ep|Episode|Part|Qist|His+a?)\s*\.?\s*#?\s*\d+\b.*$/i, "")
     .replace(/\s*[(\[]\s*\d{1,3}\s*[)\]]\s*$/i, "")
+    .replace(/\s*[-–—:]+\s*$/, "")
     .replace(/\s+/g, " ")
     .trim();
 }

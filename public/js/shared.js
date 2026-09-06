@@ -49,8 +49,32 @@ function normalize(s) {
   return String(s || "").trim().toLowerCase();
 }
 
+function cleanDramaTitle(title) {
+  return String(title || "")
+    .replace(/\s*\|\s*.*$/, "")
+    .replace(/\s*-\s*(PTV|Pak Spotlight|Classic|Full|Drama|Play|HD).*$/i, "")
+    .replace(/\s*\b(Ep|Episode|Part|Qist|His+a?)\s*\.?\s*#?\s*\d+\b.*$/i, "")
+    .replace(/\s*[(\[]\s*\d{1,3}\s*[)\]]\s*$/, "")
+    .replace(/\s*[-–—:]+\s*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseEpisodeNumber(title, description) {
+  const text = `${title || ""} ${description || ""}`;
+  const m = text.match(/\b(?:ep|episode|part|qist|his+a?)\s*\.?\s*#?\s*(\d{1,3})\b/i)
+    || String(title || "").match(/[(\[]\s*(\d{1,2})\s*[)\]]\s*$/)
+    || String(title || "").match(/\s(\d{1,2})\s*$/);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return n > 0 && n < 500 ? n : null;
+}
+
 function isSeries(d) {
-  return d.is_series === true || d.is_series === 1 || String(d.is_series).toLowerCase() === "true" || !!String(d.series || "").trim();
+  if (!d) return false;
+  return !!String(d.series || "").trim() ||
+    d.is_series === true || d.is_series === 1 || String(d.is_series).toLowerCase() === "true" ||
+    ["serial / series", "series", "serial"].includes(String(d.type || "").toLowerCase().trim());
 }
 
 function extractYouTubeId(url) {
@@ -62,22 +86,28 @@ function extractYouTubeId(url) {
 }
 
 function mapRow(r) {
+  const parsedEp = r.episode_number != null ? Number(r.episode_number) : (r.episode != null ? Number(r.episode) : parseEpisodeNumber(r.title));
+  const rawSeries = (r.series_name || r.series || "").trim();
+  const cleanedTitle = cleanDramaTitle(r.title);
+  const isSerialType = ["serial / series", "series", "serial"].includes(String(r.type || "").toLowerCase().trim());
+  const inferredSeries = rawSeries || (parsedEp || isSerialType ? cleanedTitle : "");
+
   return {
     id: r.id,
     title: r.title || "Untitled Drama",
-    urdu: r.urdu_title || "",
+    urdu: r.urdu_title || r.urdu || "",
     writer: r.writer || "",
     director: r.director || "",
-    cast: r.cast_members || "",
+    cast: r.cast || r.cast_members || "",
     music: r.music || "",
-    producer: r.producer || "",
+    producer: r.produced || r.producer || "",
     episodes_count: r.episodes_count || null,
-    youtube: r.youtube_url || "",
-    image: r.thumbnail_url || "",
+    youtube: r.youtube_url || r.youtube || "",
+    image: r.thumbnail_url || r.image || "",
     type: r.type || "Serial / Series",
-    is_series: !!r.is_series,
-    series: r.series || "",
-    episode: r.episode !== null && r.episode !== undefined ? r.episode : null,
+    is_series: !!inferredSeries || isSerialType,
+    series: inferredSeries,
+    episode: parsedEp,
     year: r.year || "",
     description: r.description || ""
   };
@@ -88,7 +118,7 @@ function groupDramas(list) {
   const groups = new Map();
   for (const d of list) {
     const isSer = isSeries(d) && !!String(d.series || "").trim();
-    const key = isSer ? `series::${normalize(d.series)}::${d.type}` : `single::${d.id}`;
+    const key = isSer ? `series::${normalize(d.series)}` : `single::${d.id}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(d);
   }
@@ -194,7 +224,7 @@ function getDramaSeriesEpisodes(drama) {
   const isSer = isSeries(drama) && !!String(drama.series || "").trim();
   if (!isSer) return [drama];
   return rows
-    .filter(x => normalize(x.series) === normalize(drama.series) && String(x.type) === String(drama.type))
+    .filter(x => normalize(x.series) === normalize(drama.series))
     .sort((a, b) => (a.episode ?? 9999) - (b.episode ?? 9999));
 }
 
@@ -364,10 +394,10 @@ function handleMobileSearchInput() {
 // ----------------------
 function renderPosterCard(d, epCount = 1) {
   const title = isSeries(d) && d.series ? d.series : d.title;
-  const countBadge = epCount > 1 ? `${epCount} Eps` : "";
+  const countBadge = epCount > 1 ? `${epCount} Episodes` : "";
 
   return `
-    <div class="netflix-card" onclick="window.location.href='/watch?id=${d.id}'" title="${esc(title)}">
+    <div class="netflix-card" onclick="window.location.href='/watch.html?id=${d.id}'" title="${esc(title)}">
       <div class="card-media">
         ${d.image ? `
           <img src="${esc(d.image)}" alt="${esc(title)}" loading="lazy">
@@ -377,8 +407,9 @@ function renderPosterCard(d, epCount = 1) {
             <div class="card-fallback-text">${esc(title)}</div>
           </div>
         `}
+        ${epCount > 1 ? `<span class="card-ep-tag">${epCount} Eps</span>` : ''}
       </div>
-      <div class="card-info desktop-only">
+      <div class="card-info">
         <div class="card-title-line">
           <div class="card-title">${esc(title)}</div>
           ${d.urdu ? `<div class="card-urdu">${esc(d.urdu)}</div>` : ''}
@@ -386,7 +417,7 @@ function renderPosterCard(d, epCount = 1) {
         <div class="card-meta-line">
           <span>${esc(d.type)}</span>
           ${d.year ? ` · <span>${esc(d.year)}</span>` : ''}
-          ${countBadge ? ` · <span>${countBadge}</span>` : ''}
+          ${countBadge ? ` · <span class="card-ep-count">${countBadge}</span>` : ''}
         </div>
       </div>
     </div>

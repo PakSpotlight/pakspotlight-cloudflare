@@ -3,34 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pak Spotlight — Admin Portal</title>
+<title>Pak Spotlight — Admin Studio Console</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Noto+Nastaliq+Urdu:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg-deep: #060b08;
-  --bg-surface: #0e1712;
-  --bg-card: #132019;
-  --bg-card-hover: #182920;
-  --border: #22372b;
-  --border-gold: rgba(245, 197, 66, 0.35);
-  --gold: #f5c542;
-  --gold-hover: #ffd768;
-  --gold-glow: rgba(245, 197, 66, 0.15);
-  --emerald-accent: #2e7d4d;
-  --text-primary: #fbf9f4;
-  --text-muted: #95a59c;
-  --text-dim: #64756c;
-  --danger: #ef5350;
+  --canvas-void: #060a08;
+  --surface-studio: #0d1510;
+  --surface-card: #132018;
+  --surface-card-hover: #18281e;
+  --surface-elevated: #1a2c21;
+  --border-subtle: #1e3025;
+  --border-gold: rgba(229, 179, 56, 0.35);
+  --gold-ptv: #e5b338;
+  --gold-hover: #f3c64c;
+  --gold-glow: rgba(229, 179, 56, 0.15);
+  --phosphor-mint: #2e8b57;
+  --phosphor-bg: rgba(46, 139, 87, 0.12);
+  --danger-crimson: #ef5350;
   --danger-bg: rgba(239, 83, 80, 0.12);
-  --success: #66bb6a;
-  --success-bg: rgba(102, 187, 106, 0.12);
-  --radius: 12px;
+  --ink-cream: #f4f6f1;
+  --ink-subtle: #899c90;
+  --ink-dim: #5c6e63;
   --radius-sm: 6px;
   --radius-md: 10px;
-  --control-h: 46px;
+  --radius-lg: 14px;
+  --control-h: 44px;
   --font-serif: 'Cinzel', serif;
   --font-sans: 'Plus Jakarta Sans', sans-serif;
   --font-urdu: 'Noto Nastaliq Urdu', serif;
@@ -39,2706 +39,2396 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
-  background-color: var(--bg-deep);
-  color: var(--text-primary);
+  background-color: var(--canvas-void);
+  color: var(--ink-cream);
   font-family: var(--font-sans);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-image: 
-    radial-gradient(circle at 85% 15%, rgba(46, 125, 77, 0.18) 0%, transparent 45%),
-    radial-gradient(circle at 15% 75%, rgba(245, 197, 66, 0.08) 0%, transparent 40%);
+  background-image:
+    radial-gradient(circle at 88% 12%, rgba(46, 139, 87, 0.14) 0%, transparent 40%),
+    radial-gradient(circle at 12% 78%, rgba(229, 179, 56, 0.07) 0%, transparent 35%);
   background-attachment: fixed;
 }
 
 a { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; outline: none; }
-input, select, textarea { font-family: inherit; }
+button { font-family: inherit; cursor: pointer; border: none; outline: none; transition: all 0.2s ease; }
+input, select, textarea {
+  font-family: inherit;
+  color: var(--ink-cream);
+  background: var(--surface-studio);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold-ptv);
+  box-shadow: 0 0 0 2px var(--gold-glow);
+}
+textarea { resize: vertical; min-height: 90px; }
 
-/* Header */
-.topbar {
+/* Sticky Studio Topbar */
+.studio-topbar {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(6, 11, 8, 0.92);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border);
-  padding: 12px 5%;
+  background: rgba(6, 10, 8, 0.94);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 4%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
 }
-.brand {
+.brand-lockup {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.brand img {
-  width: 44px;
-  height: 44px;
+.brand-logo {
+  width: 42px;
+  height: 42px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(245, 197, 66, 0.25));
+  filter: drop-shadow(0 2px 8px rgba(229, 179, 56, 0.3));
 }
-.brand-titles {
-  display: flex;
-  flex-direction: column;
-}
-.brand-name {
+.brand-text h1 {
   font-family: var(--font-serif);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.4px;
   color: #fff;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.badge-admin {
-  background: linear-gradient(135deg, rgba(245, 197, 66, 0.2), rgba(245, 197, 66, 0.05));
-  border: 1px solid var(--gold);
-  color: var(--gold);
+.badge-studio {
+  background: var(--gold-glow);
+  border: 1px solid var(--gold-ptv);
+  color: var(--gold-ptv);
+  font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  letter-spacing: 1px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
 }
 .brand-sub {
-  font-size: 10px;
-  color: var(--text-muted);
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--ink-subtle);
+  letter-spacing: 0.3px;
 }
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-/* Buttons */
+/* Base Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 18px;
-  border-radius: 8px;
+  padding: 9px 18px;
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  transition: all 0.2s ease;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
   white-space: nowrap;
 }
 .btn-gold {
-  background: linear-gradient(135deg, #f5c542 0%, #d4a024 100%);
-  color: #0b110e;
-  box-shadow: 0 4px 14px rgba(245, 197, 66, 0.25);
+  background: var(--gold-ptv);
+  color: #060a08;
 }
 .btn-gold:hover {
-  background: linear-gradient(135deg, #ffd768 0%, #e5b334 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(245, 197, 66, 0.35);
-}
-.btn-gold:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+  background: var(--gold-hover);
+  box-shadow: 0 4px 14px rgba(229, 179, 56, 0.3);
 }
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink-cream);
+  border: 1px solid var(--border-subtle);
 }
 .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(245, 197, 66, 0.4);
-  color: var(--gold);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--ink-subtle);
 }
 .btn-danger {
   background: var(--danger-bg);
-  color: var(--danger);
+  color: var(--danger-crimson);
   border: 1px solid rgba(239, 83, 80, 0.3);
 }
 .btn-danger:hover {
-  background: var(--danger);
-  color: #fff;
+  background: rgba(239, 83, 80, 0.22);
 }
 .btn-sm {
   padding: 6px 12px;
   font-size: 12px;
+}
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink-cream);
+  border: 1px solid var(--border-subtle);
+}
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--gold-ptv);
 }
 
-/* Main Container */
-.admin-container {
-  max-width: 1200px;
+/* Studio Shell */
+.studio-main {
+  flex: 1;
+  max-width: 1440px;
   width: 100%;
   margin: 0 auto;
-  padding: 36px 5%;
-  flex: 1;
+  padding: 24px 4% 60px;
 }
 
-/* Auth Card */
-.auth-wrapper {
-  max-width: 460px;
-  margin: 60px auto;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 36px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-.auth-wrapper::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #2e7d4d, var(--gold), #2e7d4d);
-}
-.auth-header {
-  text-align: center;
-  margin-bottom: 28px;
-}
-.auth-header img {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 12px;
-}
-.auth-header h1 {
-  font-family: var(--font-serif);
-  font-size: 24px;
-  color: #fff;
-  letter-spacing: 1px;
-}
-.auth-header p {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 6px;
-}
-.form-group {
-  margin-bottom: 18px;
-}
-.form-group label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 7px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-}
-.form-group input, .form-group textarea, .form-group select {
-  width: 100%;
-  background: #080e0a;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  color: #fff;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-  outline: none;
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.12);
-}
-.form-group textarea {
-  min-height: 110px;
-  resize: vertical;
-  line-height: 1.5;
-}
-.urdu-input {
-  font-family: var(--font-urdu);
-  direction: rtl;
-  font-size: 18px !important;
-}
-
-/* Dashboard Header */
-.dash-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 30px;
-}
-.dash-title h1 {
-  font-family: var(--font-serif);
-  font-size: 28px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 1px;
-}
-.dash-title p {
-  color: var(--text-muted);
-  font-size: 13px;
-  margin-top: 4px;
-}
-
-/* Stats Cards */
-.stats-grid {
+/* Quick Metrics Row */
+.metrics-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
 }
-.stat-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
+.metric-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   position: relative;
   overflow: hidden;
 }
-.stat-card::after {
+.metric-card::before {
   content: "";
   position: absolute;
-  top: 0; right: 0; width: 60px; height: 60px;
-  background: radial-gradient(circle, rgba(245, 197, 66, 0.1) 0%, transparent 70%);
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--gold-ptv);
+  opacity: 0.6;
 }
-.stat-card.alert {
-  border-color: rgba(239, 83, 80, 0.35);
-  background: rgba(239, 83, 80, 0.04);
-}
-.stat-label {
-  font-size: 12px;
-  color: var(--text-muted);
+.metric-label {
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  font-weight: 600;
-}
-.stat-value {
-  font-family: var(--font-serif);
-  font-size: 30px;
+  color: var(--ink-subtle);
   font-weight: 700;
-  color: var(--gold);
 }
-.stat-desc {
+.metric-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.1;
+}
+.metric-desc {
   font-size: 11px;
-  color: var(--text-dim);
+  color: var(--ink-dim);
+}
+.metric-card.alert .metric-value {
+  color: var(--danger-crimson);
 }
 
-/* Drama Management Section */
+/* Primary Tab Navigation */
+.studio-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 14px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.studio-tabs-bar::-webkit-scrollbar { display: none; }
+.tab-btn {
+  background: transparent;
+  color: var(--ink-subtle);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.tab-btn:hover {
+  color: var(--ink-cream);
+  background: rgba(255, 255, 255, 0.04);
+}
+.tab-btn.active {
+  background: var(--gold-ptv);
+  color: #060a08;
+  border-color: var(--gold-ptv);
+}
+.tab-count {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+}
+.tab-btn.active .tab-count {
+  background: rgba(0, 0, 0, 0.25);
+  color: #060a08;
+}
+
+.tab-pane {
+  display: none;
+}
+.tab-pane.active {
+  display: block;
+}
+
+/* Common Panel Container */
 .panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   padding: 24px;
   margin-bottom: 24px;
 }
 .panel-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  justify-content: space-between;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 .panel-title {
-  font-family: var(--font-serif);
-  font-size: 19px;
+  font-size: 18px;
+  font-weight: 800;
   color: #fff;
-  letter-spacing: 0.5px;
-}
-.panel-controls {
   display: flex;
-  gap: 12px;
   align-items: center;
-  flex-wrap: wrap;
+  gap: 10px;
 }
-.search-input {
-  background: #080e0a;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0 14px;
-  min-height: var(--control-h);
-  color: #fff;
-  font-size: 14px;
-  min-width: 240px;
-}
-.search-input:focus {
-  outline: none;
-  border-color: var(--gold);
+.panel-sub {
+  font-size: 12px;
+  color: var(--ink-subtle);
+  margin-top: 2px;
 }
 
-/* Drama Table / List */
-.drama-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.drama-item {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px 18px;
+/* Search and Filters Bar */
+.search-bar-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  transition: all 0.2s;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
-.drama-item:hover {
-  background: var(--bg-card-hover);
-  border-color: rgba(245, 197, 66, 0.3);
-}
-.drama-thumb-box {
-  width: 80px;
-  height: 48px;
-  border-radius: 6px;
-  background: #070d0a;
-  border: 1px solid var(--border);
-  overflow: hidden;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
+.search-input-wrap {
+  flex: 1;
+  min-width: 240px;
   position: relative;
 }
-.drama-thumb-box img {
+.search-input-wrap input {
+  padding-left: 36px;
+}
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-dim);
+  pointer-events: none;
+}
+
+/* ============================================================
+   NETFLIX SERIES ACCORDION CARD STYLES
+   ============================================================ */
+.series-accordion-card {
+  background: var(--surface-studio);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+.series-accordion-card:hover {
+  border-color: rgba(229, 179, 56, 0.3);
+}
+.series-card-header {
+  display: grid;
+  grid-template-columns: 88px 1fr auto;
+  gap: 18px;
+  padding: 18px;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+.series-poster-box {
+  width: 88px;
+  aspect-ratio: 2/3;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #08110b;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.series-poster-box img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.drama-thumb-box .no-thumb {
-  font-size: 9px;
-  color: var(--text-dim);
-  text-align: center;
-  line-height: 1.1;
-  padding: 4px;
+.series-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.drama-info {
-  flex: 1;
-  min-width: 0;
-}
-.drama-title-row {
+.series-title-row {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
-.drama-title {
-  font-size: 15px;
-  font-weight: 700;
+.series-title-text {
+  font-size: 18px;
+  font-weight: 800;
   color: #fff;
+  letter-spacing: 0.2px;
 }
-.drama-urdu {
+.series-urdu-text {
   font-family: var(--font-urdu);
-  font-size: 14px;
-  color: var(--gold);
+  font-size: 15px;
+  color: var(--gold-ptv);
   direction: rtl;
 }
-.drama-meta {
+.series-badges-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 4px;
   flex-wrap: wrap;
 }
 .pill {
-  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
   border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
+  color: var(--ink-subtle);
+  border: 1px solid var(--border-subtle);
 }
 .pill-gold {
-  border-color: rgba(245, 197, 66, 0.3);
-  color: var(--gold);
-  background: rgba(245, 197, 66, 0.08);
+  background: var(--gold-glow);
+  color: var(--gold-ptv);
+  border-color: rgba(229, 179, 56, 0.35);
 }
-.pill-missing {
-  border-color: rgba(239, 83, 80, 0.3);
-  color: var(--danger);
-  background: var(--danger-bg);
-}
-.drama-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-/* Add-method steps: 1 video · playlist · manual */
-.add-steps { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
-.add-card {
-  background: linear-gradient(135deg, rgba(20, 36, 26, 0.9) 0%, rgba(14, 23, 18, 0.9) 100%);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px;
-}
-.add-card.active-method { border-color: rgba(245, 197, 66, 0.45); }
-.add-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.add-num {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: rgba(245, 197, 66, 0.15); border: 1px solid var(--gold);
-  color: var(--gold); font-size: 13px; font-weight: 800;
-  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.add-card h2 { font-size: 15px; font-weight: 800; color: #fff; }
-.add-card p.hint { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; }
-.add-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
-.add-row input, .add-row select {
-  flex: 1; min-width: 200px;
-  background: #080e0a; border: 1px solid var(--border-gold);
-  border-radius: 8px; padding: 0 14px; min-height: var(--control-h); color: #fff; font-size: 14px;
-}
-.add-row input:focus, .add-row select:focus { border-color: var(--gold); outline: none; }
-.add-row .btn { min-height: var(--control-h); flex-shrink: 0; }
-#plCatSelect { flex: 0 0 200px; min-width: 160px; }
-@media (max-width: 640px) {
-  .add-row { flex-direction: column; align-items: stretch; }
-  .add-row input, .add-row select, .add-row .btn { width: 100%; min-width: 0; min-height: 48px; }
-  #plCatSelect { flex: 1 1 auto; }
-  .add-card { padding: 16px 14px; }
-}
-/* Playlist preview list */
-.pl-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 320px; overflow-y: auto; }
-.pl-row {
-  display: flex; align-items: center; gap: 12px;
-  background: #09100c; border: 1px solid var(--border);
-  border-radius: 8px; padding: 8px 12px 8px 8px;
-}
-.pl-row img { width: 96px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; background: #000; flex-shrink: 0; }
-.pl-row .pl-info { flex: 1; min-width: 0; }
-.pl-row .pl-title { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pl-row .pl-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-.pl-row input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--gold); flex-shrink: 0; }
-.pl-result { font-size: 12.5px; padding: 8px 12px; border-radius: 8px; margin-top: 8px; }
-.pl-result.added { background: var(--success-bg); color: var(--success); }
-.pl-result.skipped, .pl-result.error { background: rgba(255,255,255,0.04); color: var(--text-muted); }
-/* Playlist wizard: step labels, tools, episode rows */
-.pl-step-label {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--border);
-  font-size: 13px; font-weight: 800; color: #fff; letter-spacing: 0.3px;
-}
-.pl-step-label:first-child { margin-top: 12px; padding-top: 0; border-top: none; }
-.pl-step-note { font-size: 11.5px; font-weight: 600; color: var(--text-muted); }
-.pl-tools { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-.pl-row { align-items: flex-start; }
-.pl-row .pl-info { display: flex; flex-direction: column; gap: 2px; }
-.pl-computed { font-size: 11px; color: var(--text-muted); }
-.pl-dup {
-  display: inline-block; font-size: 10px; font-weight: 700; color: var(--gold);
-  background: rgba(245,197,66,0.1); border: 1px solid rgba(245,197,66,0.3);
-  border-radius: 4px; padding: 1px 6px; margin-top: 3px; width: fit-content;
-}
-.pl-ep-wrap { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; flex-shrink: 0; }
-.pl-ep-wrap label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-dim); }
-.pl-ep {
-  width: 64px; min-height: var(--control-h); background: #080e0a; border: 1px solid var(--border);
-  border-radius: 8px; color: #fff; font-size: 14px; font-weight: 700; text-align: center;
-}
-.pl-ep:focus { outline: none; border-color: var(--gold); }
-/* AI badge + skeleton + credits grid */
-.pl-ai-badge { font-size: 11px; font-weight: 700; color: var(--text-muted); }
-.pl-ai-badge.found { color: var(--gold); }
-.pl-ai-badge.cached { color: var(--success); }
-.pl-ai-badge.failed { color: var(--danger); }
-.pl-skel {
-  border: 1px solid var(--border); border-radius: 8px; padding: 14px;
-  display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px;
-}
-.pl-skel span {
-  display: block; height: 12px; border-radius: 6px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 75%);
-  background-size: 200% 100%; animation: plShimmer 1.2s infinite;
-}
-@keyframes plShimmer { to { background-position: -200% 0; } }
-.pl-ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.pl-ai-grid .full { grid-column: 1 / -1; }
-.pl-ai-grid > div { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-.pl-ai-grid label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--gold); }
-.pl-ai-grid input, .pl-ai-grid select, .pl-ai-grid textarea {
-  width: 100%; background: #080f0c; border: 1px solid var(--border); border-radius: 8px;
-  padding: 0 12px; min-height: var(--control-h); color: #fff; font-size: 13.5px; box-sizing: border-box;
-}
-.pl-ai-grid textarea { padding: 10px 12px; min-height: 64px; resize: vertical; line-height: 1.5; }
-.pl-ai-grid input:focus, .pl-ai-grid select:focus, .pl-ai-grid textarea:focus {
-  border-color: var(--gold); outline: none; box-shadow: 0 0 0 3px rgba(245,197,66,0.15);
-}
-/* Progress bar */
-.pl-progress {
-  height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border); overflow: hidden; margin-top: 12px;
-}
-.pl-progress-fill {
-  height: 100%; width: 0%; border-radius: 999px;
-  background: linear-gradient(90deg, #d4a024, var(--gold)); transition: width 0.25s ease;
-}
-.pl-progress-text { font-size: 12.5px; color: var(--text-muted); margin-top: 8px; }
-.pl-progress-text b { color: var(--gold); }
-/* Results summary + filter chips */
-.pl-summary {
-  border: 1px solid rgba(245,197,66,0.35); border-radius: 10px; padding: 14px;
-  margin-top: 12px; background: rgba(245,197,66,0.04);
-}
-.pl-summary-title { font-size: 14px; font-weight: 800; color: #fff; }
-.pl-summary-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-.pl-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-.pl-chip {
-  background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-muted);
-  font-size: 11.5px; font-weight: 700; padding: 7px 12px; border-radius: 999px; min-height: 36px;
-}
-.pl-chip.active { border-color: var(--gold); color: var(--gold); background: rgba(245,197,66,0.1); }
-.pl-summary-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-.pl-summary-actions .btn { flex: 1; min-width: 140px; min-height: var(--control-h); }
-@media (max-width: 640px) {
-  .pl-ai-grid { grid-template-columns: 1fr; }
-  .pl-ep { width: 72px; min-height: 48px; }
-  .pl-row img { width: 80px; }
-}
-/* Sticky save bar on phones */
-@media (max-width: 640px) {
-  .form-actions.sticky-mobile {
-    position: sticky; bottom: 0; z-index: 50;
-    background: rgba(6, 11, 8, 0.96); backdrop-filter: blur(10px);
-    margin: 20px -16px -16px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--border);
-  }
-  .btn { min-height: 46px; }
-  .tab-btn { min-height: 44px; }
-  .drama-thumb-box { width: 100%; aspect-ratio: 16/9; }
-  .drama-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
-}
-
-/* AI Studio / Autofill Box */
-.ai-card {
-  background: linear-gradient(135deg, rgba(20, 36, 26, 0.9) 0%, rgba(14, 23, 18, 0.9) 100%);
-  border: 1px solid rgba(245, 197, 66, 0.35);
-  border-radius: var(--radius);
-  padding: 22px;
-  margin-bottom: 24px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-}
-.ai-card::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-}
-.ai-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-.ai-badge {
-  background: linear-gradient(135deg, #f5c542, #d4a024);
-  color: #0b110e;
-  font-size: 11px;
+.pill-episodes {
+  background: var(--phosphor-bg);
+  color: var(--phosphor-mint);
+  border-color: rgba(46, 139, 87, 0.35);
   font-weight: 800;
-  padding: 3px 10px;
-  border-radius: 999px;
-  letter-spacing: 0.8px;
 }
-.ai-title {
-  font-family: var(--font-serif);
-  font-size: 16px;
-  color: #fff;
-  font-weight: 700;
-}
-.ai-desc {
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.5;
-  margin-bottom: 16px;
-}
-.ai-input-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: stretch;
-}
-.ai-input-row input {
-  flex: 1;
-  min-width: 260px;
-  background: #080e0a;
-  border: 1px solid var(--border-gold);
-  border-radius: 8px;
-  padding: 0 16px;
-  min-height: var(--control-h);
-  color: #fff;
-  font-size: 14px;
-}
-.ai-input-row .btn { min-height: var(--control-h); }
-.ai-status {
-  margin-top: 12px;
-  font-size: 13px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  display: none;
-}
-.ai-status.active { display: block; }
-.ai-status.info {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-}
-.ai-status.ok {
-  background: var(--success-bg);
-  color: var(--success);
-  border: 1px solid rgba(102, 187, 106, 0.3);
-}
-.ai-status.err {
-  background: var(--danger-bg);
-  color: var(--danger);
-  border: 1px solid rgba(239, 83, 80, 0.3);
-}
-
-/* Thumbnail Preview Box */
-.thumb-preview-card {
-  background: #09100c;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-.thumb-img-wrap {
-  width: 140px;
-  aspect-ratio: 16/9;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid var(--border-gold);
-  background: #000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  flex-shrink: 0;
-}
-.thumb-img-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.thumb-details {
-  flex: 1;
-  min-width: 200px;
-}
-.thumb-badge {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gold);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-.thumb-note {
+.series-meta-credits {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--ink-dim);
   line-height: 1.4;
 }
+.series-meta-credits b {
+  color: var(--ink-subtle);
+  font-weight: 600;
+}
+.series-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
-/* Tabbed Navigation */
-.admin-tab-nav {
+/* Expanded Episodes Tray */
+.series-episodes-tray {
+  display: none;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 20px;
+}
+.series-accordion-card.open .series-episodes-tray {
+  display: block;
+}
+.episodes-tray-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.episodes-tray-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--gold-ptv);
+}
+.episodes-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.episodes-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.episodes-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+  vertical-align: middle;
+}
+.episodes-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+.ep-num-badge {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--gold-ptv);
+}
+.ep-thumb-preview {
+  width: 72px;
+  aspect-ratio: 16/9;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #000;
+  vertical-align: middle;
+}
+
+/* ============================================================
+   INGESTION STUDIO STYLES (YOUTUBE SEARCH + AI + PLAYLIST)
+   ============================================================ */
+.ingest-subtabs-nav {
   display: flex;
   gap: 8px;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 10px;
-  margin-bottom: 24px;
-  scrollbar-width: none;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 12px;
 }
-.admin-tab-nav::-webkit-scrollbar { display: none; }
-.tab-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 10px 18px;
+.ingest-tab-btn {
+  background: transparent;
+  color: var(--ink-subtle);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 16px;
   border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
 }
-.tab-btn:hover {
-  color: #fff;
-  border-color: var(--border-gold);
-  background: rgba(245, 197, 66, 0.06);
+.ingest-tab-btn.active {
+  background: var(--surface-card);
+  color: var(--gold-ptv);
+  border-color: var(--gold-ptv);
 }
-.tab-btn.active {
-  background: rgba(245, 197, 66, 0.15);
-  border-color: var(--gold);
-  color: var(--gold);
-  box-shadow: 0 0 16px rgba(245, 197, 66, 0.12);
+.yt-search-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
 }
-.tab-count {
-  font-size: 10px;
-  font-weight: 800;
-  background: rgba(0, 0, 0, 0.45);
-  padding: 2px 7px;
-  border-radius: 999px;
-  color: #fff;
-}
-.tab-pane {
-  display: none;
-  animation: tabFadeIn 0.22s ease-out;
-}
-.tab-pane.active {
-  display: block;
-}
-@keyframes tabFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Hero Spotlight Slider Manager */
-.hero-item-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+.yt-search-card {
+  background: var(--surface-studio);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
-  margin-bottom: 10px;
-  transition: all 0.2s;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
-.hero-item-card:hover {
-  border-color: var(--border-gold);
-  background: var(--bg-card-hover);
-}
-.hero-item-order {
-  font-family: var(--font-serif);
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--gold);
-  width: 24px;
-  text-align: center;
-}
-.hero-item-thumb {
-  width: 80px;
+.yt-search-thumb {
+  width: 100%;
   aspect-ratio: 16/9;
   object-fit: cover;
-  border-radius: 6px;
   background: #000;
 }
-.hero-item-info {
+.yt-search-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  min-width: 0;
+  gap: 8px;
 }
-.hero-item-title {
+.yt-search-title {
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
 }
-.hero-item-sub {
+.yt-search-meta {
   font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 2px;
+  color: var(--ink-dim);
 }
-.hero-item-actions {
+.yt-search-actions {
+  margin-top: auto;
+  padding-top: 10px;
   display: flex;
-  gap: 6px;
-  align-items: center;
-}
-.btn-icon {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border);
-  color: #fff;
-  border-radius: 6px;
-  padding: 5px 8px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-icon:hover {
-  background: rgba(245, 197, 66, 0.15);
-  border-color: var(--gold);
-  color: var(--gold);
+  gap: 8px;
 }
 
-/* Category Manager */
-.cat-chips-list {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.cat-chip {
-  background: var(--bg-card);
-  border: 1px solid var(--border-gold);
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-.cat-chip:hover {
-  background: var(--bg-card-hover);
-}
-.cat-chip .remove-cat-btn {
-  background: none;
-  border: none;
-  color: var(--danger);
-  font-weight: 800;
-  cursor: pointer;
-  font-size: 13px;
-  line-height: 1;
-  padding: 2px;
-}
-.cat-chip .remove-cat-btn:hover {
-  color: #ff8a80;
-}
-
-/* Form Layout & Inputs */
+/* Form Styles */
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
 }
 .form-grid .full {
   grid-column: 1 / -1;
 }
-.form-grid > div {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-.form-grid label {
+.form-group label {
+  display: block;
   font-size: 11px;
-  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color: var(--gold);
-}
-.form-grid input,
-.form-grid select {
-  width: 100%;
-  background: #080f0c;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0 14px;
-  min-height: var(--control-h);
-  color: #fff;
-  font-size: 14px;
-  font-family: var(--font-sans);
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-.form-grid textarea {
-  width: 100%;
-  background: #080f0c;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  color: #fff;
-  font-size: 14px;
-  font-family: var(--font-sans);
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-.form-grid input::placeholder,
-.form-grid textarea::placeholder {
-  color: var(--text-dim);
-}
-.form-grid input:focus,
-.form-grid select:focus,
-.form-grid textarea:focus {
-  border-color: var(--gold);
-  background: #0d1a13;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.15);
-}
-.form-grid textarea {
-  min-height: 110px;
-  resize: vertical;
-  line-height: 1.6;
-}
-/* One shared select look everywhere (hero picker, playlist group, drama group).
-   Must come AFTER the .add-row / .form-grid background shorthands above,
-   otherwise `background:` resets background-image to none. */
-select.search-input,
-.add-row select,
-.form-grid select {
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23f5c542' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  padding-right: 38px;
-  cursor: pointer;
-  line-height: 1.2;
-}
-select.search-input option,
-.add-row select option,
-.form-grid select option {
-  background: #0e1712;
-  color: #fff;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  color: var(--ink-subtle);
+  margin-bottom: 6px;
 }
 .urdu-input {
-  font-family: var(--font-urdu), serif !important;
+  font-family: var(--font-urdu);
+  font-size: 16px;
   direction: rtl;
-  font-size: 18px !important;
-  padding: 9px 14px !important;
-  color: var(--gold) !important;
-}
-.form-grid input[type="file"] {
-  padding: 10px 12px;
-  background: #080e0a;
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.form-grid input[type="file"]::file-selector-button {
-  background: rgba(245, 197, 66, 0.12);
-  border: 1px solid var(--gold);
-  color: var(--gold);
-  padding: 7px 16px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 12px;
-  cursor: pointer;
-  margin-right: 12px;
-  transition: all 0.2s ease;
-}
-.form-grid input[type="file"]::file-selector-button:hover {
-  background: var(--gold);
-  color: #080f0b;
 }
 
-.form-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 24px;
-  flex-wrap: wrap;
+/* Status Notifications */
+.status-banner {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  display: none;
+  margin-top: 12px;
 }
+.status-banner.show { display: block; }
+.status-banner.info { background: rgba(229, 179, 56, 0.1); color: var(--gold-ptv); border: 1px solid rgba(229, 179, 56, 0.3); }
+.status-banner.ok { background: var(--phosphor-bg); color: var(--phosphor-mint); border: 1px solid rgba(46, 139, 87, 0.4); }
+.status-banner.err { background: var(--danger-bg); color: var(--danger-crimson); border: 1px solid rgba(239, 83, 80, 0.4); }
 
-/* Storage Card */
-.storage-box {
+/* Staged Thumbnail Preview Card */
+.thumb-staging-card {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 16px;
-  flex-wrap: wrap;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 18px;
+  background: var(--surface-studio);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-top: 10px;
+}
+.thumb-staging-preview {
+  width: 100px;
+  aspect-ratio: 16/9;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #000;
 }
 
-/* Footer */
-footer {
-  border-top: 1px solid var(--border);
-  padding: 24px 5%;
-  color: var(--text-dim);
-  font-size: 12px;
-  display: flex;
-  justify-content: space-between;
+/* Modal Overlay */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+  display: none;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 14px;
-  background: var(--bg-deep);
+  justify-content: center;
+  padding: 20px;
 }
+.modal-backdrop.open { display: flex; }
+.modal-dialog {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  max-width: 680px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  padding: 26px;
+  position: relative;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+.modal-close {
+  background: transparent;
+  color: var(--ink-subtle);
+  font-size: 20px;
+  cursor: pointer;
+}
+.modal-close:hover { color: #fff; }
 
+/* Responsive adjustments */
 @media (max-width: 850px) {
-  .form-grid { grid-template-columns: 1fr; gap: 16px; }
-  .topbar { padding: 12px 16px; }
-  .admin-container { padding: 20px 16px; }
-  .ai-input-row { flex-direction: column; }
-  .ai-input-row input { min-width: 100%; }
-  .ai-input-row button { width: 100%; }
-}
-
-/* Phones: dense dashboard — stats strip, all tabs visible, compact rows */
-@media (max-width: 640px) {
-  .dash-header { padding-bottom: 12px; margin-bottom: 16px; gap: 10px; }
-  .dash-title h1 { font-size: 21px; }
-  .dash-title p { display: none; }
-
-  /* All 4 tabs visible, no sideways scroll */
-  .admin-tab-nav {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    overflow: visible;
-    border-bottom: none;
-    padding-bottom: 0;
-    margin-bottom: 16px;
+  .series-card-header {
+    grid-template-columns: 70px 1fr;
+    gap: 12px;
   }
-  .tab-btn { justify-content: center; padding: 10px 8px; font-size: 12px; min-height: 44px; }
-  .tab-btn .tab-count { margin-left: 2px; }
-
-  /* Stats: compact 2x2, numbers only */
-  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-  .stat-card { padding: 10px 12px; gap: 2px; }
-  .stat-label { font-size: 10px; }
-  .stat-value { font-size: 22px; }
-  .stat-desc { display: none; }
-
-  .panel { padding: 14px 12px; }
-  .panel-header { margin-bottom: 12px; gap: 10px; }
-  .panel-title { font-size: 16px; }
-  .panel-controls, .panel-controls .search-input { width: 100%; }
-  .panel-controls .search-input { min-width: 0; padding: 0 14px; font-size: 14px; }
-
-  /* Rows: thumb left, text middle, actions scroll in one line */
-  .drama-list { gap: 8px; }
-  .drama-item {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
+  .series-card-actions {
+    grid-column: 1 / -1;
+    margin-top: 8px;
   }
-  .drama-thumb-box { width: 76px; height: 46px; flex-shrink: 0; }
-  .drama-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
-  .drama-info { flex: 1; min-width: 0; }
-  .drama-title-row { min-width: 0; }
-  .drama-title { font-size: 13px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .drama-urdu { font-size: 12px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .drama-meta { gap: 5px; font-size: 11px; margin-top: 3px; }
-  .drama-meta .meta-extra { display: none; }
-  .drama-meta .pill { font-size: 9px; padding: 1px 6px; }
-  .drama-actions {
-    width: 100%;
-    flex-basis: 100%;
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: none;
+  .form-grid {
+    grid-template-columns: 1fr;
   }
-  .drama-actions::-webkit-scrollbar { display: none; }
-  .drama-actions .btn { min-height: 38px; padding: 8px 12px; font-size: 11px; flex-shrink: 0; }
-
-  /* Thumb-sized add button, always in reach */
-  .fab-add {
-    position: fixed;
-    right: 16px;
-    bottom: calc(20px + env(safe-area-inset-bottom));
-    z-index: 200;
-    width: 58px; height: 58px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f5c542 0%, #d4a024 100%);
-    color: #0b110e;
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 20px rgba(245,197,66,0.35);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .studio-topbar {
+    padding: 10px 16px;
   }
-  .fab-add:active { transform: scale(0.94); }
-
-  .form-actions { flex-direction: column; align-items: stretch; }
-  .form-actions button { width: 100%; }
-  .brand-name { font-size: 15px; }
-  .brand-sub { display: none; }
-  .hide-m { display: none; }
-  .topbar-actions { gap: 8px; }
-}
-@media (min-width: 641px) {
-  .fab-add { display: none; }
+  .studio-main {
+    padding: 16px 16px 50px;
+  }
 }
 </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <a href="/" title="Go to Website"><img src="/logo.png" alt="Pak Spotlight" width="44" height="44"></a>
-    <div class="brand-titles">
-      <div class="brand-name">PAK SPOTLIGHT <span class="badge-admin">ADMIN</span></div>
-      <div class="brand-sub">Classic PTV Drama Catalog</div>
+  <!-- Studio Topbar -->
+  <header class="studio-topbar">
+    <div class="brand-lockup">
+      <a href="/index.html" title="Go to Public Archive">
+        <img class="brand-logo" src="/logo.png" alt="Pak Spotlight">
+      </a>
+      <div class="brand-text">
+        <h1>PAK SPOTLIGHT <span class="badge-studio">STUDIO</span></h1>
+        <span class="brand-sub">Classic PTV Archive Management Console</span>
+      </div>
     </div>
+    <div class="topbar-actions" id="topbarAuthActions">
+      <a class="btn btn-ghost btn-sm" href="/index.html">← Public Site</a>
+    </div>
+  </header>
+
+  <!-- Main Studio Shell -->
+  <main class="studio-main" id="studioApp">
+    <div style="padding: 100px 20px; text-align: center; color: var(--ink-subtle);">
+      <div style="font-size: 36px; margin-bottom: 12px;">📼</div>
+      <p>Authenticating studio console…</p>
+    </div>
+  </main>
+
+  <!-- Modals Container -->
+  <div class="modal-backdrop" id="studioModalBackdrop">
+    <div class="modal-dialog" id="studioModalDialog"></div>
   </div>
-  <div class="topbar-actions" id="topbarActions">
-    <a class="btn btn-ghost btn-sm" href="/">← PUBLIC WEBSITE</a>
-  </div>
-</header>
 
-<main class="admin-container" id="adminApp">
-  <!-- Content injected dynamically -->
-</main>
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<footer>
-  <div><b>PAK SPOTLIGHT</b> — old PTV dramas.</div>
-  <div>Admin</div>
-</footer>
+  <script>
+    const SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-const SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
-const SUPABASE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    function cleanDramaTitle(title) {
+      return String(title || "")
+        .replace(/\s*\|\s*.*$/, "")
+        .replace(/\s*-\s*(PTV|Pak Spotlight|Classic|Full|Drama|Play|HD).*$/i, "")
+        .replace(/\s*\b(Ep|Episode|Part|Qist|His+a?)\s*\.?\s*#?\s*\d+\b.*$/i, "")
+        .replace(/\s*[(\[]\s*\d{1,3}\s*[)\]]\s*$/, "")
+        .replace(/\s*[-–—:]+\s*$/, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
 
-const $ = id => document.getElementById(id);
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function parseEpisodeNumber(title, description) {
+      const text = `${title || ""} ${description || ""}`;
+      const m = text.match(/\b(?:ep|episode|part|qist|his+a?)\s*\.?\s*#?\s*(\d{1,3})\b/i)
+        || String(title || "").match(/[(\[]\s*(\d{1,2})\s*[)\]]\s*$/)
+        || String(title || "").match(/\s(\d{1,2})\s*$/);
+      if (!m) return null;
+      const n = Number(m[1]);
+      return n > 0 && n < 500 ? n : null;
+    }
 
-// Mirror of the Worker's cleanDramaTitle: "Dhoop Kinare Ep 5 | PTV" -> "Dhoop Kinare".
-// Defined here because the form's playlist import runs in the browser.
-function cleanDramaTitle(title) {
-  return String(title || "")
-    .replace(/\s*\|\s*.*$/, "")
-    .replace(/\s*-\s*(PTV|Pak Spotlight|Classic|Full|Drama|Play|HD).*$/i, "")
-    .replace(/\s*\b(Ep|Episode|Part|Qist)\s*\.?\s*#?\s*\d+\b.*$/i, "")
-    .replace(/\s*[(\[]\s*\d{1,3}\s*[)\]]\s*$/, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-// Alias for the alternate spelling used in older revisions.
-const clearDramaTitle = cleanDramaTitle;
-window.cleanDramaTitle = cleanDramaTitle;
-window.clearDramaTitle = clearDramaTitle;
+    // Global State
+    let authSession = null;
+    let allDramas = [];
+    let configuredCategories = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
+    let configuredFeaturedIds = [];
+    let activeStudioTab = "series";
+    let seriesSearchTerm = "";
+    let playsSearchTerm = "";
 
-let rows = [];
-let authSession = null;
-let editingId = null;
-let editingImage = "";
-let stagedAiThumbnailUrl = ""; // Holds the YouTube thumbnail URL to upload to Supabase
-let configuredCategories = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
+    // ----------------------------------------------------
+    // DATA LOADING
+    // ----------------------------------------------------
+    async function fetchArchiveData() {
+      const [dramaRes, catRes, featRes] = await Promise.all([
+        supabase.from("Drama").select("*").order("id", { ascending: false }),
+        fetch("/api/categories").catch(() => null),
+        fetch("/api/featured").catch(() => null)
+      ]);
 
-async function loadCategories() {
-  try {
-    const res = await fetch("/api/categories");
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data.categories) && data.categories.length > 0) {
-        configuredCategories = data.categories;
+      if (dramaRes.data) {
+        allDramas = dramaRes.data.map(r => {
+          const parsedEp = r.episode_number != null ? Number(r.episode_number) : parseEpisodeNumber(r.title);
+          const rawSeries = (r.series_name || "").trim();
+          const cleanedTitle = cleanDramaTitle(r.title);
+          const isSerialType = ["serial / series", "series", "serial"].includes(String(r.type || "").toLowerCase().trim());
+          const inferredSeries = rawSeries || (parsedEp || isSerialType ? cleanedTitle : "");
+
+          return {
+            id: r.id,
+            title: r.title || "Untitled",
+            urdu: r.urdu_title || "",
+            year: r.year || "",
+            type: r.type || "Serial / Series",
+            series_name: inferredSeries,
+            episode_number: parsedEp,
+            writer: r.writer || "",
+            director: r.director || "",
+            produced: r.produced || "",
+            cast: r.cast || "",
+            description: r.description || "",
+            youtube_url: r.youtube_url || "",
+            thumbnail_url: r.thumbnail_url || ""
+          };
+        });
+      }
+
+      if (catRes && catRes.ok) {
+        const catData = await catRes.json();
+        if (Array.isArray(catData.categories)) configuredCategories = catData.categories;
+      }
+      if (featRes && featRes.ok) {
+        const featData = await featRes.json();
+        if (Array.isArray(featData.featuredIds)) configuredFeaturedIds = featData.featuredIds;
       }
     }
-  } catch (e) {
-    console.warn("Could not load categories", e);
-  }
-}
 
-function renderCategoryChips() {
-  const container = $("catChipsList");
-  if (!container) return;
-  container.innerHTML = configuredCategories.map((c, i) => `
-    <div class="cat-chip">
-      <span>${esc(c)}</span>
-      <button class="remove-cat-btn" title="Remove category" onclick="removeCategory(${i})">✕</button>
-    </div>
-  `).join("");
-}
-
-window.removeCategory = function(index) {
-  if (configuredCategories.length <= 1) {
-    alert("Keep at least one group.");
-    return;
-  }
-  configuredCategories.splice(index, 1);
-  renderCategoryChips();
-};
-
-async function saveCategoriesToServer() {
-  const status = $("catStatusMsg");
-  const btn = $("saveCatsBtn");
-  if (!authSession) { showLogin(); return; }
-
-  btn.disabled = true;
-  status.className = "ai-status active info";
-  status.textContent = "Saving…";
-
-  try {
-    const res = await fetch("/api/categories", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": "Bearer " + authSession.access_token
-      },
-      body: JSON.stringify({ categories: configuredCategories })
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || "Failed.");
-
-    status.className = "ai-status active ok";
-    status.textContent = "Saved.";
-  } catch (err) {
-    status.className = "ai-status active err";
-    status.textContent = "Problem: " + (err.message || String(err));
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-let configuredFeaturedIds = [];
-
-async function loadFeaturedIds() {
-  try {
-    const res = await fetch("/api/featured");
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data.featuredIds)) {
-        configuredFeaturedIds = data.featuredIds;
-      }
-    }
-  } catch (e) {
-    console.warn("Could not load featured IDs", e);
-  }
-}
-
-function updateHeroCountBadge() {
-  const badge = $("heroTabCount");
-  if (badge) badge.textContent = configuredFeaturedIds.length;
-}
-
-function renderHeroItems() {
-  const container = $("heroItemsList");
-  if (!container) return;
-
-  updateHeroCountBadge();
-
-  if (!configuredFeaturedIds.length) {
-    container.innerHTML = `
-      <div style="padding:32px;text-align:center;color:var(--text-muted);border:1px dashed var(--border);border-radius:8px">
-        Empty. Tap ☆ Top on a drama to pin it here.
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = configuredFeaturedIds.map((id, index) => {
-    const d = rows.find(r => r.id === id);
-    if (!d) return '';
-    return `
-      <div class="hero-item-card">
-        <span class="hero-item-order">#${index + 1}</span>
-        <img class="hero-item-thumb" src="${esc(d.image || '/logo.png')}" alt="${esc(d.title)}">
-        <div class="hero-item-info">
-          <div class="hero-item-title">${esc(d.title)} ${d.urdu ? `<span style="font-family:var(--font-urdu);color:var(--gold);font-size:12px;margin-left:6px">${esc(d.urdu)}</span>` : ''}</div>
-          <div class="hero-item-sub">${esc(d.type)}${d.year ? ' · ' + esc(d.year) : ''}${d.writer ? ' · ' + esc(d.writer) : ''}</div>
-        </div>
-        <div class="hero-item-actions">
-          <button class="btn-icon" title="Move Up" onclick="moveHeroItem(${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
-          <button class="btn-icon" title="Move Down" onclick="moveHeroItem(${index}, 1)" ${index === configuredFeaturedIds.length - 1 ? 'disabled' : ''}>▼</button>
-          <button class="btn-icon" style="color:var(--danger)" title="Remove from Hero Slider" onclick="removeHeroItem(${index})">✕</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-window.moveHeroItem = function(index, dir) {
-  const target = index + dir;
-  if (target < 0 || target >= configuredFeaturedIds.length) return;
-  const item = configuredFeaturedIds.splice(index, 1)[0];
-  configuredFeaturedIds.splice(target, 0, item);
-  renderHeroItems();
-};
-
-window.removeHeroItem = function(index) {
-  configuredFeaturedIds.splice(index, 1);
-  renderHeroItems();
-  renderDramaItems(rows);
-};
-
-window.toggleHeroFeature = async function(dramaId) {
-  const idx = configuredFeaturedIds.indexOf(dramaId);
-  if (idx >= 0) {
-    configuredFeaturedIds.splice(idx, 1);
-  } else {
-    configuredFeaturedIds.push(dramaId);
-  }
-  renderHeroItems();
-  renderDramaItems(rows);
-  // Save right away so the home page changes without extra taps.
-  try {
-    const res = await fetch("/api/featured", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": "Bearer " + authSession.access_token
-      },
-      body: JSON.stringify({ featuredIds: configuredFeaturedIds })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.error) throw new Error(data.error || "Failed.");
-  } catch (err) {
-    alert("Problem: " + (err.message || String(err)));
-  }
-};
-
-async function saveFeaturedToServer() {
-  const status = $("heroStatusMsg");
-  const btn = $("saveHeroBtn");
-  if (!authSession) { showLogin(); return; }
-
-  btn.disabled = true;
-  status.className = "ai-status active info";
-  status.textContent = "Saving…";
-
-  try {
-    const res = await fetch("/api/featured", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": "Bearer " + authSession.access_token
-      },
-      body: JSON.stringify({ featuredIds: configuredFeaturedIds })
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || "Failed.");
-
-    status.className = "ai-status active ok";
-    status.textContent = "Saved.";
-    updateHeroCountBadge();
-  } catch (err) {
-    status.className = "ai-status active err";
-    status.textContent = "Problem: " + (err.message || String(err));
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-window.switchAdminTab = function(tabName) {
-  document.querySelectorAll(".tab-btn").forEach(b => {
-    b.classList.toggle("active", b.getAttribute("data-tab") === tabName);
-  });
-  document.querySelectorAll(".tab-pane").forEach(p => {
-    p.classList.toggle("active", p.id === `tabContent-${tabName}`);
-  });
-};
-
-function mapRow(r) {
-  return {
-    id: r.id,
-    title: r.title ?? r.Title ?? "",
-    urdu: r.urdu_title ?? r.urdu ?? r.Urdu ?? "",
-    year: r.year ?? "",
-    type: r.type ?? "Long Play",
-    writer: r.writer ?? "",
-    produced: r.produced ?? "",
-    director: r.director ?? "",
-    cast: r.cast ?? "",
-    description: r.description ?? "",
-    youtube: r.youtube_url ?? r.youtube ?? "",
-    image: r.thumbnail_url ?? r.image ?? r.thumbnail ?? "",
-    series: r.series_name ?? "",
-    episode: r.episode_number == null ? null : Number(r.episode_number)
-  };
-}
-
-async function loadData() {
-  let q = await supabase.from("Drama").select("id,title,urdu_title,year,type,writer,director,cast,description,youtube_url,series_name,episode_number,thumbnail_url");
-  if (q.error) {
-    console.warn("Retrying with select *", q.error);
-    q = await supabase.from("Drama").select("*");
-  }
-  if (q.error) throw q.error;
-  rows = (q.data || []).map(mapRow);
-  return rows;
-}
-
-// ----------------------
-// LOGIN VIEW
-// ----------------------
-function showLogin(msg = "") {
-  editingId = null;
-  stagedAiThumbnailUrl = "";
-  $("topbarActions").innerHTML = `<a class="btn btn-ghost btn-sm" href="/">← PUBLIC WEBSITE</a>`;
-  $("adminApp").innerHTML = `
-    <div class="auth-wrapper">
-      <div class="auth-header">
-        <img src="/logo.png" alt="Pak Spotlight">
-        <h1>Admin Sign In</h1>
-        <p>Sign in to add dramas.</p>
-      </div>
-      <form id="loginForm">
-        <div class="form-group">
-          <label>Email</label>
-          <input id="loginEmail" type="email" autocomplete="username" required placeholder="Email">
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••">
-        </div>
-        <button class="btn btn-gold" style="width:100%;margin-top:10px" type="submit">Sign in</button>
-        <div id="loginMsg" class="ai-status ${msg ? 'active err' : ''}" style="margin-top:14px">${esc(msg)}</div>
-      </form>
-    </div>
-  `;
-
-  $("loginForm").onsubmit = async e => {
-    e.preventDefault();
-    const status = $("loginMsg");
-    status.className = "ai-status active info";
-    status.textContent = "Signing in…";
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: $("loginEmail").value.trim(),
-      password: $("loginPassword").value
-    });
-
-    if (error) {
-      status.className = "ai-status active err";
-      status.textContent = "Problem: " + error.message;
-      return;
-    }
-
-    authSession = data.session;
-    await showDashboard();
-  };
-}
-
-// ----------------------
-// DASHBOARD VIEW
-// ----------------------
-async function showDashboard() {
-  if (!authSession) { showLogin(); return; }
-
-  $("topbarActions").innerHTML = `
-    <span style="font-size:12px;color:var(--text-muted);display:none;align-items:center;gap:6px" id="userEmailSpan">
-      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--success)"></span>
-      ${esc(authSession.user.email || 'Admin')}
-    </span>
-    <a class="btn btn-ghost btn-sm hide-m" href="/" target="_blank">VIEW ARCHIVE ↗</a>
-    <button class="btn btn-danger btn-sm" id="logoutBtn">LOG OUT</button>
-  `;
-  $("logoutBtn").onclick = async () => {
-    await supabase.auth.signOut();
-    authSession = null;
-    showLogin();
-  };
-
-  $("adminApp").innerHTML = `
-    <div style="text-align:center;padding:60px;color:var(--text-muted)">
-      Loading…
-    </div>
-  `;
-
-  try {
-    await Promise.all([loadData(), loadCategories(), loadFeaturedIds()]);
-  } catch (e) {
-    $("adminApp").innerHTML = `
-      <div class="panel">
-        <h2 style="color:var(--danger)">No connection</h2>
-        <p style="margin-top:8px;color:var(--text-muted)">${esc(e.message || String(e))}</p>
-        <button class="btn btn-gold" style="margin-top:16px" onclick="location.reload()">Try again</button>
-      </div>
-    `;
-    return;
-  }
-
-  // Calculate metrics
-  const totalDramas = rows.length;
-  const serialsCount = rows.filter(r => ["Serial / Series", "Series", "Serial"].includes(r.type)).length;
-  const longPlaysCount = rows.filter(r => r.type === "Long Play").length;
-  const missingThumbs = rows.filter(r => !r.image || !r.image.trim()).length;
-
-  $("adminApp").innerHTML = `
-    <div class="dash-header">
-      <div class="dash-title">
-        <h1>Dramas</h1>
-        <p>Add, fix and arrange.</p>
-      </div>
-      <button class="btn btn-gold" id="addDramaBtn">+ ADD</button>
-    </div>
-
-    <!-- Tabbed Dashboard Navigation -->
-    <div class="admin-tab-nav">
-      <button class="tab-btn active" data-tab="catalog" onclick="switchAdminTab('catalog')">
-        Dramas <span class="tab-count">${totalDramas}</span>
-      </button>
-      <button class="tab-btn" data-tab="hero" onclick="switchAdminTab('hero')">
-        Home top <span class="tab-count" id="heroTabCount">${configuredFeaturedIds.length}</span>
-      </button>
-      <button class="tab-btn" data-tab="categories" onclick="switchAdminTab('categories')">
-        Groups <span class="tab-count" id="catsTabCount">${configuredCategories.length}</span>
-      </button>
-      <button class="tab-btn" data-tab="system" onclick="switchAdminTab('system')">
-        Checks
-      </button>
-    </div>
-
-    <!-- TAB 1: Dramas Catalog -->
-    <div class="tab-pane active" id="tabContent-catalog">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-label">Dramas</span>
-          <span class="stat-value">${totalDramas}</span>
-          <span class="stat-desc">In the list</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Serials</span>
-          <span class="stat-value">${serialsCount}</span>
-          <span class="stat-desc">Many episodes</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Long plays</span>
-          <span class="stat-value">${longPlaysCount}</span>
-          <span class="stat-desc">Single plays</span>
-        </div>
-        <div class="stat-card ${missingThumbs > 0 ? 'alert' : ''}">
-          <span class="stat-label">No photo</span>
-          <span class="stat-value" style="color:${missingThumbs > 0 ? 'var(--danger)' : 'var(--success)'}">${missingThumbs}</span>
-          <span class="stat-desc">${missingThumbs > 0 ? 'Need a photo' : 'All have photos'}</span>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">All (${totalDramas})</div>
-          <div class="panel-controls">
-            <input class="search-input" id="tableSearch" placeholder="Search name, writer…">
-          </div>
-        </div>
-        <div class="drama-list" id="dramaList"></div>
-      </div>
-    </div>
-
-    <!-- TAB 2: Hero Spotlight Slider Manager -->
-    <div class="tab-pane" id="tabContent-hero">
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">Home top</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Pick what shows first on the home page.</div>
-          </div>
-          <button class="btn btn-gold btn-sm" id="saveHeroBtn" type="button">Save</button>
-        </div>
-
-        <div id="heroItemsList"></div>
-
-        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-          <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--gold)">+ Add to home top</div>
-          <div class="add-row">
-            <select id="heroAddSelect">
-              <option value="">-- Pick a drama --</option>
-              ${rows.map(r => `<option value="${r.id}">${esc(r.title)} (${esc(r.year || 'Classic')}) · ${esc(r.type)}</option>`).join("")}
-            </select>
-            <button class="btn btn-gold btn-sm" id="addHeroItemBtn" type="button">+ Add</button>
-          </div>
-        </div>
-        <div id="heroStatusMsg" class="ai-status" style="margin-top:14px"></div>
-      </div>
-    </div>
-
-    <!-- TAB 3: Categories Configuration Panel -->
-    <div class="tab-pane" id="tabContent-categories">
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">Groups</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Groups on the home page.</div>
-          </div>
-          <button class="btn btn-gold btn-sm" id="saveCatsBtn" type="button">Save</button>
-        </div>
-        <div class="cat-chips-list" id="catChipsList"></div>
-        <div class="add-row" style="margin-top:16px">
-          <input id="newCatInput" placeholder="New group name…">
-          <button class="btn btn-gold btn-sm" id="addCatBtn" type="button">+ Add</button>
-        </div>
-        <div id="catStatusMsg" class="ai-status" style="margin-top:12px"></div>
-      </div>
-    </div>
-
-    <!-- TAB 4: Storage & Diagnostics -->
-    <div class="tab-pane" id="tabContent-system">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">Photo checks</div>
-        </div>
-        <div class="storage-box">
-          <div>
-            <div style="font-weight:700;margin-bottom:4px">Photos</div>
-            <div style="font-size:12px;color:var(--text-muted)">Check saving works.</div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <button class="btn btn-ghost btn-sm" id="testStorageBtn">Test</button>
-          </div>
-        </div>
-        <div id="storageMsg" class="ai-status" style="margin-top:12px"></div>
-      </div>
-    </div>
-
-    <button class="fab-add" id="fabAddBtn" type="button" aria-label="Add drama">+</button>
-  `;
-
-  $("addDramaBtn").onclick = () => showForm();
-  $("testStorageBtn").onclick = testStorage;
-  const fab = $("fabAddBtn");
-  if (fab) fab.onclick = () => showForm();
-
-  // Hero Manager setup
-  renderHeroItems();
-  $("addHeroItemBtn").onclick = () => {
-    const selVal = $("heroAddSelect").value;
-    if (!selVal) return;
-    const dramaId = Number(selVal);
-    if (configuredFeaturedIds.includes(dramaId)) {
-      alert("Already on home top.");
-      return;
-    }
-    configuredFeaturedIds.push(dramaId);
-    $("heroAddSelect").value = "";
-    renderHeroItems();
-    renderDramaItems(rows);
-  };
-  $("saveHeroBtn").onclick = saveFeaturedToServer;
-
-  // Categories setup
-  renderCategoryChips();
-  $("addCatBtn").onclick = () => {
-    const val = $("newCatInput").value.trim();
-    if (!val) return;
-    if (configuredCategories.some(c => c.toLowerCase() === val.toLowerCase())) {
-      alert("Already added.");
-      return;
-    }
-    configuredCategories.push(val);
-    $("newCatInput").value = "";
-    renderCategoryChips();
-    const countBadge = $("catsTabCount");
-    if (countBadge) countBadge.textContent = configuredCategories.length;
-  };
-  $("saveCatsBtn").onclick = saveCategoriesToServer;
-
-  // Search setup
-  const searchInput = $("tableSearch");
-  searchInput.oninput = () => {
-    const q = searchInput.value.toLowerCase().trim();
-    renderDramaItems(rows.filter(r => 
-      (r.title + " " + r.urdu + " " + r.writer + " " + r.director + " " + r.cast + " " + r.year + " " + r.type + " " + r.series).toLowerCase().includes(q)
-    ));
-  };
-
-  renderDramaItems(rows);
-
-  if (pendingCatalogSearch) {
-    const q = pendingCatalogSearch;
-    pendingCatalogSearch = "";
-    switchAdminTab("catalog");
-    const si = $("tableSearch");
-    if (si) {
-      si.value = q;
-      const needle = q.toLowerCase().trim();
-      renderDramaItems(rows.filter(r =>
-        (r.title + " " + r.urdu + " " + r.writer + " " + r.director + " " + r.cast + " " + r.year + " " + r.type + " " + r.series).toLowerCase().includes(needle)
-      ));
-    }
-    const cat = $("tabContent-catalog");
-    if (cat) cat.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}
-
-function renderDramaItems(list) {
-  const container = $("dramaList");
-  if (!list.length) {
-    container.innerHTML = `
-      <div style="padding:32px;text-align:center;color:var(--text-muted);border:1px dashed var(--border);border-radius:8px">
-        Nothing here yet.
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = list.map(d => {
-    const hasThumb = !!d.image && d.image.trim().length > 0;
-    const isFeatured = configuredFeaturedIds.includes(d.id);
-
-    return `
-      <div class="drama-item">
-        <div class="drama-thumb-box">
-          ${hasThumb ? `<img src="${esc(d.image)}" alt="${esc(d.title)}" loading="lazy">` : `<span class="no-thumb">No photo</span>`}
-        </div>
-        <div class="drama-info">
-          <div class="drama-title-row">
-            <span class="drama-title">${esc(d.title)}</span>
-            ${d.urdu ? `<span class="drama-urdu">${esc(d.urdu)}</span>` : ''}
-          </div>
-          <div class="drama-meta">
-            <span class="pill pill-gold">${esc(d.type)}</span>
-            ${d.year ? `<span class="pill">${esc(d.year)}</span>` : ''}
-            ${d.episode ? `<span class="pill">Ep ${d.episode}</span>` : ''}
-            ${d.writer ? `<span class="meta-extra">${esc(d.writer)}</span>` : ''}
-            ${d.cast ? `<span class="meta-extra">${esc(d.cast.slice(0, 40))}${d.cast.length > 40 ? '…' : ''}</span>` : ''}
-            ${!hasThumb ? `<span class="pill pill-missing">No photo</span>` : ''}
-            ${isFeatured ? `<span class="pill pill-gold" style="font-size:10px">★ Top</span>` : ''}
-          </div>
-        </div>
-        <div class="drama-actions">
-          ${!hasThumb && d.youtube ? `
-            <button class="btn btn-ghost btn-sm" title="Get YouTube photo" onclick="syncMissingThumbnail(${d.id}, '${esc(d.youtube)}')">
-              Get photo
-            </button>
-          ` : ''}
-          <button class="btn btn-sm ${isFeatured ? 'btn-gold' : 'btn-ghost'}" title="Show on home top" onclick="toggleHeroFeature(${d.id})">
-            ${isFeatured ? '★ Top' : '☆ Top'}
-          </button>
-          <button class="btn btn-ghost btn-sm" onclick="editDrama(${d.id})">Fix</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteDrama(${d.id}, '${esc(d.title)}')">Cut</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-// ----------------------
-// FORM VIEW (ADD / EDIT)
-// ----------------------
-function showForm(d = null) {
-  editingId = d?.id || null;
-  editingImage = d?.image || "";
-  stagedAiThumbnailUrl = "";
-  plPreviewItems = [];
-  plImporting = false;
-  plCancelled = false;
-  plLastSeries = "";
-
-  $("adminApp").innerHTML = `
-    <div class="dash-header">
-      <div class="dash-title">
-        <h1>${d ? esc(d.title) : 'New drama'}</h1>
-        <p>${d ? 'Fix and save.' : 'Use 1, 2 or fill in yourself.'}</p>
-      </div>
-      <button class="btn btn-ghost" id="cancelFormTopBtn">← BACK</button>
-    </div>
-
-    <!-- 1: One video -->
-    <div class="add-steps">
-    <div class="add-card active-method">
-      <div class="add-card-head"><span class="add-num">1</span><h2>One video</h2></div>
-      <p class="hint">Paste one YouTube link. Tap Fill and the name, year, writer and cast appear below.</p>
-      <div class="add-row">
-        <input id="aiUrlInput" type="url" inputmode="url" placeholder="YouTube link" value="${esc(d?.youtube || '')}">
-        <button class="btn btn-gold" id="aiDetectBtn" type="button">Fill</button>
-      </div>
-      <div id="aiStatusMsg" class="ai-status"></div>
-    </div>
-
-    <!-- 2: Whole playlist — guided 3-step wizard -->
-    <div class="add-card" id="playlistCard" style="${d ? 'display:none' : ''}">
-      <div class="add-card-head"><span class="add-num">2</span><h2>Whole playlist</h2></div>
-      <p class="hint">Paste a playlist link to add every episode at once. Review everything first — nothing is saved until you tap “Add to archive”.</p>
-      <div class="add-row">
-        <input id="plUrlInput" type="url" inputmode="url" placeholder="Playlist link (…playlist?list=…)">
-        <button class="btn btn-ghost" id="plPreviewBtn" type="button">See videos</button>
-      </div>
-      <div id="plPreviewBox" style="display:none">
-        <!-- Step 1: pick episodes -->
-        <div class="pl-step-label"><span>1 · Episodes</span><span id="plCountNote" class="pl-step-note"></span></div>
-        <div class="pl-tools">
-          <button class="btn btn-ghost btn-sm" id="plSelectAllBtn" type="button">Select all</button>
-          <button class="btn btn-ghost btn-sm" id="plSelectNoneBtn" type="button">Select none</button>
-        </div>
-        <div class="pl-list" id="plItemsList"></div>
-        <!-- Step 2: series info, found by AI -->
-        <div class="pl-step-label"><span>2 · Series info</span><span id="plAiBadge" class="pl-ai-badge"></span></div>
-        <div id="plAiBox"></div>
-        <!-- Step 3: import -->
-        <div class="pl-step-label"><span>3 · Add to archive</span></div>
-        <div class="add-row form-actions sticky-mobile" id="plImportBar" style="margin-top:0">
-          <button class="btn btn-gold" id="plImportBtn" type="button">Add to archive</button>
-          <button class="btn btn-ghost" id="plCancelBtn" type="button" style="display:none">Cancel</button>
-        </div>
-        <div class="pl-progress" id="plProgressBar" style="display:none"><div class="pl-progress-fill" id="plProgressFill"></div></div>
-        <div id="plProgressText" class="pl-progress-text" style="display:none"></div>
-        <div id="plStatusMsg" class="ai-status"></div>
-        <div id="plResultsBox"></div>
-      </div>
-      <div id="plStatusMsgTop" class="ai-status"></div>
-    </div>
-    </div>
-
-    <!-- 3: Details -->
-    <div class="add-card" style="border:none;background:none;padding:0 0 4px">
-      <div class="add-card-head"><span class="add-num">3</span><h2>Details</h2></div>
-      <p class="hint">Check and fix before saving.</p>
-    </div>
-
-    <!-- Main Metadata Form -->
-    <div class="panel">
-      <form id="dramaForm">
-        <div class="form-grid">
-          <div>
-            <label>Name *</label>
-            <input id="f_title" required value="${esc(d?.title || '')}" placeholder="Drama name">
-          </div>
-          <div>
-            <label>Urdu name (اردو نام)</label>
-            <input id="f_urdu" class="urdu-input" value="${esc(d?.urdu || '')}" placeholder="اردو نام">
-          </div>
-
-          <div>
-            <label>Year</label>
-            <input id="f_year" value="${esc(d?.year || '')}" placeholder="e.g. 1987">
-          </div>
-          <div>
-            <label>Group</label>
-            <select id="f_type">
-              ${(configuredCategories.includes(d?.type) || !d?.type ? configuredCategories : [d.type, ...configuredCategories]).map(c => `
-                <option value="${esc(c)}" ${(d?.type || configuredCategories[0]) === c ? 'selected' : ''}>${esc(c)}</option>
-              `).join("")}
-            </select>
-          </div>
-
-          <div>
-            <label>Drama (for episodes)</label>
-            <input id="f_series" value="${esc(d?.series || '')}" placeholder="Same for all episodes">
-          </div>
-          <div>
-            <label>Episode</label>
-            <input id="f_episode" type="number" min="1" inputmode="numeric" value="${d?.episode ?? ''}" placeholder="1, 2, 3...">
-          </div>
-
-          <div>
-            <label>Writer</label>
-            <input id="f_writer" value="${esc(d?.writer || '')}" placeholder="Writer">
-          </div>
-          <div>
-            <label>Director</label>
-            <input id="f_director" value="${esc(d?.director || '')}" placeholder="Director">
-          </div>
-
-          <div class="full">
-            <label>PTV center</label>
-            <input id="f_produced" value="${esc(d?.produced || '')}" placeholder="e.g. Lahore, Karachi">
-          </div>
-
-          <div class="full">
-            <label>Cast</label>
-            <input id="f_cast" value="${esc(d?.cast || '')}" placeholder="Names, with commas">
-          </div>
-
-          <div class="full">
-            <label>About</label>
-            <textarea id="f_description" placeholder="What is this drama about?">${esc(d?.description || '')}</textarea>
-          </div>
-
-          <div class="full">
-            <label>YouTube link</label>
-            <input id="f_youtube" type="url" inputmode="url" value="${esc(d?.youtube || '')}" placeholder="YouTube link">
-          </div>
-
-          <!-- Thumbnail Section -->
-          <div class="full">
-            <label>Photo</label>
-            
-            <!-- Live Thumbnail Preview Box -->
-            <div id="thumbPreviewBox" class="thumb-preview-card" style="${editingImage ? '' : 'display:none'}">
-              <div class="thumb-img-wrap">
-                <img id="thumbPreviewImg" src="${esc(editingImage || '')}" alt="Thumbnail preview">
-              </div>
-              <div class="thumb-details">
-                <div class="thumb-badge" id="thumbPreviewBadge">
-                  ${editingImage ? 'Current photo' : 'Photo'}
-                </div>
-                <div class="thumb-note" id="thumbPreviewNote">
-                  ${editingImage ? 'Now showing.' : 'Saved with the drama.'}
-                </div>
-              </div>
-            </div>
-
-            <div style="margin-top:12px">
-              <input id="f_file" type="file" accept="image/*">
-              <div style="font-size:11px;color:var(--text-dim);margin-top:4px">
-                Or pick a photo from your phone. Empty keeps the current photo.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-actions sticky-mobile">
-          <button class="btn btn-gold" id="saveDramaBtn" type="submit">Save</button>
-          <button class="btn btn-ghost" id="cancelFormBtn" type="button">Back</button>
-          <div id="formMsg" class="ai-status" style="flex:1"></div>
-        </div>
-      </form>
-    </div>
-  `;
-
-  if (d?.type) $("f_type").value = d.type;
-
-  $("cancelFormTopBtn").onclick = showDashboard;
-  $("cancelFormBtn").onclick = showDashboard;
-  $("aiDetectBtn").onclick = runAiAutofill;
-  if ($("plPreviewBtn")) $("plPreviewBtn").onclick = runPlaylistPreview;
-  if ($("plImportBtn")) $("plImportBtn").onclick = runPlaylistImport;
-  if ($("plSelectAllBtn")) $("plSelectAllBtn").onclick = () => {
-    plPreviewItems.forEach(x => { if (!x.dup) x.selected = true; });
-    document.querySelectorAll("[data-pl-check]").forEach(c => {
-      const i = Number(c.getAttribute("data-pl-check"));
-      if (!plPreviewItems[i]?.dup) c.checked = true;
-    });
-    plUpdateImportBtn();
-  };
-  if ($("plSelectNoneBtn")) $("plSelectNoneBtn").onclick = () => {
-    plPreviewItems.forEach(x => { x.selected = false; });
-    document.querySelectorAll("[data-pl-check]").forEach(c => { c.checked = false; });
-    plUpdateImportBtn();
-  };
-  if ($("plCancelBtn")) $("plCancelBtn").onclick = () => { plCancelled = true; };
-  if ($("plItemsList")) $("plItemsList").addEventListener("change", e => {
-    const t = e.target;
-    if (t.matches("[data-pl-check]")) {
-      const i = Number(t.getAttribute("data-pl-check"));
-      if (plPreviewItems[i]) plPreviewItems[i].selected = t.checked;
-      plUpdateImportBtn();
-    } else if (t.matches("[data-pl-ep]")) {
-      const i = Number(t.getAttribute("data-pl-ep"));
-      if (plPreviewItems[i] && t.value) plPreviewItems[i].ep = String(t.value);
-    }
-  });
-  if ($("plResultsBox")) $("plResultsBox").addEventListener("click", e => {
-    const chip = e.target.closest("[data-pl-filter]");
-    if (chip) { plFilterResults(chip.getAttribute("data-pl-filter")); return; }
-    const act = e.target.closest("[data-pl-action]");
-    if (!act) return;
-    if (act.getAttribute("data-pl-action") === "view") {
-      pendingCatalogSearch = plLastSeries;
-      showDashboard();
-    } else if (act.getAttribute("data-pl-action") === "again") {
-      plResetWizard();
-    }
-  });
-  $("dramaForm").onsubmit = handleSaveDrama;
-
-  // File preview trigger
-  $("f_file").onchange = () => {
-    const file = $("f_file").files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        $("thumbPreviewBox").style.display = "flex";
-        $("thumbPreviewImg").src = e.target.result;
-        $("thumbPreviewBadge").innerHTML = "New photo picked";
-        $("thumbPreviewNote").textContent = `"${file.name}" will be saved.`;
-        stagedAiThumbnailUrl = ""; // custom file overrides AI thumbnail
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-}
-
-// ----------------------
-// AI AUTOFILL LOGIC
-// ----------------------
-async function runAiAutofill() {
-  const btn = $("aiDetectBtn");
-  const status = $("aiStatusMsg");
-  const url = $("aiUrlInput").value.trim();
-
-  if (!url) {
-    status.className = "ai-status active err";
-    status.textContent = "Paste a YouTube link first.";
-    return;
-  }
-
-  if (/[?&]list=/.test(url)) {
-    status.className = "ai-status active err";
-    status.textContent = "That link is a playlist — use step 2 (Whole playlist) below instead.";
-    return;
-  }
-
-  if (!authSession?.access_token) {
-    showLogin("Please sign in again.");
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = "Filling…";
-  status.className = "ai-status active info";
-  status.textContent = "Getting details…";
-
-  try {
-    const res = await fetch("/api/ai-autofill", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": "Bearer " + authSession.access_token
-      },
-      body: JSON.stringify({ url })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "AI auto-fill request failed.");
-
-    const f = data.fields || {};
-    const setVal = (id, val) => {
-      if ($(id) && val !== undefined && val !== null) $(id).value = String(val);
-    };
-
-    setVal("f_title", f.title);
-    setVal("f_urdu", f.urdu_title);
-    setVal("f_year", f.year);
-    setVal("f_series", f.series_name);
-    setVal("f_episode", f.episode_number);
-    setVal("f_writer", f.writer);
-    setVal("f_director", f.director);
-    setVal("f_produced", f.produced);
-    setVal("f_cast", f.cast);
-    setVal("f_description", f.description);
-    setVal("f_youtube", url);
-
-    if ($("f_type") && f.type) {
-      const match = configuredCategories.find(c => c.toLowerCase() === String(f.type).trim().toLowerCase()) 
-        || (configuredCategories.includes(f.type) ? f.type : (configuredCategories[0] || "Long Play"));
-      $("f_type").value = match;
-    }
-
-    // Thumbnail staging
-    const detectedThumb = f.thumbnail || data.video?.thumbnail;
-    if (detectedThumb) {
-      stagedAiThumbnailUrl = detectedThumb;
-      $("thumbPreviewBox").style.display = "flex";
-      $("thumbPreviewImg").src = detectedThumb;
-      $("thumbPreviewBadge").innerHTML = "Photo found";
-      $("thumbPreviewNote").textContent = "Saved with the drama.";
-    }
-
-    status.className = "ai-status active ok";
-    status.textContent = data.cached
-      ? "Done — AI reused earlier info (no wait)."
-      : data.searched
-        ? "Done — AI searched the web for this drama."
-        : "Done — AI filled from the YouTube info. Check below, then Save.";
-  } catch (err) {
-    status.className = "ai-status active err";
-    status.textContent = "Problem: " + (err.message || String(err));
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Fill";
-  }
-}
-
-// ----------------------
-// PLAYLIST WIZARD: preview -> editable AI series info -> import with progress
-// ----------------------
-let plPreviewItems = []; // [{id,title,description,publishedAt,thumbnail,url,ep,selected,dup}]
-let plImporting = false;
-let plCancelled = false;
-let plLastSeries = "";
-let plSuggestedSeries = "";
-let pendingCatalogSearch = "";
-
-// Pure render helpers (only depend on esc / cleanDramaTitle / configuredCategories).
-function plRowHtml(it, i) {
-  const computed = cleanDramaTitle(it.title) || `Episode ${esc(it.ep || (i + 1))}`;
-  return `
-    <div class="pl-row" data-row="${i}">
-      <input type="checkbox" data-pl-check="${i}"${it.selected ? " checked" : ""} aria-label="Include this video">
-      <img src="${esc(it.thumbnail)}" alt="" loading="lazy">
-      <span class="pl-info">
-        <span class="pl-title">${esc(it.title)}</span>
-        <span class="pl-computed">Saves as “${esc(computed)}” · Ep ${esc(it.ep || (i + 1))}</span>
-        ${it.dup ? `<span class="pl-dup">Already in archive — unticked</span>` : ""}
-      </span>
-      <span class="pl-ep-wrap"><label>Ep</label><input class="pl-ep" data-pl-ep="${i}" type="number" min="1" inputmode="numeric" value="${esc(it.ep || (i + 1))}"></span>
-    </div>`;
-}
-
-function plAiBoxHtml(series, ai) {
-  const v = k => esc(ai?.[k] || "");
-  return `
-    <div class="pl-ai-grid">
-      <div>
-        <label>Drama name</label>
-        <input id="plSeriesInput" value="${esc(series || "")}" placeholder="Same for all episodes">
-      </div>
-      <div>
-        <label>Group</label>
-        <select id="plCatSelect">
-          ${configuredCategories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
-        </select>
-      </div>
-      <div>
-        <label>Urdu name</label>
-        <input id="plAiUrdu" class="urdu-input" value="${v("urdu_title")}" placeholder="اردو نام">
-      </div>
-      <div>
-        <label>Year</label>
-        <input id="plAiYear" value="${v("year")}" placeholder="e.g. 1987" inputmode="numeric">
-      </div>
-      <div>
-        <label>Writer</label>
-        <input id="plAiWriter" value="${v("writer")}" placeholder="Writer">
-      </div>
-      <div>
-        <label>Director</label>
-        <input id="plAiDirector" value="${v("director")}" placeholder="Director">
-      </div>
-      <div class="full">
-        <label>PTV center</label>
-        <input id="plAiProduced" value="${v("produced")}" placeholder="e.g. Lahore, Karachi">
-      </div>
-      <div class="full">
-        <label>Cast</label>
-        <input id="plAiCast" value="${v("cast")}" placeholder="Names, with commas">
-      </div>
-      <div class="full">
-        <label>About (shared by all episodes)</label>
-        <textarea id="plAiDesc" placeholder="What is this drama about?">${v("description")}</textarea>
-      </div>
-    </div>
-    <div style="margin-top:8px">
-      <button class="btn btn-ghost btn-sm" id="plAiRefreshBtn" type="button">↻ Ask AI again</button>
-    </div>`;
-}
-
-function plResultRowHtml(r) {
-  const icon = r.status === "added" ? "✓" : r.status === "skipped" ? "–" : "×";
-  return `<div class="pl-result ${r.status}" data-pl-status="${r.status}">${icon} ${esc(r.title)} (Ep ${esc(r.ep)})${r.note ? ` — ${esc(r.note)}` : ""}${r.status === "added" ? " added" : ""}</div>`;
-}
-
-function plSummaryHtml(s) {
-  const chip = (f, label, n) => n > 0 ? `<button class="pl-chip" data-pl-filter="${f}" type="button">${label} ${n}</button>` : "";
-  const headline = s.cancelled
-    ? `Stopped — ${s.added} added before cancel`
-    : s.failed > 0
-      ? `${s.added} of ${s.total} added`
-      : `All ${s.added} added ✓`;
-  return `
-    <div class="pl-summary">
-      <div class="pl-summary-title">${esc(headline)}</div>
-      <div class="pl-summary-sub">${esc(s.series || "")}${s.skipped ? ` · ${s.skipped} already in archive` : ""}${s.failed ? ` · ${s.failed} failed` : ""}</div>
-      <div class="pl-chips">
-        <button class="pl-chip active" data-pl-filter="all" type="button">All ${s.total}</button>
-        ${chip("added", "Added", s.added)}
-        ${chip("skipped", "Already there", s.skipped)}
-        ${chip("error", "Failed", s.failed)}
-      </div>
-      <div class="pl-summary-actions">
-        <button class="btn btn-gold btn-sm" data-pl-action="view" type="button">View in Dramas →</button>
-        <button class="btn btn-ghost btn-sm" data-pl-action="again" type="button">+ Add another</button>
-      </div>
-    </div>`;
-}
-
-function plSelected() {
-  const out = [];
-  plPreviewItems.forEach((it, i) => {
-    const check = document.querySelector(`[data-pl-check="${i}"]`);
-    const epInput = document.querySelector(`[data-pl-ep="${i}"]`);
-    const selected = check ? check.checked : !!it.selected;
-    let ep = epInput && epInput.value ? Number(epInput.value) : Number(it.ep) || (i + 1);
-    if (!(ep > 0)) ep = i + 1;
-    if (selected) out.push({ it, ep: String(ep) });
-  });
-  return out;
-}
-
-function plUpdateImportBtn() {
-  const btn = $("plImportBtn");
-  if (!btn) return;
-  const n = plSelected().length;
-  btn.textContent = n > 0 ? `Add ${n} to archive` : "Add to archive";
-  btn.disabled = plImporting || n === 0;
-  const note = $("plCountNote");
-  if (note) {
-    const dups = plPreviewItems.filter(x => x.dup).length;
-    note.textContent = `${plPreviewItems.length} videos${dups ? ` · ${dups} already in archive` : ""} · ${n} selected`;
-  }
-}
-
-async function runPlaylistPreview() {
-  const btn = $("plPreviewBtn");
-  const status = $("plStatusMsgTop");
-  const url = $("plUrlInput").value.trim();
-  if (!url) {
-    status.className = "ai-status active err";
-    status.textContent = "Paste a playlist link first.";
-    return;
-  }
-  if (/youtu\.?be/.test(url) && !/[?&]list=/.test(url)) {
-    status.className = "ai-status active err";
-    status.textContent = "That looks like a single video — use step 1 (Fill) above instead.";
-    return;
-  }
-  if (!authSession?.access_token) { showLogin("Please sign in again."); return; }
-  btn.disabled = true;
-  btn.textContent = "Loading…";
-  status.className = "ai-status active info";
-  status.textContent = "Reading playlist…";
-  try {
-    const res = await fetch("/api/playlist-preview", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": "Bearer " + authSession.access_token
-      },
-      body: JSON.stringify({ url, limit: 50 })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not read playlist.");
-    plSuggestedSeries = data.suggestedSeries || "";
-    plPreviewItems = (data.items || []).map((it, i) => ({
-      ...it,
-      url: it.url || `https://www.youtube.com/watch?v=${it.id}`,
-      ep: it.episode || String(i + 1),
-      selected: true,
-      dup: false
-    }));
-    if (!plPreviewItems.length) throw new Error("No videos found in this playlist.");
-
-    // Pre-check duplicates in ONE query so the user sees them before importing.
-    try {
-      const urls = plPreviewItems.map(x => x.url);
-      const { data: existing } = await supabase.from("Drama").select("youtube_url").in("youtube_url", urls);
-      const have = new Set((existing || []).map(r => r.youtube_url));
-      plPreviewItems.forEach(x => {
-        if (have.has(x.url)) { x.dup = true; x.selected = false; }
-      });
-    } catch (e) {
-      console.warn("Duplicate pre-check failed, continuing", e);
-    }
-
-    $("plPreviewBox").style.display = "block";
-    $("plItemsList").innerHTML = plPreviewItems.map(plRowHtml).join("");
-    $("plResultsBox").innerHTML = "";
-    $("plStatusMsg").className = "ai-status";
-    $("plStatusMsg").textContent = "";
-    setPlProgress(0, "");
-    plUpdateImportBtn();
-    status.className = "ai-status active ok";
-    status.textContent = `${plPreviewItems.length} videos found. Fix episode numbers, review the AI info, then add.`;
-    $("playlistCard").scrollIntoView({ behavior: "smooth", block: "start" });
-    fetchPlAiCredits(false);
-  } catch (err) {
-    status.className = "ai-status active err";
-    status.textContent = "Problem: " + (err.message || String(err));
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "See videos";
-  }
-}
-
-function setPlAiBadge(state, text) {
-  const b = $("plAiBadge");
-  if (!b) return;
-  b.className = "pl-ai-badge" + (state ? " " + state : "");
-  b.textContent = text || "";
-}
-
-async function fetchPlAiCredits(isRefresh) {
-  const box = $("plAiBox");
-  if (!box) return;
-  if (!plPreviewItems.length) { box.innerHTML = ""; return; }
-  setPlAiBadge("", isRefresh ? "Asking AI…" : "Asking AI…");
-  if (!isRefresh || !box.querySelector(".pl-ai-grid")) {
-    box.innerHTML = `<div class="pl-skel"><span style="width:60%"></span><span></span><span style="width:80%"></span></div>`;
-  }
-  const first = plPreviewItems.find(x => !x.dup) || plPreviewItems[0];
-  const firstUrl = first.url || `https://www.youtube.com/watch?v=${first.id}`;
-  try {
-    if (!authSession?.access_token) throw new Error("Signed out.");
-    const aiRes = await fetch("/api/ai-autofill", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": "Bearer " + authSession.access_token
-      },
-      body: JSON.stringify({ url: firstUrl, forceSearch: true })
-    });
-    const aiData = await aiRes.json().catch(() => ({}));
-    if (!aiRes.ok) throw new Error(aiData.error || "AI request failed.");
-    const f = aiData.fields || {};
-    box.innerHTML = plAiBoxHtml(f.series_name || plSuggestedSeries || cleanDramaTitle(first.title), f);
-    if ($("plAiRefreshBtn")) $("plAiRefreshBtn").onclick = () => fetchPlAiCredits(true);
-    setPlAiBadge(
-      aiData.cached ? "cached" : "found",
-      aiData.cached ? "⚡ AI · reused earlier info, no cost" : aiData.searched ? "✨ AI · searched the web" : "✨ AI · filled from YouTube info"
-    );
-  } catch (err) {
-    console.warn("AI credits failed", err);
-    box.innerHTML = plAiBoxHtml(plSuggestedSeries || cleanDramaTitle(first.title), null);
-    if ($("plAiRefreshBtn")) $("plAiRefreshBtn").onclick = () => fetchPlAiCredits(true);
-    setPlAiBadge("failed", "AI unavailable — fill in yourself, then add");
-  }
-}
-
-function setPlProgress(pct, text) {
-  const bar = $("plProgressBar");
-  const fill = $("plProgressFill");
-  const t = $("plProgressText");
-  if (!bar || !fill || !t) return;
-  if (!text && pct <= 0) {
-    bar.style.display = "none";
-    t.style.display = "none";
-    return;
-  }
-  bar.style.display = "block";
-  t.style.display = "block";
-  fill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
-  t.innerHTML = text || "";
-}
-
-function plFilterResults(f) {
-  document.querySelectorAll("#plResultsBox [data-pl-filter]").forEach(c => {
-    c.classList.toggle("active", c.getAttribute("data-pl-filter") === f);
-  });
-  document.querySelectorAll('#plResultsBox [data-pl-status]').forEach(r => {
-    r.style.display = (f === "all" || r.getAttribute("data-pl-status") === f) ? "" : "none";
-  });
-}
-
-function plResetWizard() {
-  plPreviewItems = [];
-  plImporting = false;
-  plCancelled = false;
-  plLastSeries = "";
-  $("plUrlInput").value = "";
-  $("plPreviewBox").style.display = "none";
-  $("plItemsList").innerHTML = "";
-  $("plAiBox").innerHTML = "";
-  setPlAiBadge("", "");
-  $("plResultsBox").innerHTML = "";
-  setPlProgress(0, "");
-  const s = $("plStatusMsgTop");
-  s.className = "ai-status";
-  s.textContent = "";
-  $("plUrlInput").focus();
-}
-
-async function runPlaylistImport() {
-  const btn = $("plImportBtn");
-  const cancelBtn = $("plCancelBtn");
-  const status = $("plStatusMsg");
-  const box = $("plResultsBox");
-  const selected = plSelected();
-
-  if (!selected.length) {
-    status.className = "ai-status active err";
-    status.textContent = "Tick at least one video first.";
-    return;
-  }
-  if (!authSession?.access_token) { showLogin("Please sign in again."); return; }
-
-  const seriesName = ($("plSeriesInput")?.value || "").trim()
-    || cleanDramaTitle(selected[0].it.title) || plSuggestedSeries || "Untitled serial";
-  const credits = {
-    category: $("plCatSelect")?.value || configuredCategories[0] || "Long Play",
-    urdu_title: ($("plAiUrdu")?.value || "").trim(),
-    year: ($("plAiYear")?.value || "").trim(),
-    writer: ($("plAiWriter")?.value || "").trim(),
-    director: ($("plAiDirector")?.value || "").trim(),
-    produced: ($("plAiProduced")?.value || "").trim(),
-    cast: ($("plAiCast")?.value || "").trim(),
-    description: ($("plAiDesc")?.value || "").trim()
-  };
-
-  plImporting = true;
-  plCancelled = false;
-  btn.disabled = true;
-  btn.textContent = "Adding…";
-  cancelBtn.style.display = "";
-  status.className = "ai-status active info";
-  status.textContent = `Adding ${selected.length} episodes of “${seriesName}”…`;
-  box.innerHTML = "";
-  plUpdateImportBtn();
-
-  let added = 0, skipped = 0, failed = 0;
-  const total = selected.length;
-
-  for (let i = 0; i < selected.length; i++) {
-    if (plCancelled) break;
-    const { it, ep } = selected[i];
-    const epNum = Number(ep) || (i + 1);
-    setPlProgress(Math.round((i / total) * 100), `Adding <b>${i + 1} of ${total}</b> — Ep ${esc(epNum)}…`);
-
-    const videoUrl = it.url || `https://www.youtube.com/watch?v=${it.id}`;
-    try {
-      const { data: dupData } = await supabase.from("Drama").select("id").eq("youtube_url", videoUrl);
-      if (dupData && dupData.length > 0) {
-        skipped++;
-        box.insertAdjacentHTML("beforeend", plResultRowHtml({ status: "skipped", title: it.title, ep: epNum, note: "Already in archive" }));
-        continue;
-      }
-      const title = cleanDramaTitle(it.title) || `${seriesName} Ep ${epNum}`;
-      const payload = {
-        title,
-        urdu_title: credits.urdu_title,
-        year: credits.year || String(it.publishedAt || "").slice(0, 4),
-        type: credits.category,
-        series_name: seriesName,
-        episode_number: epNum,
-        writer: credits.writer,
-        director: credits.director,
-        produced: credits.produced,
-        cast: credits.cast,
-        description: (it.description || credits.description).slice(0, 800),
-        youtube_url: videoUrl,
-        thumbnail_url: it.thumbnail || ""
-      };
-      const { error: insErr } = await supabase.from("Drama").insert(payload);
-      if (insErr) {
-        failed++;
-        box.insertAdjacentHTML("beforeend", plResultRowHtml({ status: "error", title: it.title, ep: epNum, note: insErr.message }));
+    // ----------------------------------------------------
+    // AUTHENTICATION & LOGIN VIEW
+    // ----------------------------------------------------
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      authSession = session;
+      if (!authSession) {
+        renderLoginView();
       } else {
-        added++;
-        box.insertAdjacentHTML("beforeend", plResultRowHtml({ status: "added", title, ep: epNum }));
+        updateTopAuthUi();
+        await fetchArchiveData();
+        renderStudioDashboard();
       }
-    } catch (e) {
-      failed++;
-      box.insertAdjacentHTML("beforeend", plResultRowHtml({ status: "error", title: it.title, ep: epNum, note: e.message || String(e) }));
-    }
-  }
-
-  setPlProgress(plCancelled ? Math.round((added + skipped + failed) / total * 100) : 100,
-    plCancelled ? "Stopped." : `Finished — <b>${added}</b> added${skipped ? `, ${skipped} already there` : ""}${failed ? `, ${failed} failed` : ""}.`);
-  plLastSeries = seriesName;
-  box.insertAdjacentHTML("afterbegin", plSummaryHtml({ added, skipped, failed, total, series: seriesName, cancelled: plCancelled }));
-  box.querySelector(".pl-summary")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  status.className = failed && !added ? "ai-status active err" : "ai-status active ok";
-  status.textContent = failed && !added
-    ? "Nothing was added — see failures below."
-    : plCancelled ? "Stopped. What was added is saved." : "Saved. View them in Dramas or add another playlist.";
-
-  plImporting = false;
-  cancelBtn.style.display = "none";
-  plUpdateImportBtn();
-  btn.textContent = "Add to archive";
-  await loadData().catch(() => {});
-}
-
-// ----------------------
-// SAVE DRAMA & UPLOAD THUMBNAIL TO SUPABASE
-// ----------------------
-async function handleSaveDrama(e) {
-  e.preventDefault();
-  if (!authSession) { showLogin(); return; }
-
-  const btn = $("saveDramaBtn");
-  const msg = $("formMsg");
-  const fileInput = $("f_file");
-  const localFile = fileInput.files[0];
-
-  btn.disabled = true;
-  msg.className = "ai-status active info";
-  msg.textContent = "Saving…";
-
-  const payload = {
-    title: $("f_title").value.trim(),
-    urdu_title: $("f_urdu").value.trim(),
-    year: $("f_year").value.trim(),
-    type: $("f_type").value,
-    series_name: $("f_series").value.trim() || null,
-    episode_number: $("f_episode").value ? Number($("f_episode").value) : null,
-    writer: $("f_writer").value.trim(),
-    director: $("f_director").value.trim(),
-    produced: $("f_produced").value.trim(),
-    cast: $("f_cast").value.trim(),
-    description: $("f_description").value.trim(),
-    youtube_url: $("f_youtube").value.trim()
-  };
-
-  let dramaId = editingId;
-
-  try {
-    // 1. Insert or Update row in Drama table
-    if (editingId) {
-      const q = await supabase.from("Drama").update(payload).eq("id", editingId);
-      if (q.error) throw q.error;
-    } else {
-      const q = await supabase.from("Drama").insert(payload).select("id").single();
-      if (q.error) throw q.error;
-      dramaId = q.data.id;
     }
 
-    // 2. Photo upload
-    if (localFile) {
-      // Custom photo picked from phone
-      msg.textContent = "Saving photo…";
-      const ext = (localFile.type || "image/jpeg").split("/")[1]?.replace("jpeg", "jpg") || "jpg";
-      const storagePath = `drama/${dramaId}.${ext}`;
+    function updateTopAuthUi() {
+      const container = $("topbarAuthActions");
+      if (!container) return;
+      if (authSession?.user) {
+        container.innerHTML = `
+          <span style="font-size:12px;color:var(--ink-subtle);font-weight:600">👤 ${esc(authSession.user.email)}</span>
+          <a class="btn btn-ghost btn-sm" href="/index.html">← Public Site</a>
+          <button class="btn btn-ghost btn-sm" onclick="handleSignOut()">Sign Out</button>
+        `;
+      } else {
+        container.innerHTML = `<a class="btn btn-ghost btn-sm" href="/index.html">← Public Site</a>`;
+      }
+    }
 
-      const { error: upErr } = await supabase.storage.from("thumbnails").upload(storagePath, localFile, {
-        contentType: localFile.type || "image/jpeg",
-        upsert: true,
-        cacheControl: "31536000"
+    async function handleSignOut() {
+      await supabase.auth.signOut();
+      authSession = null;
+      renderLoginView();
+    }
+
+    function renderLoginView(errorMsg = "") {
+      $("studioApp").innerHTML = `
+        <div style="max-width:420px;margin:80px auto;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:32px;box-shadow:0 12px 36px rgba(0,0,0,0.6)">
+          <div style="text-align:center;margin-bottom:24px">
+            <img src="/logo.png" alt="" style="width:54px;height:54px;margin-bottom:12px">
+            <h2 style="font-family:var(--font-serif);font-size:20px;letter-spacing:1px;color:#fff">Admin Sign In</h2>
+            <p style="font-size:12px;color:var(--ink-subtle);margin-top:4px">Pak Spotlight Master Studio Console</p>
+          </div>
+          <form id="studioLoginForm">
+            <div class="form-group" style="margin-bottom:14px">
+              <label>Email Address</label>
+              <input type="email" id="loginEmail" required placeholder="admin@pakspotlight.com" autocomplete="username">
+            </div>
+            <div class="form-group" style="margin-bottom:20px">
+              <label>Password</label>
+              <input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <button class="btn btn-gold" type="submit" style="width:100%">Authorize & Sign In</button>
+            <div class="status-banner ${errorMsg ? 'show err' : ''}" id="loginStatus">${esc(errorMsg)}</div>
+          </form>
+        </div>
+      `;
+
+      $("studioLoginForm").onsubmit = async e => {
+        e.preventDefault();
+        const stat = $("loginStatus");
+        stat.className = "status-banner show info";
+        stat.textContent = "Authenticating…";
+        const email = $("loginEmail").value.trim();
+        const password = $("loginPass").value;
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          stat.className = "status-banner show err";
+          stat.textContent = error.message;
+        } else {
+          authSession = data.session;
+          updateTopAuthUi();
+          await fetchArchiveData();
+          renderStudioDashboard();
+        }
+      };
+    }
+
+    // ----------------------------------------------------
+    // MAIN STUDIO DASHBOARD
+    // ----------------------------------------------------
+    function getSeriesGroups() {
+      const seriesMap = new Map();
+      allDramas.forEach(d => {
+        const isSer = !!d.series_name || ["serial / series", "series", "serial"].includes(String(d.type || "").toLowerCase().trim());
+        if (isSer && d.series_name) {
+          const k = d.series_name.toLowerCase().trim();
+          if (!seriesMap.has(k)) seriesMap.set(k, { name: d.series_name, episodes: [] });
+          seriesMap.get(k).episodes.push(d);
+        }
       });
-      if (upErr) throw new Error("Photo problem: " + upErr.message);
+      return Array.from(seriesMap.values()).map(s => {
+        s.episodes.sort((a, b) => (a.episode_number ?? 9999) - (b.episode_number ?? 9999));
+        s.rep = s.episodes.find(e => e.thumbnail_url) || s.episodes[0];
+        return s;
+      });
+    }
 
-      const pubUrl = supabase.storage.from("thumbnails").getPublicUrl(storagePath).data.publicUrl;
-      const { error: patchErr } = await supabase.from("Drama").update({ thumbnail_url: pubUrl }).eq("id", dramaId);
-      if (patchErr) throw new Error("Photo problem: " + patchErr.message);
+    function getStandalonePlays() {
+      return allDramas.filter(d => {
+        const isSer = !!d.series_name || ["serial / series", "series", "serial"].includes(String(d.type || "").toLowerCase().trim());
+        return !isSer || !d.series_name;
+      });
+    }
 
-    } else if (stagedAiThumbnailUrl) {
-      // YouTube photo
-      msg.textContent = "Saving photo…";
-      let uploadedSuccessfully = false;
+    function renderStudioDashboard() {
+      const seriesGroups = getSeriesGroups();
+      const standalonePlays = getStandalonePlays();
+      const missingPhotos = allDramas.filter(d => !d.thumbnail_url || !d.thumbnail_url.trim()).length;
 
-      // Strategy 1: Fetch binary via Cloudflare Worker proxy and upload via client supabase SDK
+      $("studioApp").innerHTML = `
+        <!-- Metrics Strip -->
+        <div class="metrics-strip">
+          <div class="metric-card">
+            <span class="metric-label">Drama Series</span>
+            <span class="metric-value">${seriesGroups.length}</span>
+            <span class="metric-desc">Grouped drama sagas</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Total Episodes</span>
+            <span class="metric-value">${allDramas.length}</span>
+            <span class="metric-desc">In entire video archive</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Single Plays</span>
+            <span class="metric-value">${standalonePlays.length}</span>
+            <span class="metric-desc">Long plays & telefilms</span>
+          </div>
+          <div class="metric-card ${missingPhotos > 0 ? 'alert' : ''}">
+            <span class="metric-label">Missing Photos</span>
+            <span class="metric-value">${missingPhotos}</span>
+            <span class="metric-desc">${missingPhotos > 0 ? 'Use Toolkit to sync photos' : 'All videos have artwork'}</span>
+          </div>
+        </div>
+
+        <!-- Primary Navigation Tabs -->
+        <div class="studio-tabs-bar">
+          <button class="tab-btn ${activeStudioTab === 'series' ? 'active' : ''}" onclick="switchStudioTab('series')">
+            📺 Drama Series <span class="tab-count">${seriesGroups.length}</span>
+          </button>
+          <button class="tab-btn ${activeStudioTab === 'plays' ? 'active' : ''}" onclick="switchStudioTab('plays')">
+            🎬 Single Plays <span class="tab-count">${standalonePlays.length}</span>
+          </button>
+          <button class="tab-btn ${activeStudioTab === 'ingest' ? 'active' : ''}" onclick="switchStudioTab('ingest')">
+            ⚡ Quick Ingest &amp; AI
+          </button>
+          <button class="tab-btn ${activeStudioTab === 'tools' ? 'active' : ''}" onclick="switchStudioTab('tools')">
+            🛠 Archive Toolkit
+          </button>
+          <button class="tab-btn ${activeStudioTab === 'showcase' ? 'active' : ''}" onclick="switchStudioTab('showcase')">
+            ⭐ Hero Showcase <span class="tab-count">${configuredFeaturedIds.length}</span>
+          </button>
+          <button class="tab-btn ${activeStudioTab === 'categories' ? 'active' : ''}" onclick="switchStudioTab('categories')">
+            📁 Groups <span class="tab-count">${configuredCategories.length}</span>
+          </button>
+        </div>
+
+        <!-- TAB PANES -->
+        <div id="tabContent-series" class="tab-pane ${activeStudioTab === 'series' ? 'active' : ''}">
+          ${renderSeriesTabHtml(seriesGroups)}
+        </div>
+
+        <div id="tabContent-plays" class="tab-pane ${activeStudioTab === 'plays' ? 'active' : ''}">
+          ${renderPlaysTabHtml(standalonePlays)}
+        </div>
+
+        <div id="tabContent-ingest" class="tab-pane ${activeStudioTab === 'ingest' ? 'active' : ''}">
+          ${renderIngestTabHtml()}
+        </div>
+
+        <div id="tabContent-tools" class="tab-pane ${activeStudioTab === 'tools' ? 'active' : ''}">
+          ${renderToolsTabHtml()}
+        </div>
+
+        <div id="tabContent-showcase" class="tab-pane ${activeStudioTab === 'showcase' ? 'active' : ''}">
+          ${renderShowcaseTabHtml()}
+        </div>
+
+        <div id="tabContent-categories" class="tab-pane ${activeStudioTab === 'categories' ? 'active' : ''}">
+          ${renderCategoriesTabHtml()}
+        </div>
+      `;
+
+      bindStudioEvents();
+    }
+
+    function switchStudioTab(tab) {
+      activeStudioTab = tab;
+      document.querySelectorAll(".studio-tabs-bar .tab-btn").forEach(b => {
+        b.classList.toggle("active", b.textContent.includes(tab) || (tab === 'series' && b.textContent.includes('Series')) || (tab === 'plays' && b.textContent.includes('Single')) || (tab === 'ingest' && b.textContent.includes('Ingest')) || (tab === 'tools' && b.textContent.includes('Toolkit')) || (tab === 'showcase' && b.textContent.includes('Hero')) || (tab === 'categories' && b.textContent.includes('Groups')));
+      });
+      document.querySelectorAll(".tab-pane").forEach(p => {
+        p.classList.toggle("active", p.id === `tabContent-${tab}`);
+      });
+    }
+
+    // ============================================================
+    // TAB 1: SERIES MANAGEMENT (NETFLIX STYLE)
+    // ============================================================
+    function renderSeriesTabHtml(seriesGroups) {
+      let filtered = seriesGroups;
+      if (seriesSearchTerm) {
+        const q = seriesSearchTerm.toLowerCase();
+        filtered = seriesGroups.filter(s => {
+          return s.name.toLowerCase().includes(q) ||
+            s.episodes.some(e => e.writer.toLowerCase().includes(q) || e.director.toLowerCase().includes(q) || e.cast.toLowerCase().includes(q) || e.urdu.toLowerCase().includes(q));
+        });
+      }
+
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Drama Series Catalog (${seriesGroups.length})</div>
+              <div class="panel-sub">Every series groups all its episodes under one title, just like Netflix.</div>
+            </div>
+            <button class="btn btn-gold" onclick="openNewSeriesModal()">+ Ingest New Series</button>
+          </div>
+
+          <div class="search-bar-row">
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="seriesSearchInput" placeholder="Filter series by name, writer, or star cast…" value="${esc(seriesSearchTerm)}">
+            </div>
+          </div>
+
+          <div id="seriesAccordionList">
+            ${filtered.length === 0 ? `
+              <div style="padding:40px;text-align:center;color:var(--ink-subtle);border:1px dashed var(--border-subtle);border-radius:var(--radius-md)">
+                No drama series found matching "${esc(seriesSearchTerm)}".
+              </div>
+            ` : filtered.map(s => {
+              const rep = s.rep || {};
+              const epCount = s.episodes.length;
+              const isFeat = configuredFeaturedIds.includes(rep.id);
+              const maxEp = Math.max(...s.episodes.map(e => e.episode_number || 0), 0);
+              const nextEp = maxEp + 1;
+
+              return `
+                <div class="series-accordion-card" id="seriesCard-${esc(s.name.replace(/[^a-zA-Z0-9]/g, '-'))}">
+                  <div class="series-card-header" onclick="toggleSeriesAccordion('${esc(s.name.replace(/[^a-zA-Z0-9]/g, '-'))}')">
+                    <div class="series-poster-box">
+                      <img src="${esc(rep.thumbnail_url || '/logo.png')}" alt="${esc(s.name)}" loading="lazy">
+                    </div>
+                    <div class="series-header-info">
+                      <div class="series-title-row">
+                        <span class="series-title-text">${esc(s.name)}</span>
+                        ${rep.urdu ? `<span class="series-urdu-text">${esc(rep.urdu)}</span>` : ''}
+                      </div>
+                      <div class="series-badges-row">
+                        <span class="pill pill-episodes">${epCount} Episode${epCount !== 1 ? 's' : ''}</span>
+                        ${rep.year ? `<span class="pill">${esc(rep.year)}</span>` : ''}
+                        <span class="pill pill-gold">${esc(rep.type)}</span>
+                        ${isFeat ? `<span class="pill pill-gold">★ Pinned to Top</span>` : ''}
+                      </div>
+                      <div class="series-meta-credits">
+                        ${rep.writer ? `<b>Writer:</b> ${esc(rep.writer)} · ` : ''}
+                        ${rep.director ? `<b>Director:</b> ${esc(rep.director)} · ` : ''}
+                        ${rep.cast ? `<b>Cast:</b> ${esc(rep.cast.slice(0, 60))}${rep.cast.length > 60 ? '…' : ''}` : ''}
+                      </div>
+                    </div>
+                    <div class="series-card-actions" onclick="event.stopPropagation()">
+                      <button class="btn btn-gold btn-sm" onclick="openAddEpisodeModal('${esc(s.name)}', ${nextEp}, '${esc(rep.type)}', '${esc(rep.writer)}', '${esc(rep.director)}', '${esc(rep.cast)}', '${esc(rep.year)}', '${esc(rep.urdu)}')">
+                        + Add Ep ${nextEp}
+                      </button>
+                      <button class="btn btn-ghost btn-sm" onclick="openBulkEditModal('${esc(s.name)}')">
+                        ✎ Bulk Credits
+                      </button>
+                      <button class="btn btn-ghost btn-sm" onclick="toggleHeroFeature(${rep.id})">
+                        ${isFeat ? '★ Top' : '☆ Top'}
+                      </button>
+                      <a class="btn btn-ghost btn-sm" href="/watch.html?id=${rep.id}" target="_blank">
+                        Watch ↗
+                      </a>
+                    </div>
+                  </div>
+
+                  <!-- Accordion Tray -->
+                  <div class="series-episodes-tray">
+                    <div class="episodes-tray-header">
+                      <span class="episodes-tray-title">Episodes (${epCount})</span>
+                      <button class="btn btn-ghost btn-sm" onclick="openAddEpisodeModal('${esc(s.name)}', ${nextEp}, '${esc(rep.type)}', '${esc(rep.writer)}', '${esc(rep.director)}', '${esc(rep.cast)}', '${esc(rep.year)}', '${esc(rep.urdu)}')">
+                        + Add Episode to ${esc(s.name)}
+                      </button>
+                    </div>
+                    <table class="episodes-table">
+                      <thead>
+                        <tr>
+                          <th style="width:50px">#</th>
+                          <th style="width:90px">Preview</th>
+                          <th>Title</th>
+                          <th>Urdu</th>
+                          <th>Year</th>
+                          <th style="text-align:right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${s.episodes.map(ep => `
+                          <tr>
+                            <td><span class="ep-num-badge">${ep.episode_number ?? '–'}</span></td>
+                            <td>
+                              <img class="ep-thumb-preview" src="${esc(ep.thumbnail_url || '/logo.png')}" alt="">
+                            </td>
+                            <td>
+                              <span style="font-weight:700;color:#fff">${esc(ep.title)}</span>
+                            </td>
+                            <td>
+                              <span style="font-family:var(--font-urdu);color:var(--gold-ptv);font-size:13px">${esc(ep.urdu)}</span>
+                            </td>
+                            <td><span style="color:var(--ink-subtle)">${esc(ep.year || '—')}</span></td>
+                            <td style="text-align:right;white-space:nowrap">
+                              <button class="btn btn-ghost btn-sm" onclick="openEditEpisodeModal(${ep.id})">Edit</button>
+                              ${ep.youtube_url ? `<a class="btn btn-ghost btn-sm" href="${esc(ep.youtube_url)}" target="_blank">YT ↗</a>` : ''}
+                              <button class="btn btn-danger btn-sm" onclick="deleteDramaRecord(${ep.id}, '${esc(ep.title)}')">✕</button>
+                            </td>
+                          </tr>
+                        `).join("")}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function openNewSeriesModal() {
+      switchStudioTab('ingest');
+      switchIngestSubtab('playlist');
+    }
+
+    function toggleSeriesAccordion(cardId) {
+      const card = $(`seriesCard-${cardId}`);
+      if (card) card.classList.toggle("open");
+    }
+
+    // ============================================================
+    // TAB 2: STANDALONE PLAYS & TELEFILMS
+    // ============================================================
+    function renderPlaysTabHtml(standalonePlays) {
+      let filtered = standalonePlays;
+      if (playsSearchTerm) {
+        const q = playsSearchTerm.toLowerCase();
+        filtered = standalonePlays.filter(p => {
+          return p.title.toLowerCase().includes(q) ||
+            p.urdu.toLowerCase().includes(q) ||
+            p.writer.toLowerCase().includes(q) ||
+            p.cast.toLowerCase().includes(q);
+        });
+      }
+
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Standalone Long Plays &amp; Telefilms (${standalonePlays.length})</div>
+              <div class="panel-sub">Single-part classic dramas, telefilms, and special presentations.</div>
+            </div>
+            <button class="btn btn-gold" onclick="switchStudioTab('ingest')">+ Ingest Single Play</button>
+          </div>
+
+          <div class="search-bar-row">
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="playsSearchInput" placeholder="Filter single plays…" value="${esc(playsSearchTerm)}">
+            </div>
+          </div>
+
+          <table class="episodes-table">
+            <thead>
+              <tr>
+                <th style="width:80px">Poster</th>
+                <th>Title</th>
+                <th>Urdu</th>
+                <th>Category</th>
+                <th>Year</th>
+                <th>Writer / Cast</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map(p => {
+                const isFeat = configuredFeaturedIds.includes(p.id);
+                return `
+                  <tr>
+                    <td>
+                      <img class="ep-thumb-preview" src="${esc(p.thumbnail_url || '/logo.png')}" alt="">
+                    </td>
+                    <td>
+                      <span style="font-weight:700;color:#fff">${esc(p.title)}</span>
+                    </td>
+                    <td>
+                      <span style="font-family:var(--font-urdu);color:var(--gold-ptv);font-size:13px">${esc(p.urdu)}</span>
+                    </td>
+                    <td><span class="pill pill-gold">${esc(p.type)}</span></td>
+                    <td><span style="color:var(--ink-subtle)">${esc(p.year || '—')}</span></td>
+                    <td>
+                      <span style="font-size:11px;color:var(--ink-dim)">
+                        ${p.writer ? `<b>Writer:</b> ${esc(p.writer)}<br>` : ''}
+                        ${p.cast ? `<b>Cast:</b> ${esc(p.cast.slice(0, 40))}` : ''}
+                      </span>
+                    </td>
+                    <td style="text-align:right;white-space:nowrap">
+                      <button class="btn btn-sm ${isFeat ? 'btn-gold' : 'btn-ghost'}" onclick="toggleHeroFeature(${p.id})">
+                        ${isFeat ? '★ Top' : '☆ Top'}
+                      </button>
+                      <button class="btn btn-ghost btn-sm" onclick="openEditEpisodeModal(${p.id})">Edit</button>
+                      <button class="btn btn-danger btn-sm" onclick="deleteDramaRecord(${p.id}, '${esc(p.title)}')">✕</button>
+                    </td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // TAB 3: INGESTION STUDIO (YOUTUBE SEARCH + AI + PLAYLIST)
+    // ============================================================
+    let activeIngestSubtab = "ytsearch";
+    let ytSearchResults = [];
+    let stagedThumbnailUrl = "";
+
+    function renderIngestTabHtml() {
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Content Ingestion &amp; AI Studio</div>
+              <div class="panel-sub">Three fast paths to add content: Search YouTube in-app, use AI Auto-Fill, or batch-import playlists.</div>
+            </div>
+          </div>
+
+          <div class="ingest-subtabs-nav">
+            <button class="ingest-tab-btn ${activeIngestSubtab === 'ytsearch' ? 'active' : ''}" onclick="switchIngestSubtab('ytsearch')">
+              🔍 Direct YouTube Search
+            </button>
+            <button class="ingest-tab-btn ${activeIngestSubtab === 'autofill' ? 'active' : ''}" onclick="switchIngestSubtab('autofill')">
+              ⚡ Single Video AI Auto-Fill
+            </button>
+            <button class="ingest-tab-btn ${activeIngestSubtab === 'playlist' ? 'active' : ''}" onclick="switchIngestSubtab('playlist')">
+              📑 Whole Playlist Importer
+            </button>
+          </div>
+
+          <!-- SUB-TAB 1: In-App YouTube Search -->
+          <div id="subtab-ytsearch" style="${activeIngestSubtab === 'ytsearch' ? '' : 'display:none'}">
+            <p style="font-size:13px;color:var(--ink-subtle);margin-bottom:14px">
+              Search the Pak Spotlight YouTube archive (@pkspotlight) directly without leaving this page. Click <b>Auto-Fill</b> to immediately import with full AI-generated metadata.
+            </p>
+            <div style="display:flex;gap:10px">
+              <input type="text" id="ytSearchQuery" placeholder="e.g. Dhoop Kinare, Ankahi, Waris, Tanhaiyaan..." onkeydown="if(event.key==='Enter') runYouTubeSearch()">
+              <button class="btn btn-gold" id="ytSearchBtn" onclick="runYouTubeSearch()">Search YouTube</button>
+            </div>
+            <div class="status-banner" id="ytSearchStatus"></div>
+            <div class="yt-search-results-grid" id="ytSearchResultsGrid">
+              ${ytSearchResults.map(item => `
+                <div class="yt-search-card">
+                  <img class="yt-search-thumb" src="${esc(item.thumbnail)}" alt="${esc(item.title)}">
+                  <div class="yt-search-body">
+                    <span class="yt-search-title">${esc(item.title)}</span>
+                    <span class="yt-search-meta">Uploaded: ${esc(item.publishedAt?.slice(0, 10) || 'Classic')}</span>
+                    <div class="yt-search-actions">
+                      <button class="btn btn-gold btn-sm" style="flex:1" onclick="useYtSearchResultForAutofill('${esc(item.id)}', '${esc(item.title)}')">
+                        ⚡ Auto-Fill This
+                      </button>
+                      <a class="btn btn-ghost btn-sm" href="https://www.youtube.com/watch?v=${esc(item.id)}" target="_blank">YT ↗</a>
+                    </div>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+
+          <!-- SUB-TAB 2: Single Video AI Auto-Fill Form -->
+          <div id="subtab-autofill" style="${activeIngestSubtab === 'autofill' ? '' : 'display:none'}">
+            <form id="singleIngestForm">
+              <div style="background:var(--surface-studio);padding:18px;border-radius:var(--radius-md);border:1px solid var(--border-subtle);margin-bottom:20px">
+                <label style="display:block;font-size:12px;font-weight:700;color:var(--gold-ptv);margin-bottom:8px">1. Paste YouTube Video Link</label>
+                <div style="display:flex;gap:10px">
+                  <input type="url" id="aiVideoUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+                  <button type="button" class="btn btn-gold" id="aiAutofillBtn" onclick="runSingleAiAutofill()">⚡ Fill with AI</button>
+                </div>
+                <div class="status-banner" id="aiAutofillStatus"></div>
+              </div>
+
+              <div class="form-grid">
+                <div>
+                  <label>Title *</label>
+                  <input id="f_title" required placeholder="Drama or Episode title">
+                </div>
+                <div>
+                  <label>Urdu Title (اردو نام)</label>
+                  <input id="f_urdu" class="urdu-input" placeholder="اردو نام">
+                </div>
+                <div>
+                  <label>Series Name (for grouping episodes together)</label>
+                  <input id="f_series" placeholder="e.g. Dhoop Kinare (leave blank for standalone plays)">
+                </div>
+                <div>
+                  <label>Episode Number</label>
+                  <input id="f_episode" type="number" min="1" placeholder="e.g. 1">
+                </div>
+                <div>
+                  <label>Release Year</label>
+                  <input id="f_year" placeholder="e.g. 1987">
+                </div>
+                <div>
+                  <label>Category Group</label>
+                  <select id="f_type">
+                    ${configuredCategories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
+                  </select>
+                </div>
+                <div>
+                  <label>Writer</label>
+                  <input id="f_writer" placeholder="Writer name">
+                </div>
+                <div>
+                  <label>Director</label>
+                  <input id="f_director" placeholder="Director name">
+                </div>
+                <div class="full">
+                  <label>Star Cast</label>
+                  <input id="f_cast" placeholder="Actors separated by commas">
+                </div>
+                <div class="full">
+                  <label>PTV Center / Production</label>
+                  <input id="f_produced" placeholder="e.g. PTV Lahore / PTV Karachi">
+                </div>
+                <div class="full">
+                  <label>About / Synopsis</label>
+                  <textarea id="f_description" placeholder="Synopsis of this drama or episode…"></textarea>
+                </div>
+                <div class="full">
+                  <label>YouTube URL</label>
+                  <input id="f_youtube" type="url" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                <div class="full">
+                  <label>Artwork / Thumbnail</label>
+                  <div class="thumb-staging-card" id="thumbStagingBox" style="display:none">
+                    <img class="thumb-staging-preview" id="thumbStagingImg" src="" alt="Thumbnail Preview">
+                    <div>
+                      <div style="font-weight:700;font-size:13px;color:#fff" id="thumbStagingTitle">YouTube Thumbnail Detected</div>
+                      <div style="font-size:11px;color:var(--ink-subtle)">Will be automatically uploaded to Supabase Storage on save.</div>
+                    </div>
+                  </div>
+                  <div style="margin-top:10px">
+                    <input type="file" id="f_customFile" accept="image/*" style="font-size:12px">
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:24px;display:flex;gap:12px;align-items:center">
+                <button type="submit" class="btn btn-gold" id="saveDramaSubmitBtn">Save to Archive</button>
+                <div class="status-banner" id="saveDramaStatus" style="margin:0"></div>
+              </div>
+            </form>
+          </div>
+
+          <!-- SUB-TAB 3: Whole Playlist Wizard -->
+          <div id="subtab-playlist" style="${activeIngestSubtab === 'playlist' ? '' : 'display:none'}">
+            <div style="background:var(--surface-studio);padding:18px;border-radius:var(--radius-md);border:1px solid var(--border-subtle);margin-bottom:20px">
+              <label style="display:block;font-size:12px;font-weight:700;color:var(--gold-ptv);margin-bottom:8px">Paste YouTube Playlist URL</label>
+              <div style="display:flex;gap:10px">
+                <input type="url" id="plInputUrl" placeholder="https://www.youtube.com/playlist?list=...">
+                <button type="button" class="btn btn-gold" id="plPreviewBtn" onclick="runPlaylistPreview()">See Videos</button>
+              </div>
+              <div class="status-banner" id="plStatusMsgTop"></div>
+            </div>
+
+            <div id="plWizardContent" style="display:none">
+              <!-- Playlist episodes list -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <span style="font-size:14px;font-weight:700;color:#fff" id="plEpisodesHeaderTitle">Episodes Detected</span>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-ghost btn-sm" onclick="toggleAllPlaylistChecks(true)">Select All</button>
+                  <button class="btn btn-ghost btn-sm" onclick="toggleAllPlaylistChecks(false)">Select None</button>
+                </div>
+              </div>
+              <div style="max-height:300px;overflow-y:auto;background:var(--surface-studio);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:10px;margin-bottom:20px" id="plItemsListBox"></div>
+
+              <!-- Shared Series Metadata -->
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:12px">Series Information (Shared by all episodes)</div>
+              <div class="form-grid" style="margin-bottom:20px">
+                <div>
+                  <label>Drama Series Name *</label>
+                  <input id="plSeriesName" required>
+                </div>
+                <div>
+                  <label>Urdu Name (اردو نام)</label>
+                  <input id="plUrduName" class="urdu-input">
+                </div>
+                <div>
+                  <label>Year</label>
+                  <input id="plYear">
+                </div>
+                <div>
+                  <label>Category</label>
+                  <select id="plCategory">
+                    ${configuredCategories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")}
+                  </select>
+                </div>
+                <div>
+                  <label>Writer</label>
+                  <input id="plWriter">
+                </div>
+                <div>
+                  <label>Director</label>
+                  <input id="plDirector">
+                </div>
+                <div class="full">
+                  <label>Star Cast</label>
+                  <input id="plCast">
+                </div>
+              </div>
+
+              <div style="display:flex;gap:12px;align-items:center">
+                <button class="btn btn-gold" id="plStartImportBtn" onclick="runPlaylistBatchImport()">Add to Archive</button>
+                <div class="status-banner" id="plBatchStatus" style="margin:0"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function switchIngestSubtab(subtab) {
+      activeIngestSubtab = subtab;
+      document.querySelectorAll(".ingest-tab-btn").forEach(b => {
+        b.classList.toggle("active", (subtab === 'ytsearch' && b.textContent.includes('Search')) || (subtab === 'autofill' && b.textContent.includes('Single')) || (subtab === 'playlist' && b.textContent.includes('Playlist')));
+      });
+      $('subtab-ytsearch').style.display = subtab === 'ytsearch' ? 'block' : 'none';
+      $('subtab-autofill').style.display = subtab === 'autofill' ? 'block' : 'none';
+      $('subtab-playlist').style.display = subtab === 'playlist' ? 'block' : 'none';
+    }
+
+    async function runYouTubeSearch() {
+      const q = $("ytSearchQuery").value.trim();
+      const status = $("ytSearchStatus");
+      const btn = $("ytSearchBtn");
+      if (!q) return;
+
+      btn.disabled = true;
+      status.className = "status-banner show info";
+      status.textContent = "Searching YouTube archive…";
+
       try {
-        const proxyUrl = `/api/proxy-thumbnail?url=${encodeURIComponent(stagedAiThumbnailUrl)}`;
-        const imgRes = await fetch(proxyUrl);
-        if (imgRes.ok) {
-          const imgBlob = await imgRes.blob();
-          const storagePath = `drama/${dramaId}.jpg`;
-          const { error: upErr } = await supabase.storage.from("thumbnails").upload(storagePath, imgBlob, {
-            contentType: "image/jpeg",
-            upsert: true,
-            cacheControl: "31536000"
-          });
+        const res = await fetch(`/api/youtube-search?q=${encodeURIComponent(q)}`, {
+          headers: { "authorization": "Bearer " + authSession.access_token }
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || "Search failed");
+        ytSearchResults = data.items || [];
+        status.className = "status-banner show ok";
+        status.textContent = `Found ${ytSearchResults.length} videos. Click "Auto-Fill This" on any item to ingest.`;
+        renderIngestTabHtml();
+      } catch (err) {
+        status.className = "status-banner show err";
+        status.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
 
-          if (!upErr) {
-            const pubUrl = `${supabase.storage.from("thumbnails").getPublicUrl(storagePath).data.publicUrl}?t=${Date.now()}`;
-            await supabase.from("Drama").update({ thumbnail_url: pubUrl }).eq("id", dramaId);
-            uploadedSuccessfully = true;
+    function useYtSearchResultForAutofill(ytId, title) {
+      switchIngestSubtab("autofill");
+      const url = `https://www.youtube.com/watch?v=${ytId}`;
+      $("aiVideoUrl").value = url;
+      runSingleAiAutofill();
+    }
+
+    async function runSingleAiAutofill() {
+      const url = $("aiVideoUrl").value.trim();
+      const status = $("aiAutofillStatus");
+      const btn = $("aiAutofillBtn");
+      if (!url) return;
+
+      btn.disabled = true;
+      status.className = "status-banner show info";
+      status.textContent = "AI is inspecting video metadata & web records…";
+
+      try {
+        const res = await fetch("/api/ai-autofill", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "authorization": "Bearer " + authSession.access_token
+          },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || "AI Auto-fill failed");
+
+        const f = data.fields || {};
+        $("f_title").value = f.title || "";
+        $("f_urdu").value = f.urdu_title || "";
+        $("f_series").value = f.series_name || cleanDramaTitle(f.title) || "";
+        $("f_episode").value = f.episode_number || "";
+        $("f_year").value = f.year || "";
+        $("f_writer").value = f.writer || "";
+        $("f_director").value = f.director || "";
+        $("f_produced").value = f.produced || "";
+        $("f_cast").value = f.cast || "";
+        $("f_description").value = f.description || "";
+        $("f_youtube").value = url;
+
+        if (f.type && $("f_type")) {
+          const match = configuredCategories.find(c => c.toLowerCase() === f.type.toLowerCase()) || configuredCategories[0];
+          $("f_type").value = match;
+        }
+
+        const thumb = f.thumbnail || data.video?.thumbnail;
+        if (thumb) {
+          stagedThumbnailUrl = thumb;
+          $("thumbStagingBox").style.display = "flex";
+          $("thumbStagingImg").src = thumb;
+        }
+
+        status.className = "status-banner show ok";
+        status.textContent = data.cached ? "AI reused cached drama record (0s wait)." : "AI successfully populated all drama fields.";
+      } catch (err) {
+        status.className = "status-banner show err";
+        status.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ============================================================
+    // TAB 4: ARCHIVE TOOLKIT (AUTO-LINK SERIES & BATCH THUMBNAILS)
+    // ============================================================
+    function renderToolsTabHtml() {
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Archive Automation Toolkit</div>
+              <div class="panel-sub">Run automated maintenance across your entire catalog in one click.</div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:20px">
+            <!-- Tool 1: Auto-Detect & Link Series -->
+            <div style="background:var(--surface-studio);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:20px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:16px;font-weight:800;color:#fff">⚡ Auto-Link &amp; Group Series</div>
+              <p style="font-size:12px;color:var(--ink-subtle);line-height:1.4">
+                Scans existing drama titles with episode tags (e.g. "Uss Paar - Ep 13") and automatically sets their <b>series_name</b> and <b>episode_number</b> so they instantly collapse under a clean Netflix series card.
+              </p>
+              <button class="btn btn-gold" id="autoLinkSeriesBtn" onclick="runAutoLinkSeriesTool()">Scan &amp; Auto-Link All Series</button>
+              <div class="status-banner" id="autoLinkStatus"></div>
+            </div>
+
+            <!-- Tool 2: Batch Photo Repair -->
+            <div style="background:var(--surface-studio);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:20px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:16px;font-weight:800;color:#fff">🖼 Batch Thumbnail Repair</div>
+              <p style="font-size:12px;color:var(--ink-subtle);line-height:1.4">
+                Finds any drama or episode missing a photo, pulls the best available thumbnail from YouTube, and uploads it directly to your Supabase Storage bucket.
+              </p>
+              <button class="btn btn-gold" id="batchSyncThumbsBtn" onclick="runBatchThumbnailSync()">Sync Missing Thumbnails</button>
+              <div class="status-banner" id="batchSyncStatus"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function runAutoLinkSeriesTool() {
+      const btn = $("autoLinkSeriesBtn");
+      const status = $("autoLinkStatus");
+      btn.disabled = true;
+      status.className = "status-banner show info";
+      status.textContent = "Scanning database for series episodes…";
+
+      try {
+        let updatedCount = 0;
+        for (const d of allDramas) {
+          const ep = parseEpisodeNumber(d.title);
+          const cleaned = cleanDramaTitle(d.title);
+          const needsSeries = !d.series_name && (ep || ["serial / series", "series", "serial"].includes(String(d.type).toLowerCase().trim()));
+          const needsEp = d.episode_number == null && ep != null;
+
+          if (needsSeries || needsEp) {
+            const updates = {};
+            if (needsSeries) updates.series_name = cleaned;
+            if (needsEp) updates.episode_number = ep;
+
+            const { error } = await supabase.from("Drama").update(updates).eq("id", d.id);
+            if (!error) updatedCount++;
           }
         }
-      } catch (proxyErr) {
-        console.warn("Client proxy upload attempt failed, falling back to server store endpoint", proxyErr);
+
+        status.className = "status-banner show ok";
+        status.textContent = `Auto-linked ${updatedCount} drama episodes into series! Reloading…`;
+        await fetchArchiveData();
+        renderStudioDashboard();
+      } catch (err) {
+        status.className = "status-banner show err";
+        status.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function runBatchThumbnailSync() {
+      const btn = $("batchSyncThumbsBtn");
+      const status = $("batchSyncStatus");
+      btn.disabled = true;
+      status.className = "status-banner show info";
+      status.textContent = "Checking for missing photos…";
+
+      const targets = allDramas.filter(d => (!d.thumbnail_url || !d.thumbnail_url.trim()) && d.youtube_url);
+      if (targets.length === 0) {
+        status.className = "status-banner show ok";
+        status.textContent = "All dramas already have artwork!";
+        btn.disabled = false;
+        return;
       }
 
-      // Strategy 2: server save fallback
-      if (!uploadedSuccessfully) {
-        msg.textContent = "Saving photo…";
-        const storeRes = await fetch("/api/store-thumbnail", {
+      status.textContent = `Syncing ${targets.length} missing photos to Supabase Storage…`;
+      let success = 0;
+
+      for (const d of targets) {
+        try {
+          const ytMatch = d.youtube_url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=))([\w-]{11})/);
+          const ytId = ytMatch ? ytMatch[1] : null;
+          if (!ytId) continue;
+          const imgUrl = `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`;
+
+          const storeRes = await fetch("/api/store-thumbnail", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "authorization": "Bearer " + authSession.access_token
+            },
+            body: JSON.stringify({ dramaId: d.id, imageUrl: imgUrl })
+          });
+          if (storeRes.ok) success++;
+        } catch {}
+      }
+
+      status.className = "status-banner show ok";
+      status.textContent = `Successfully synced ${success} photos! Reloading…`;
+      await fetchArchiveData();
+      renderStudioDashboard();
+      btn.disabled = false;
+    }
+
+    // ============================================================
+    // TAB 5 & 6: SHOWCASE (HERO SLIDER) & CATEGORIES
+    // ============================================================
+    function renderShowcaseTabHtml() {
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Home Hero Spotlight (${configuredFeaturedIds.length})</div>
+              <div class="panel-sub">Arrange the billboard items shown prominently at the top of the home page.</div>
+            </div>
+            <button class="btn btn-gold btn-sm" onclick="saveFeaturedList()">Save Spotlight</button>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px" id="featuredItemsList">
+            ${configuredFeaturedIds.map((id, index) => {
+              const d = allDramas.find(x => x.id === id);
+              if (!d) return '';
+              return `
+                <div style="display:flex;align-items:center;gap:14px;background:var(--surface-studio);padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-subtle)">
+                  <span style="font-weight:800;color:var(--gold-ptv)">#${index + 1}</span>
+                  <img src="${esc(d.thumbnail_url || '/logo.png')}" alt="" style="width:60px;aspect-ratio:16/9;object-fit:cover;border-radius:4px">
+                  <div style="flex:1">
+                    <span style="font-weight:700;color:#fff">${esc(d.title)}</span>
+                    <span style="font-size:12px;color:var(--ink-subtle);margin-left:8px">${esc(d.type)} · ${esc(d.year || 'Classic')}</span>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn-icon" onclick="moveFeaturedOrder(${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
+                    <button class="btn-icon" onclick="moveFeaturedOrder(${index}, 1)" ${index === configuredFeaturedIds.length - 1 ? 'disabled' : ''}>▼</button>
+                    <button class="btn-icon" style="color:var(--danger-crimson)" onclick="removeFeaturedItem(${index})">✕</button>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+
+          <div style="border-top:1px solid var(--border-subtle);padding-top:16px;display:flex;gap:10px;align-items:center">
+            <select id="addFeaturedSelect" style="flex:1">
+              <option value="">-- Select a drama to pin to Home Spotlight --</option>
+              ${allDramas.map(d => `<option value="${d.id}">${esc(d.title)} (${esc(d.year || 'Classic')}) · ${esc(d.type)}</option>`).join("")}
+            </select>
+            <button class="btn btn-gold btn-sm" onclick="addFeaturedFromSelect()">+ Pin</button>
+          </div>
+          <div class="status-banner" id="featuredSaveStatus"></div>
+        </div>
+      `;
+    }
+
+    function moveFeaturedOrder(idx, delta) {
+      const target = idx + delta;
+      if (target < 0 || target >= configuredFeaturedIds.length) return;
+      const item = configuredFeaturedIds.splice(idx, 1)[0];
+      configuredFeaturedIds.splice(target, 0, item);
+      renderStudioDashboard();
+    }
+
+    function removeFeaturedItem(idx) {
+      configuredFeaturedIds.splice(idx, 1);
+      renderStudioDashboard();
+    }
+
+    function addFeaturedFromSelect() {
+      const val = Number($("addFeaturedSelect").value);
+      if (!val || configuredFeaturedIds.includes(val)) return;
+      configuredFeaturedIds.push(val);
+      renderStudioDashboard();
+    }
+
+    async function toggleHeroFeature(id) {
+      const idx = configuredFeaturedIds.indexOf(id);
+      if (idx >= 0) configuredFeaturedIds.splice(idx, 1);
+      else configuredFeaturedIds.push(id);
+      await saveFeaturedList();
+      renderStudioDashboard();
+    }
+
+    async function saveFeaturedList() {
+      const status = $("featuredSaveStatus");
+      if (status) {
+        status.className = "status-banner show info";
+        status.textContent = "Saving hero slider configuration…";
+      }
+      try {
+        const res = await fetch("/api/featured", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "authorization": "Bearer " + authSession.access_token
+          },
+          body: JSON.stringify({ featuredIds: configuredFeaturedIds })
+        });
+        if (status) {
+          status.className = "status-banner show ok";
+          status.textContent = "Saved.";
+        }
+      } catch (err) {
+        if (status) {
+          status.className = "status-banner show err";
+          status.textContent = err.message;
+        }
+      }
+    }
+
+    function renderCategoriesTabHtml() {
+      return `
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Category Taxonomy (${configuredCategories.length})</div>
+              <div class="panel-sub">Manage groups shown in top navigation and browsing carousels.</div>
+            </div>
+            <button class="btn btn-gold btn-sm" onclick="saveCategoriesConfig()">Save Groups</button>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px" id="categoryChipsList">
+            ${configuredCategories.map((c, i) => `
+              <div class="pill pill-gold" style="display:inline-flex;align-items:center;gap:8px;padding:6px 12px;font-size:13px">
+                <span>${esc(c)}</span>
+                <button style="background:none;color:inherit;font-size:12px;cursor:pointer" onclick="removeCategoryChip(${i})">✕</button>
+              </div>
+            `).join("")}
+          </div>
+
+          <div style="display:flex;gap:10px;max-width:400px">
+            <input type="text" id="newCategoryInput" placeholder="New group name…">
+            <button class="btn btn-gold btn-sm" onclick="addNewCategoryChip()">+ Add</button>
+          </div>
+          <div class="status-banner" id="categorySaveStatus"></div>
+        </div>
+      `;
+    }
+
+    function addNewCategoryChip() {
+      const val = $("newCategoryInput").value.trim();
+      if (!val || configuredCategories.includes(val)) return;
+      configuredCategories.push(val);
+      renderStudioDashboard();
+    }
+
+    function removeCategoryChip(idx) {
+      if (configuredCategories.length <= 1) {
+        alert("Must keep at least one category.");
+        return;
+      }
+      configuredCategories.splice(idx, 1);
+      renderStudioDashboard();
+    }
+
+    async function saveCategoriesConfig() {
+      const status = $("categorySaveStatus");
+      if (status) {
+        status.className = "status-banner show info";
+        status.textContent = "Saving category configuration…";
+      }
+      try {
+        await fetch("/api/categories", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "authorization": "Bearer " + authSession.access_token
+          },
+          body: JSON.stringify({ categories: configuredCategories })
+        });
+        if (status) {
+          status.className = "status-banner show ok";
+          status.textContent = "Categories saved successfully.";
+        }
+      } catch (err) {
+        if (status) {
+          status.className = "status-banner show err";
+          status.textContent = err.message;
+        }
+      }
+    }
+
+    // ============================================================
+    // MODALS: ADD EPISODE, BULK EDIT, QUICK EDIT
+    // ============================================================
+    function openModal(html) {
+      const b = $("studioModalBackdrop");
+      const d = $("studioModalDialog");
+      d.innerHTML = html;
+      b.classList.add("open");
+    }
+
+    function closeModal() {
+      $("studioModalBackdrop").classList.remove("open");
+    }
+
+    function openAddEpisodeModal(seriesName, nextEp, type, writer, director, cast, year, urdu) {
+      openModal(`
+        <div class="modal-header">
+          <h3 class="modal-title">+ Add Episode to ${esc(seriesName)}</h3>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <form id="addEpisodeForm">
+          <div style="background:var(--surface-studio);padding:14px;border-radius:var(--radius-sm);margin-bottom:16px;border:1px solid var(--border-subtle)">
+            <label style="display:block;font-size:11px;font-weight:700;color:var(--gold-ptv);margin-bottom:6px">YouTube Episode URL</label>
+            <div style="display:flex;gap:10px">
+              <input type="url" id="modalEpYtUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+              <button type="button" class="btn btn-gold btn-sm" onclick="autoDetectModalEpisode('${esc(seriesName)}')">⚡ Detect</button>
+            </div>
+            <div class="status-banner" id="modalEpDetectStatus"></div>
+          </div>
+
+          <div class="form-grid">
+            <div>
+              <label>Episode Number *</label>
+              <input type="number" id="m_epNum" value="${nextEp}" required>
+            </div>
+            <div>
+              <label>Episode Title *</label>
+              <input id="m_title" value="${esc(seriesName)} - Episode ${nextEp}" required>
+            </div>
+            <div>
+              <label>Series Name</label>
+              <input id="m_series" value="${esc(seriesName)}" readonly style="opacity:0.8">
+            </div>
+            <div>
+              <label>Urdu Name</label>
+              <input id="m_urdu" class="urdu-input" value="${esc(urdu || '')}">
+            </div>
+            <div>
+              <label>Year</label>
+              <input id="m_year" value="${esc(year || '')}">
+            </div>
+            <div>
+              <label>Category</label>
+              <input id="m_type" value="${esc(type || 'Serial / Series')}" readonly style="opacity:0.8">
+            </div>
+            <div>
+              <label>Writer</label>
+              <input id="m_writer" value="${esc(writer || '')}">
+            </div>
+            <div>
+              <label>Director</label>
+              <input id="m_director" value="${esc(director || '')}">
+            </div>
+            <div class="full">
+              <label>Cast</label>
+              <input id="m_cast" value="${esc(cast || '')}">
+            </div>
+          </div>
+
+          <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px">
+            <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-gold" id="mSaveEpSubmitBtn">Save Episode</button>
+          </div>
+          <div class="status-banner" id="mSaveEpStatus"></div>
+        </form>
+      `);
+
+      $("addEpisodeForm").onsubmit = async e => {
+        e.preventDefault();
+        const stat = $("mSaveEpStatus");
+        const btn = $("mSaveEpSubmitBtn");
+        btn.disabled = true;
+        stat.className = "status-banner show info";
+        stat.textContent = "Saving episode…";
+
+        const ytUrl = $("modalEpYtUrl").value.trim();
+        const epNum = Number($("m_epNum").value);
+        const title = $("m_title").value.trim();
+
+        const payload = {
+          title,
+          urdu_title: $("m_urdu").value.trim(),
+          series_name: seriesName,
+          episode_number: epNum,
+          year: $("m_year").value.trim(),
+          type: $("m_type").value,
+          writer: $("m_writer").value.trim(),
+          director: $("m_director").value.trim(),
+          cast: $("m_cast").value.trim(),
+          youtube_url: ytUrl
+        };
+
+        const { data, error } = await supabase.from("Drama").insert(payload).select().single();
+        if (error) {
+          stat.className = "status-banner show err";
+          stat.textContent = error.message;
+          btn.disabled = false;
+        } else {
+          // Auto sync thumbnail in background
+          if (data?.id && ytUrl) {
+            fetch(`/api/store-thumbnail`, {
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                "authorization": "Bearer " + authSession.access_token
+              },
+              body: JSON.stringify({ dramaId: data.id, imageUrl: `https://i.ytimg.com/vi/${extractYouTubeId(ytUrl)}/hqdefault.jpg` })
+            }).catch(() => {});
+          }
+          closeModal();
+          await fetchArchiveData();
+          renderStudioDashboard();
+        }
+      };
+    }
+
+    function extractYouTubeId(url) {
+      if (!url) return "";
+      const m = String(url).match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=))([\w-]{11})/);
+      return m ? m[1] : "";
+    }
+
+    async function autoDetectModalEpisode(seriesName) {
+      const url = $("modalEpYtUrl").value.trim();
+      const status = $("modalEpDetectStatus");
+      if (!url) return;
+      status.className = "status-banner show info";
+      status.textContent = "Detecting episode number…";
+      try {
+        const res = await fetch("/api/identify", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "authorization": "Bearer " + authSession.access_token
+          },
+          body: JSON.stringify({ url })
+        });
+        const v = await res.json();
+        const ep = parseEpisodeNumber(v.title, v.description);
+        if (ep) {
+          $("m_epNum").value = ep;
+          $("m_title").value = `${seriesName} - Episode ${ep}`;
+        }
+        status.className = "status-banner show ok";
+        status.textContent = `Found: ${v.title}`;
+      } catch (err) {
+        status.className = "status-banner show err";
+        status.textContent = err.message;
+      }
+    }
+
+    function openBulkEditModal(seriesName) {
+      const series = getSeriesGroups().find(s => s.name.toLowerCase() === seriesName.toLowerCase());
+      if (!series) return;
+      const rep = series.rep || {};
+
+      openModal(`
+        <div class="modal-header">
+          <h3 class="modal-title">✎ Bulk Edit: ${esc(seriesName)}</h3>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <p style="font-size:12px;color:var(--ink-subtle);margin-bottom:16px">
+          Updates writer, director, cast, year, or category across all <b>${series.episodes.length} episodes</b> at once.
+        </p>
+        <form id="bulkEditForm">
+          <div class="form-grid">
+            <div>
+              <label>Series Name *</label>
+              <input id="b_series" value="${esc(seriesName)}" required>
+            </div>
+            <div>
+              <label>Urdu Name</label>
+              <input id="b_urdu" class="urdu-input" value="${esc(rep.urdu || '')}">
+            </div>
+            <div>
+              <label>Year</label>
+              <input id="b_year" value="${esc(rep.year || '')}">
+            </div>
+            <div>
+              <label>Category</label>
+              <select id="b_type">
+                ${configuredCategories.map(c => `<option value="${esc(c)}" ${rep.type === c ? 'selected' : ''}>${esc(c)}</option>`).join("")}
+              </select>
+            </div>
+            <div>
+              <label>Writer</label>
+              <input id="b_writer" value="${esc(rep.writer || '')}">
+            </div>
+            <div>
+              <label>Director</label>
+              <input id="b_director" value="${esc(rep.director || '')}">
+            </div>
+            <div class="full">
+              <label>Star Cast</label>
+              <input id="b_cast" value="${esc(rep.cast || '')}">
+            </div>
+          </div>
+
+          <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px">
+            <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-gold" id="bSubmitBtn">Apply to All ${series.episodes.length} Episodes</button>
+          </div>
+          <div class="status-banner" id="bStatus"></div>
+        </form>
+      `);
+
+      $("bulkEditForm").onsubmit = async e => {
+        e.preventDefault();
+        const stat = $("bStatus");
+        const btn = $("bSubmitBtn");
+        btn.disabled = true;
+        stat.className = "status-banner show info";
+        stat.textContent = `Applying updates across ${series.episodes.length} episodes…`;
+
+        const newSeries = $("b_series").value.trim();
+        const payload = {
+          series_name: newSeries,
+          urdu_title: $("b_urdu").value.trim(),
+          year: $("b_year").value.trim(),
+          type: $("b_type").value,
+          writer: $("b_writer").value.trim(),
+          director: $("b_director").value.trim(),
+          cast: $("b_cast").value.trim()
+        };
+
+        const epIds = series.episodes.map(ep => ep.id);
+        const { error } = await supabase.from("Drama").update(payload).in("id", epIds);
+
+        if (error) {
+          stat.className = "status-banner show err";
+          stat.textContent = error.message;
+          btn.disabled = false;
+        } else {
+          closeModal();
+          await fetchArchiveData();
+          renderStudioDashboard();
+        }
+      };
+    }
+
+    function openEditEpisodeModal(id) {
+      const d = allDramas.find(x => x.id === id);
+      if (!d) return;
+
+      openModal(`
+        <div class="modal-header">
+          <h3 class="modal-title">Edit Record: ${esc(d.title)}</h3>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <form id="editRecordForm">
+          <div class="form-grid">
+            <div class="full">
+              <label>Title *</label>
+              <input id="e_title" value="${esc(d.title)}" required>
+            </div>
+            <div>
+              <label>Series Name</label>
+              <input id="e_series" value="${esc(d.series_name || '')}">
+            </div>
+            <div>
+              <label>Episode Number</label>
+              <input id="e_episode" type="number" value="${d.episode_number ?? ''}">
+            </div>
+            <div>
+              <label>Urdu Title</label>
+              <input id="e_urdu" class="urdu-input" value="${esc(d.urdu)}">
+            </div>
+            <div>
+              <label>Year</label>
+              <input id="e_year" value="${esc(d.year)}">
+            </div>
+            <div>
+              <label>Category</label>
+              <select id="e_type">
+                ${configuredCategories.map(c => `<option value="${esc(c)}" ${d.type === c ? 'selected' : ''}>${esc(c)}</option>`).join("")}
+              </select>
+            </div>
+            <div>
+              <label>Writer</label>
+              <input id="e_writer" value="${esc(d.writer)}">
+            </div>
+            <div>
+              <label>Director</label>
+              <input id="e_director" value="${esc(d.director)}">
+            </div>
+            <div class="full">
+              <label>Star Cast</label>
+              <input id="e_cast" value="${esc(d.cast)}">
+            </div>
+            <div class="full">
+              <label>YouTube Link</label>
+              <input id="e_youtube" type="url" value="${esc(d.youtube_url)}">
+            </div>
+            <div class="full">
+              <label>Thumbnail Public URL</label>
+              <input id="e_thumb" type="url" value="${esc(d.thumbnail_url)}">
+            </div>
+          </div>
+
+          <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px">
+            <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-gold" id="eSubmitBtn">Save Changes</button>
+          </div>
+          <div class="status-banner" id="eStatus"></div>
+        </form>
+      `);
+
+      $("editRecordForm").onsubmit = async e => {
+        e.preventDefault();
+        const stat = $("eStatus");
+        const btn = $("eSubmitBtn");
+        btn.disabled = true;
+        stat.className = "status-banner show info";
+        stat.textContent = "Saving changes…";
+
+        const payload = {
+          title: $("e_title").value.trim(),
+          series_name: $("e_series").value.trim() || null,
+          episode_number: $("e_episode").value ? Number($("e_episode").value) : null,
+          urdu_title: $("e_urdu").value.trim(),
+          year: $("e_year").value.trim(),
+          type: $("e_type").value,
+          writer: $("e_writer").value.trim(),
+          director: $("e_director").value.trim(),
+          cast: $("e_cast").value.trim(),
+          youtube_url: $("e_youtube").value.trim(),
+          thumbnail_url: $("e_thumb").value.trim()
+        };
+
+        const { error } = await supabase.from("Drama").update(payload).eq("id", id);
+        if (error) {
+          stat.className = "status-banner show err";
+          stat.textContent = error.message;
+          btn.disabled = false;
+        } else {
+          closeModal();
+          await fetchArchiveData();
+          renderStudioDashboard();
+        }
+      };
+    }
+
+    async function deleteDramaRecord(id, title) {
+      if (!confirm(`Are you sure you want to delete "${title}" from the archive?`)) return;
+      const { error } = await supabase.from("Drama").delete().eq("id", id);
+      if (error) {
+        alert("Delete failed: " + error.message);
+      } else {
+        await fetchArchiveData();
+        renderStudioDashboard();
+      }
+    }
+
+    // ============================================================
+    // SINGLE DRAMA FORM SUBMIT
+    // ============================================================
+    function bindStudioEvents() {
+      // Series search listener
+      const sInput = $("seriesSearchInput");
+      if (sInput) {
+        sInput.addEventListener("input", e => {
+          seriesSearchTerm = e.target.value.trim();
+          renderStudioDashboard();
+          const next = $("seriesSearchInput");
+          if (next) { next.focus(); next.selectionStart = next.selectionEnd = next.value.length; }
+        });
+      }
+
+      // Plays search listener
+      const pInput = $("playsSearchInput");
+      if (pInput) {
+        pInput.addEventListener("input", e => {
+          playsSearchTerm = e.target.value.trim();
+          renderStudioDashboard();
+          const next = $("playsSearchInput");
+          if (next) { next.focus(); next.selectionStart = next.selectionEnd = next.value.length; }
+        });
+      }
+
+      // Single Ingest form submit
+      const f = $("singleIngestForm");
+      if (f) {
+        f.onsubmit = async e => {
+          e.preventDefault();
+          const btn = $("saveDramaSubmitBtn");
+          const status = $("saveDramaStatus");
+          btn.disabled = true;
+          status.className = "status-banner show info";
+          status.textContent = "Saving drama record…";
+
+          const payload = {
+            title: $("f_title").value.trim(),
+            urdu_title: $("f_urdu").value.trim(),
+            series_name: $("f_series").value.trim() || null,
+            episode_number: $("f_episode").value ? Number($("f_episode").value) : null,
+            year: $("f_year").value.trim(),
+            type: $("f_type").value,
+            writer: $("f_writer").value.trim(),
+            director: $("f_director").value.trim(),
+            produced: $("f_produced").value.trim(),
+            cast: $("f_cast").value.trim(),
+            description: $("f_description").value.trim(),
+            youtube_url: $("f_youtube").value.trim()
+          };
+
+          const { data, error } = await supabase.from("Drama").insert(payload).select().single();
+          if (error) {
+            status.className = "status-banner show err";
+            status.textContent = error.message;
+            btn.disabled = false;
+            return;
+          }
+
+          const dramaId = data.id;
+          const customFile = $("f_customFile")?.files?.[0];
+
+          if (customFile) {
+            status.textContent = "Uploading custom photo…";
+            const ext = (customFile.type || "image/jpeg").split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+            const storagePath = `drama/${dramaId}.${ext}`;
+            const { error: upErr } = await supabase.storage.from("thumbnails").upload(storagePath, customFile, {
+              contentType: customFile.type || "image/jpeg",
+              upsert: true
+            });
+            if (!upErr) {
+              const pubUrl = supabase.storage.from("thumbnails").getPublicUrl(storagePath).data.publicUrl;
+              await supabase.from("Drama").update({ thumbnail_url: pubUrl }).eq("id", dramaId);
+            }
+          } else if (stagedThumbnailUrl) {
+            status.textContent = "Storing YouTube thumbnail…";
+            await fetch(`/api/store-thumbnail`, {
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                "authorization": "Bearer " + authSession.access_token
+              },
+              body: JSON.stringify({ dramaId, imageUrl: stagedThumbnailUrl })
+            }).catch(() => {});
+          }
+
+          status.className = "status-banner show ok";
+          status.textContent = "Drama successfully saved to archive!";
+          setTimeout(async () => {
+            await fetchArchiveData();
+            switchStudioTab("series");
+            renderStudioDashboard();
+          }, 1200);
+        };
+      }
+    }
+
+    // ============================================================
+    // PLAYLIST BATCH IMPORT LOGIC
+    // ============================================================
+    let plItems = [];
+    async function runPlaylistPreview() {
+      const url = $("plInputUrl").value.trim();
+      const status = $("plStatusMsgTop");
+      const btn = $("plPreviewBtn");
+      if (!url) return;
+
+      btn.disabled = true;
+      status.className = "status-banner show info";
+      status.textContent = "Fetching playlist items from YouTube…";
+
+      try {
+        const res = await fetch("/api/playlist-preview", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "authorization": "Bearer " + authSession.access_token
+          },
+          body: JSON.stringify({ url, limit: 50 })
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || "Preview failed");
+
+        plItems = (data.items || []).map((it, i) => ({
+          ...it,
+          ep: it.episode || String(i + 1),
+          selected: true
+        }));
+
+        $("plEpisodesHeaderTitle").textContent = `${plItems.length} Episodes Detected in Playlist`;
+        $("plSeriesName").value = data.suggestedSeries || cleanDramaTitle(data.playlist?.title);
+        $("plItemsListBox").innerHTML = plItems.map((it, i) => `
+          <div style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+            <input type="checkbox" id="plCheck-${i}" ${it.selected ? 'checked' : ''} onchange="plItems[${i}].selected=this.checked">
+            <span class="ep-num-badge">${it.ep}</span>
+            <img src="${esc(it.thumbnail)}" style="width:60px;aspect-ratio:16/9;object-fit:cover;border-radius:4px">
+            <span style="font-size:13px;font-weight:600;color:#fff">${esc(it.title)}</span>
+          </div>
+        `).join("");
+
+        $("plWizardContent").style.display = "block";
+        status.className = "status-banner show ok";
+        status.textContent = `Preview loaded with ${plItems.length} videos. Review and click "Add to Archive".`;
+      } catch (err) {
+        status.className = "status-banner show err";
+        status.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function toggleAllPlaylistChecks(checked) {
+      plItems.forEach((it, i) => {
+        it.selected = checked;
+        const cb = $(`plCheck-${i}`);
+        if (cb) cb.checked = checked;
+      });
+    }
+
+    async function runPlaylistBatchImport() {
+      const url = $("plInputUrl").value.trim();
+      const seriesName = $("plSeriesName").value.trim();
+      const status = $("plBatchStatus");
+      const btn = $("plStartImportBtn");
+      const selectedIds = plItems.filter(x => x.selected).map(x => x.id);
+
+      if (!selectedIds.length) {
+        alert("Please select at least one episode to import.");
+        return;
+      }
+
+      btn.disabled = true;
+      status.className = "status-banner show info";
+      status.textContent = `Importing ${selectedIds.length} episodes…`;
+
+      try {
+        const res = await fetch("/api/playlist-import", {
           method: "POST",
           headers: {
             "content-type": "application/json",
             "authorization": "Bearer " + authSession.access_token
           },
           body: JSON.stringify({
-            dramaId,
-            imageUrl: stagedAiThumbnailUrl
+            url,
+            seriesName,
+            category: $("plCategory").value,
+            videoIds: selectedIds
           })
         });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || "Batch import failed");
 
-        const storeData = await storeRes.json();
-        if (!storeRes.ok || storeData.error) {
-          throw new Error("Photo problem: " + (storeData.error || storeRes.statusText));
-        }
+        status.className = "status-banner show ok";
+        status.textContent = `Successfully added ${data.added} episodes to "${data.series}"! (${data.skipped} already in archive). Reloading…`;
+        setTimeout(async () => {
+          await fetchArchiveData();
+          switchStudioTab("series");
+          renderStudioDashboard();
+        }, 1500);
+      } catch (err) {
+        status.className = "status-banner show err";
+        status.textContent = err.message;
+        btn.disabled = false;
       }
-    } else if (editingId && editingImage) {
-      // Retain existing thumbnail if neither was supplied
-      await supabase.from("Drama").update({ thumbnail_url: editingImage }).eq("id", dramaId);
     }
 
-    msg.className = "ai-status active ok";
-    msg.textContent = "Saved.";
-    setTimeout(() => showDashboard(), 800);
-
-  } catch (err) {
-    console.error("Save error:", err);
-    msg.className = "ai-status active err";
-    msg.textContent = "Could not save: " + (err.message || String(err));
-    btn.disabled = false;
-  }
-}
-
-// ----------------------
-// HELPER ACTIONS
-// ----------------------
-window.editDrama = function(id) {
-  const d = rows.find(r => r.id === id);
-  if (d) showForm(d);
-};
-
-window.deleteDrama = async function(id, title) {
-  if (!confirm(`Remove "${title}"?`)) return;
-
-  const { error } = await supabase.from("Drama").delete().eq("id", id);
-  if (error) {
-    alert("Problem: " + error.message);
-    return;
-  }
-  await showDashboard();
-};
-
-window.syncMissingThumbnail = async function(id, youtubeUrl) {
-  if (!youtubeUrl) return;
-  if (!confirm(`Get the YouTube photo for this drama?`)) return;
-
-  const statusBox = $("storageMsg") || $("loginMsg");
-  try {
-    let vid = "";
-    try {
-      const u = new URL(youtubeUrl);
-      vid = u.searchParams.get("v") || u.pathname.split("/").pop();
-    } catch {
-      const m = youtubeUrl.match(/[A-Za-z0-9_-]{11}/);
-      vid = m ? m[0] : "";
-    }
-    if (!vid) throw new Error("Could not extract YouTube video ID.");
-
-    const maxres = `https://i.ytimg.com/vi/${vid}/maxresdefault.jpg`;
-    const res = await fetch("/api/store-thumbnail", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": "Bearer " + authSession.access_token
-      },
-      body: JSON.stringify({ dramaId: id, imageUrl: maxres })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed");
-
-    alert("Photo saved.");
-    await showDashboard();
-  } catch (err) {
-    alert("Problem: " + (err.message || err));
-  }
-};
-
-async function testStorage() {
-  const msg = $("storageMsg");
-  msg.className = "ai-status active info";
-  msg.textContent = "Testing…";
-
-  try {
-    const testPath = `_test/${Date.now()}.txt`;
-    const blob = new Blob(["Pak Spotlight Storage Test " + new Date().toISOString()], { type: "text/plain" });
-
-    const { error: upErr } = await supabase.storage.from("thumbnails").upload(testPath, blob, {
-      contentType: "text/plain",
-      upsert: true
-    });
-
-    if (upErr) throw upErr;
-
-    // Clean up test file
-    await supabase.storage.from("thumbnails").remove([testPath]);
-
-    msg.className = "ai-status active ok";
-    msg.textContent = "Works. Photos can be saved.";
-  } catch (err) {
-    msg.className = "ai-status active err";
-    msg.textContent = "Problem: " + (err.message || String(err));
-  }
-}
-
-// ----------------------
-// INITIALIZATION
-// ----------------------
-supabase.auth.getSession().then(async ({ data }) => {
-  authSession = data.session || null;
-  if (authSession) await showDashboard();
-  else showLogin();
-}).catch(err => {
-  showLogin("Problem: " + (err.message || String(err)));
-});
-
-supabase.auth.onAuthStateChange((_event, session) => {
-  authSession = session || null;
-});
-</script>
+    // Initialize Studio on load
+    checkAuth();
+  </script>
 </body>
 </html>
