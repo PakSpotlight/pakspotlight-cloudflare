@@ -95,6 +95,9 @@ function renderSeriesTabHtml(seriesGroups) {
                 <button class="btn btn-ghost btn-sm" onclick="openBulkEditModal('${esc(s.name)}')">
                   ✎ Edit
                 </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteEntireSeries('${esc(s.name)}')">
+                  🗑 Delete
+                </button>
               </div>
             </div>
           `;
@@ -138,9 +141,10 @@ function openSeriesManager(seriesName) {
           ${rep.director ? `<b>Director:</b> ${esc(rep.director)}<br>` : ''}
           ${rep.cast ? `<b>Cast:</b> ${esc(rep.cast)}` : ''}
         </div>
-        <div style="margin-top:6px;display:flex;gap:8px">
+        <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="openBulkEditModal('${esc(series.name)}')">✎ Edit Series Metadata</button>
           <a class="btn btn-ghost btn-sm" href="/watch.html?id=${rep.id}" target="_blank">Watch on Site ↗</a>
+          <button class="btn btn-danger btn-sm" onclick="deleteEntireSeries('${esc(series.name)}')">🗑 Delete Entire Series</button>
         </div>
       </div>
     </div>
@@ -213,7 +217,7 @@ function openSeriesManager(seriesName) {
             <td style="text-align:right;white-space:nowrap">
               <button class="btn btn-ghost btn-sm" onclick="openEditEpisodeModal(${ep.id})">Edit</button>
               ${ep.youtube_url ? `<a class="btn btn-ghost btn-sm" href="${esc(ep.youtube_url)}" target="_blank">YT ↗</a>` : ''}
-              <button class="btn btn-danger btn-sm" onclick="deleteDramaRecord(${ep.id}, '${esc(ep.title)}')">✕</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteDramaRecord(${ep.id}, '${esc(ep.title)}', '${esc(series.name)}')">🗑 Delete</button>
             </td>
           </tr>
         `).join("")}

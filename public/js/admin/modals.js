@@ -333,9 +333,12 @@ function openBulkEditModal(seriesName) {
         </div>
       </div>
 
-      <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px">
-        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-        <button type="submit" class="btn btn-gold" id="bSubmitBtn">Apply to All ${series.episodes.length} Episodes</button>
+      <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <button type="button" class="btn btn-danger" onclick="deleteEntireSeries('${esc(seriesName)}')">🗑 Delete Entire Series</button>
+        <div style="display:flex;gap:10px">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-gold" id="bSubmitBtn">Apply to All ${series.episodes.length} Episodes</button>
+        </div>
       </div>
       <div class="status-banner" id="bStatus"></div>
     </form>
@@ -438,9 +441,12 @@ function openEditEpisodeModal(id) {
         </div>
       </div>
 
-      <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px">
-        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-        <button type="submit" class="btn btn-gold" id="eSubmitBtn">Save Changes</button>
+      <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <button type="button" class="btn btn-danger" onclick="deleteDramaRecord(${d.id}, '${esc(d.title)}')">🗑 Delete This Record</button>
+        <div style="display:flex;gap:10px">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-gold" id="eSubmitBtn">Save Changes</button>
+        </div>
       </div>
       <div class="status-banner" id="eStatus"></div>
     </form>
@@ -481,12 +487,36 @@ function openEditEpisodeModal(id) {
   };
 }
 
-async function deleteDramaRecord(id, title) {
+async function deleteDramaRecord(id, title, seriesName = "") {
   if (!confirm(`Are you sure you want to delete "${title}" from the archive?`)) return;
   const { error } = await window.sbClient.from("Drama").delete().eq("id", id);
   if (error) {
     alert("Delete failed: " + error.message);
   } else {
+    await fetchArchiveData();
+    renderStudioDashboard();
+    if (seriesName) {
+      const exists = getSeriesGroups().find(s => s.name.toLowerCase() === seriesName.toLowerCase());
+      if (exists) openSeriesManager(seriesName);
+      else closeModal();
+    } else {
+      closeModal();
+    }
+  }
+}
+
+async function deleteEntireSeries(seriesName) {
+  const series = getSeriesGroups().find(s => s.name.toLowerCase() === seriesName.toLowerCase());
+  if (!series) return;
+  const epCount = series.episodes.length;
+  if (!confirm(`⚠️ DANGER: Delete the entire series "${seriesName}" (${epCount} episode${epCount !== 1 ? 's' : ''}) from the archive? This will delete all episodes and cannot be undone.`)) return;
+
+  const ids = series.episodes.map(e => e.id);
+  const { error } = await window.sbClient.from("Drama").delete().in("id", ids);
+  if (error) {
+    alert("Delete series failed: " + error.message);
+  } else {
+    closeModal();
     await fetchArchiveData();
     renderStudioDashboard();
   }

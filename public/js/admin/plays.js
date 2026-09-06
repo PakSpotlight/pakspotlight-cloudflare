@@ -83,7 +83,7 @@ function renderPlaysTabHtml(standalonePlays) {
                     ${isFeat ? '★ Top' : '☆ Top'}
                   </button>
                   <button class="btn btn-ghost btn-sm" onclick="openEditEpisodeModal(${p.id})">Edit</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteDramaRecord(${p.id}, '${esc(p.title)}')">✕</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteDramaRecord(${p.id}, '${esc(p.title)}')">🗑 Delete</button>
                 </td>
               </tr>
             `;
