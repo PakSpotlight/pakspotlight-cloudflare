@@ -1,33 +1,41 @@
 /* ============================================================
    PAK SPOTLIGHT — ADMIN STUDIO CONSOLE COMPONENTS
-   Series Accordion, Episodes Table, Ingest Studio & Modals
+   Compact Netflix Series Rows, Episode Manager & Modals
    ============================================================ */
 
-/* Netflix-Style Series Accordion */
-.series-accordion-card {
+/* High-Density Compact Series Rows */
+.series-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.series-row-card {
   background: var(--surface-studio);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  margin-bottom: 14px;
-  overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.series-accordion-card:hover {
-  border-color: var(--border-gold);
-}
-.series-accordion-card.open {
-  border-color: var(--gold-ptv);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-}
-.series-card-header {
-  padding: 16px 20px;
-  display: grid;
-  grid-template-columns: 80px 1fr auto;
-  gap: 20px;
+  padding: 12px 16px;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 0.2s ease;
+}
+.series-row-card:hover {
+  border-color: var(--border-gold);
+  background: var(--surface-card);
+}
+
+.series-row-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
   cursor: pointer;
 }
-.series-poster-box {
+
+.series-row-thumb {
   width: 80px;
   aspect-ratio: 16/9;
   border-radius: 6px;
@@ -36,73 +44,142 @@
   border: 1px solid var(--border-subtle);
   flex-shrink: 0;
 }
-.series-poster-box img {
+.series-row-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.series-header-info {
+
+.series-row-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+  min-width: 0;
 }
-.series-title-row {
+
+.series-row-title-line {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.series-title-text {
-  font-size: 17px;
-  font-weight: 800;
-  color: #fff;
-}
-.series-urdu-text {
-  font-family: var(--font-urdu);
-  color: var(--gold-ptv);
-  font-size: 14px;
-  direction: rtl;
-}
-.series-badges-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.series-meta-credits {
-  font-size: 12px;
-  color: var(--ink-dim);
-  margin-top: 2px;
-}
-.series-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-/* Episodes Tray Inside Series */
-.series-episodes-tray {
-  display: none;
-  background: var(--canvas-void);
-  border-top: 1px solid var(--border-subtle);
-  padding: 16px 20px;
+.series-row-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.series-accordion-card.open .series-episodes-tray {
-  display: block;
+
+.series-row-urdu {
+  font-family: var(--font-urdu);
+  color: var(--gold-ptv);
+  font-size: 13px;
+  direction: rtl;
 }
-.episodes-tray-header {
+
+.series-row-pills {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
-.episodes-tray-title {
+
+.series-row-credits {
+  font-size: 11px;
+  color: var(--ink-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 500px;
+}
+
+.series-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Series Episode Manager (Modal / Drawer View) */
+.series-manager-banner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--surface-studio);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.series-manager-cover {
+  width: 120px;
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #000;
+  border: 1px solid var(--border-gold);
+  flex-shrink: 0;
+}
+.series-manager-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.series-manager-title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+}
+.series-manager-urdu {
+  font-family: var(--font-urdu);
+  font-size: 16px;
+  color: var(--gold-ptv);
+  direction: rtl;
+}
+
+/* Quick Action Boxes inside Manager */
+.manager-action-toggles {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.manager-action-btn {
+  flex: 1;
+  background: var(--surface-studio);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   font-size: 13px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--ink-subtle);
+  font-weight: 700;
+  color: var(--ink-cream);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.manager-action-btn:hover, .manager-action-btn.active {
+  border-color: var(--gold-ptv);
+  background: var(--gold-glow);
+  color: var(--gold-ptv);
+}
+
+.manager-action-form-box {
+  background: var(--surface-studio);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 20px;
+  display: none;
+}
+.manager-action-form-box.open {
+  display: block;
 }
 
 /* Episodes Table */
@@ -135,9 +212,10 @@
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 12px;
+  display: inline-block;
 }
 .ep-thumb-preview {
-  width: 72px;
+  width: 64px;
   aspect-ratio: 16/9;
   border-radius: 4px;
   object-fit: cover;
@@ -167,56 +245,11 @@
   border-color: var(--border-gold);
 }
 
-/* YouTube Search Grid */
-.yt-search-results-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-  margin-top: 18px;
-}
-.yt-search-card {
-  background: var(--surface-studio);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.yt-search-thumb {
-  width: 100%;
-  aspect-ratio: 16/9;
-  object-fit: cover;
-  background: #000;
-}
-.yt-search-body {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-.yt-search-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.3;
-}
-.yt-search-meta {
-  font-size: 11px;
-  color: var(--ink-dim);
-}
-.yt-search-actions {
-  margin-top: auto;
-  display: flex;
-  gap: 8px;
-  padding-top: 8px;
-}
-
 /* Forms & Inputs */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 14px;
 }
 .form-grid .full { grid-column: 1 / -1; }
 .form-group label, .form-grid label {
@@ -229,7 +262,7 @@
 .urdu-input {
   font-family: var(--font-urdu);
   direction: rtl;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 /* Modals */
@@ -242,33 +275,36 @@
   display: none;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
 }
 .modal-backdrop.open { display: flex; }
 .modal-dialog {
   background: var(--surface-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  max-width: 680px;
+  max-width: 720px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 92vh;
   overflow-y: auto;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-  padding: 26px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+  padding: 24px;
   position: relative;
 }
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
 }
-.modal-title { font-size: 18px; font-weight: 800; color: #fff; }
+.modal-title { font-size: 17px; font-weight: 800; color: #fff; }
 .modal-close {
   background: transparent;
   color: var(--ink-subtle);
   font-size: 20px;
   cursor: pointer;
+  padding: 4px 8px;
 }
 .modal-close:hover { color: #fff; }
 
@@ -290,13 +326,40 @@
 }
 
 @media (max-width: 850px) {
-  .series-card-header {
-    grid-template-columns: 70px 1fr;
+  .series-row-card {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .series-row-thumb {
+    width: 60px;
+  }
+  .series-row-title {
+    font-size: 14px;
+  }
+  .series-row-urdu {
+    font-size: 12px;
+  }
+  .series-row-credits {
+    display: none;
+  }
+  .series-row-actions .btn {
+    height: 28px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+  .series-manager-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
     gap: 12px;
   }
-  .series-card-actions {
-    grid-column: 1 / -1;
-    margin-top: 8px;
+  .series-manager-cover {
+    width: 100%;
+    max-width: 200px;
+  }
+  .manager-action-toggles {
+    flex-direction: column;
   }
   .form-grid { grid-template-columns: 1fr; }
+  .modal-dialog { padding: 16px; }
 }

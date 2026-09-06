@@ -1,9 +1,9 @@
 /**
- * Pak Spotlight Admin Studio — Ingestion Studio (YouTube Search, AI Auto-Fill, Playlist Importer)
+ * Pak Spotlight Admin Studio — Ingestion Studio (Single Video AI & Playlist Wizard)
+ * Note: Direct YouTube Search removed per admin workflow requirements.
  */
 
-let activeIngestSubtab = "ytsearch";
-let ytSearchResults = [];
+let activeIngestSubtab = "autofill";
 let stagedThumbnailUrl = "";
 let plItems = [];
 
@@ -12,59 +12,27 @@ function renderIngestTabHtml() {
     <div class="panel">
       <div class="panel-header">
         <div>
-          <div class="panel-title">Content Ingestion &amp; AI Studio</div>
-          <div class="panel-sub">Three fast paths to add content: Search YouTube in-app, use AI Auto-Fill, or batch-import playlists.</div>
+          <div class="panel-title">Add Videos from Your YouTube Channel</div>
+          <div class="panel-sub">Add a single video with AI auto-fill or batch-import an entire playlist as a series.</div>
         </div>
       </div>
 
       <div class="ingest-subtabs-nav">
-        <button class="ingest-tab-btn ${activeIngestSubtab === 'ytsearch' ? 'active' : ''}" onclick="switchIngestSubtab('ytsearch')">
-          🔍 Direct YouTube Search
-        </button>
         <button class="ingest-tab-btn ${activeIngestSubtab === 'autofill' ? 'active' : ''}" onclick="switchIngestSubtab('autofill')">
-          ⚡ Single Video AI Auto-Fill
+          ⚡ Single Video (with AI Auto-Fill)
         </button>
         <button class="ingest-tab-btn ${activeIngestSubtab === 'playlist' ? 'active' : ''}" onclick="switchIngestSubtab('playlist')">
           📑 Whole Playlist Importer
         </button>
       </div>
 
-      <!-- SUB-TAB 1: In-App YouTube Search -->
-      <div id="subtab-ytsearch" style="${activeIngestSubtab === 'ytsearch' ? '' : 'display:none'}">
-        <p style="font-size:13px;color:var(--ink-subtle);margin-bottom:14px">
-          Search the Pak Spotlight YouTube archive (@pkspotlight) directly without leaving this page. Click <b>Auto-Fill</b> to immediately import with full AI-generated metadata.
-        </p>
-        <div style="display:flex;gap:10px">
-          <input type="text" id="ytSearchQuery" placeholder="e.g. Dhoop Kinare, Ankahi, Waris, Tanhaiyaan..." onkeydown="if(event.key==='Enter') runYouTubeSearch()">
-          <button class="btn btn-gold" id="ytSearchBtn" onclick="runYouTubeSearch()">Search YouTube</button>
-        </div>
-        <div class="status-banner" id="ytSearchStatus"></div>
-        <div class="yt-search-results-grid" id="ytSearchResultsGrid">
-          ${ytSearchResults.map(item => `
-            <div class="yt-search-card">
-              <img class="yt-search-thumb" src="${esc(item.thumbnail)}" alt="${esc(item.title)}" onerror="this.onerror=null; this.src='/logo.png';">
-              <div class="yt-search-body">
-                <span class="yt-search-title">${esc(item.title)}</span>
-                <span class="yt-search-meta">Uploaded: ${esc(item.publishedAt?.slice(0, 10) || 'Classic')}</span>
-                <div class="yt-search-actions">
-                  <button class="btn btn-gold btn-sm" style="flex:1" onclick="useYtSearchResultForAutofill('${esc(item.id)}', '${esc(item.title)}')">
-                    ⚡ Auto-Fill This
-                  </button>
-                  <a class="btn btn-ghost btn-sm" href="https://www.youtube.com/watch?v=${esc(item.id)}" target="_blank">YT ↗</a>
-                </div>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      </div>
-
-      <!-- SUB-TAB 2: Single Video AI Auto-Fill Form -->
+      <!-- SUB-TAB 1: Single Video AI Auto-Fill Form -->
       <div id="subtab-autofill" style="${activeIngestSubtab === 'autofill' ? '' : 'display:none'}">
         <form id="singleIngestForm">
           <div style="background:var(--surface-studio);padding:18px;border-radius:var(--radius-md);border:1px solid var(--border-subtle);margin-bottom:20px">
             <label style="display:block;font-size:12px;font-weight:700;color:var(--gold-ptv);margin-bottom:8px">1. Paste YouTube Video Link</label>
             <div style="display:flex;gap:10px">
-              <input type="url" id="aiVideoUrl" placeholder="https://www.youtube.com/watch?v=...">
+              <input type="url" id="aiVideoUrl" placeholder="https://www.youtube.com/watch?v=..." required>
               <button type="button" class="btn btn-gold" id="aiAutofillBtn" onclick="runSingleAiAutofill()">⚡ Fill with AI</button>
             </div>
             <div class="status-banner" id="aiAutofillStatus"></div>
@@ -80,11 +48,14 @@ function renderIngestTabHtml() {
               <input id="f_urdu" class="urdu-input" placeholder="اردو نام">
             </div>
             <div>
-              <label>Series Name (for grouping episodes together)</label>
-              <input id="f_series" placeholder="e.g. Dhoop Kinare (leave blank for standalone plays)">
+              <label>Series Name (leave blank if Single Play / Movie)</label>
+              <input id="f_series" placeholder="e.g. Dhoop Kinare" list="existingSeriesList">
+              <datalist id="existingSeriesList">
+                ${getSeriesGroups().map(s => `<option value="${esc(s.name)}"></option>`).join("")}
+              </datalist>
             </div>
             <div>
-              <label>Episode Number</label>
+              <label>Episode Number (if series)</label>
               <input id="f_episode" type="number" min="1" placeholder="e.g. 1">
             </div>
             <div>
@@ -118,16 +89,12 @@ function renderIngestTabHtml() {
               <textarea id="f_description" placeholder="Synopsis of this drama or episode…"></textarea>
             </div>
             <div class="full">
-              <label>YouTube URL</label>
-              <input id="f_youtube" type="url" placeholder="https://www.youtube.com/watch?v=...">
-            </div>
-            <div class="full">
-              <label>Artwork / Thumbnail</label>
+              <label>Artwork / Cover Thumbnail</label>
               <div class="thumb-staging-card" id="thumbStagingBox" style="display:none">
                 <img class="thumb-staging-preview" id="thumbStagingImg" src="" alt="Thumbnail Preview">
                 <div>
-                  <div style="font-weight:700;font-size:13px;color:#fff" id="thumbStagingTitle">YouTube Thumbnail Detected</div>
-                  <div style="font-size:11px;color:var(--ink-subtle)">Will be automatically uploaded to Supabase Storage on save.</div>
+                  <div style="font-weight:700;font-size:13px;color:#fff" id="thumbStagingTitle">Cover Thumbnail Detected</div>
+                  <div style="font-size:11px;color:var(--ink-subtle)">Will be automatically stored in Supabase Storage.</div>
                 </div>
               </div>
               <div style="margin-top:10px">
@@ -143,10 +110,10 @@ function renderIngestTabHtml() {
         </form>
       </div>
 
-      <!-- SUB-TAB 3: Whole Playlist Wizard -->
+      <!-- SUB-TAB 2: Whole Playlist Wizard -->
       <div id="subtab-playlist" style="${activeIngestSubtab === 'playlist' ? '' : 'display:none'}">
         <div style="background:var(--surface-studio);padding:18px;border-radius:var(--radius-md);border:1px solid var(--border-subtle);margin-bottom:20px">
-          <label style="display:block;font-size:12px;font-weight:700;color:var(--gold-ptv);margin-bottom:8px">Paste YouTube Playlist URL</label>
+          <label style="display:block;font-size:12px;font-weight:700;color:var(--gold-ptv);margin-bottom:8px">Paste YouTube Playlist URL from your channel</label>
           <div style="display:flex;gap:10px">
             <input type="url" id="plInputUrl" placeholder="https://www.youtube.com/playlist?list=...">
             <button type="button" class="btn btn-gold" id="plPreviewBtn" onclick="runPlaylistPreview()">See Videos</button>
@@ -164,7 +131,7 @@ function renderIngestTabHtml() {
           </div>
           <div style="max-height:300px;overflow-y:auto;background:var(--surface-studio);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:10px;margin-bottom:20px" id="plItemsListBox"></div>
 
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:12px">Series Information (Shared by all episodes)</div>
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:12px">Series Cover &amp; Details (Shared across all episodes)</div>
           <div class="form-grid" style="margin-bottom:20px">
             <div>
               <label>Drama Series Name *</label>
@@ -199,7 +166,7 @@ function renderIngestTabHtml() {
           </div>
 
           <div style="display:flex;gap:12px;align-items:center">
-            <button class="btn btn-gold" id="plStartImportBtn" onclick="runPlaylistBatchImport()">Add to Archive</button>
+            <button class="btn btn-gold" id="plStartImportBtn" onclick="runPlaylistBatchImport()">Import Series to Archive</button>
             <div class="status-banner" id="plBatchStatus" style="margin:0"></div>
           </div>
         </div>
@@ -211,52 +178,12 @@ function renderIngestTabHtml() {
 function switchIngestSubtab(subtab) {
   activeIngestSubtab = subtab;
   document.querySelectorAll(".ingest-tab-btn").forEach(b => {
-    b.classList.toggle("active", (subtab === 'ytsearch' && b.textContent.includes('Search')) || (subtab === 'autofill' && b.textContent.includes('Single')) || (subtab === 'playlist' && b.textContent.includes('Playlist')));
+    b.classList.toggle("active", (subtab === 'autofill' && b.textContent.includes('Single')) || (subtab === 'playlist' && b.textContent.includes('Playlist')));
   });
-  const yBox = $('subtab-ytsearch');
   const aBox = $('subtab-autofill');
   const pBox = $('subtab-playlist');
-  if (yBox) yBox.style.display = subtab === 'ytsearch' ? 'block' : 'none';
   if (aBox) aBox.style.display = subtab === 'autofill' ? 'block' : 'none';
   if (pBox) pBox.style.display = subtab === 'playlist' ? 'block' : 'none';
-}
-
-async function runYouTubeSearch() {
-  const q = $("ytSearchQuery").value.trim();
-  const status = $("ytSearchStatus");
-  const btn = $("ytSearchBtn");
-  if (!q) return;
-
-  btn.disabled = true;
-  status.className = "status-banner show info";
-  status.textContent = "Searching YouTube archive…";
-
-  try {
-    const res = await fetch(`/api/youtube-search?q=${encodeURIComponent(q)}`, {
-      headers: { "authorization": "Bearer " + authSession?.access_token }
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || "Search failed");
-    ytSearchResults = data.items || [];
-    status.className = "status-banner show ok";
-    status.textContent = `Found ${ytSearchResults.length} videos. Click "Auto-Fill This" on any item to ingest.`;
-    renderStudioDashboard();
-    switchStudioTab('ingest');
-    switchIngestSubtab('ytsearch');
-  } catch (err) {
-    status.className = "status-banner show err";
-    status.textContent = err.message;
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-function useYtSearchResultForAutofill(ytId, title) {
-  switchIngestSubtab("autofill");
-  const url = `https://www.youtube.com/watch?v=${ytId}`;
-  const input = $("aiVideoUrl");
-  if (input) input.value = url;
-  runSingleAiAutofill();
 }
 
 async function runSingleAiAutofill() {
@@ -292,7 +219,6 @@ async function runSingleAiAutofill() {
     $("f_produced").value = f.produced || "";
     $("f_cast").value = f.cast || "";
     $("f_description").value = f.description || "";
-    $("f_youtube").value = url;
 
     if (f.type && $("f_type")) {
       const match = configuredCategories.find(c => c.toLowerCase() === f.type.toLowerCase()) || configuredCategories[0];
@@ -327,6 +253,7 @@ function bindIngestFormEvents() {
     status.className = "status-banner show info";
     status.textContent = "Saving drama record…";
 
+    const videoUrl = $("aiVideoUrl")?.value.trim() || "";
     const payload = {
       title: $("f_title").value.trim(),
       urdu_title: $("f_urdu").value.trim(),
@@ -339,7 +266,7 @@ function bindIngestFormEvents() {
       produced: $("f_produced").value.trim(),
       cast: $("f_cast").value.trim(),
       description: $("f_description").value.trim(),
-      youtube_url: $("f_youtube").value.trim()
+      youtube_url: videoUrl
     };
 
     const { data, error } = await window.sbClient.from("Drama").insert(payload).select().single();
@@ -367,7 +294,7 @@ function bindIngestFormEvents() {
       }
     } else if (stagedThumbnailUrl) {
       status.textContent = "Storing YouTube thumbnail…";
-      await fetch(`/api/store-thumbnail`, {
+      await fetch("/api/store-thumbnail", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -428,7 +355,7 @@ async function runPlaylistPreview() {
 
     $("plWizardContent").style.display = "block";
     status.className = "status-banner show ok";
-    status.textContent = `Preview loaded with ${plItems.length} videos. Review and click "Add to Archive".`;
+    status.textContent = `Preview loaded with ${plItems.length} videos. Review details and click "Import Series to Archive".`;
   } catch (err) {
     status.className = "status-banner show err";
     status.textContent = err.message;
@@ -479,7 +406,7 @@ async function runPlaylistBatchImport() {
     if (!res.ok || data.error) throw new Error(data.error || "Batch import failed");
 
     status.className = "status-banner show ok";
-    status.textContent = `Successfully added ${data.added} episodes to "${data.series}"! (${data.skipped} already in archive). Reloading…`;
+    status.textContent = `Successfully added ${data.added} episodes to "${data.series}"! (${data.skipped} already present).`;
     setTimeout(async () => {
       await fetchArchiveData();
       switchStudioTab("series");
