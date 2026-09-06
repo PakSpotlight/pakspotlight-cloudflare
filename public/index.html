@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Noto+Nastaliq+Urdu:wght@500;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg-deep: #060b08;
@@ -24,7 +24,8 @@
   --text-primary: #fbf9f4;
   --text-muted: #9eb0a5;
   --text-dim: #677b70;
-  --font-serif: 'Cinzel', 'Playfair Display', Georgia, serif;
+  --font-serif: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-title: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-urdu: 'Noto Nastaliq Urdu', serif;
   --radius-lg: 16px;
@@ -215,80 +216,101 @@ input, select, textarea { font-family: inherit; }
 /* ============================================================
    NETFLIX BILLBOARD / HERO SECTION
    ============================================================ */
-.billboard {
+/* ============================================================
+   NETFLIX HERO SLIDER SECTION
+   ============================================================ */
+.hero-slider-wrap {
   position: relative;
-  min-height: 80vh;
+  min-height: 82vh;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 20%;
+  background-repeat: no-repeat;
   display: flex;
   align-items: flex-end;
-  padding: 120px 5% 70px;
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  overflow: hidden;
+  padding: 130px 5% 70px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.75s cubic-bezier(0.25, 1, 0.5, 1), transform 0.75s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.75s;
+  transform: scale(1.025);
+  pointer-events: none;
 }
-.billboard::before {
-  content: "";
+.hero-slide.active {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+  z-index: 2;
+  pointer-events: auto;
+}
+.hero-vignette {
   position: absolute;
   inset: 0;
   background: 
-    linear-gradient(90deg, rgba(6, 11, 8, 0.95) 0%, rgba(6, 11, 8, 0.75) 45%, rgba(6, 11, 8, 0.25) 100%),
-    linear-gradient(0deg, #060b08 0%, rgba(6, 11, 8, 0.8) 25%, transparent 60%);
+    linear-gradient(0deg, #060b08 0%, rgba(6, 11, 8, 0.82) 22%, transparent 58%),
+    linear-gradient(90deg, #060b08 0%, rgba(6, 11, 8, 0.88) 35%, rgba(6, 11, 8, 0.3) 70%, transparent 100%),
+    linear-gradient(180deg, rgba(6, 11, 8, 0.75) 0%, transparent 22%);
   z-index: 1;
+  pointer-events: none;
 }
-.billboard-content {
+.hero-overlay-content {
   position: relative;
   z-index: 2;
-  max-width: 720px;
+  max-width: 760px;
 }
-.billboard-badge {
+.hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 2px;
+  letter-spacing: 1.8px;
   color: var(--gold);
   text-transform: uppercase;
   background: rgba(245, 197, 66, 0.12);
   border: 1px solid rgba(245, 197, 66, 0.4);
   padding: 5px 14px;
   border-radius: 999px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   backdrop-filter: blur(8px);
 }
-.billboard-titles-wrap {
+.hero-title-row {
   display: flex;
   align-items: baseline;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
-.billboard-title {
-  font-family: var(--font-serif);
-  font-size: clamp(32px, 5vw, 60px);
+.hero-title {
+  font-family: var(--font-title);
+  font-size: clamp(34px, 5.2vw, 64px);
   font-weight: 900;
   line-height: 1.05;
   color: #fff;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   margin-bottom: 0;
-  text-shadow: 0 4px 18px rgba(0,0,0,0.8);
+  text-shadow: 0 4px 20px rgba(0,0,0,0.85);
 }
-.billboard-urdu {
+.hero-urdu {
   font-family: var(--font-urdu);
-  font-size: clamp(22px, 3.2vw, 34px);
+  font-size: clamp(22px, 3.4vw, 36px);
   color: var(--gold);
   direction: rtl;
   margin-bottom: 0;
   text-shadow: 0 2px 10px rgba(0,0,0,0.7);
 }
-.billboard-meta {
+.hero-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   font-size: 13px;
   font-weight: 600;
   color: #fff;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
 }
 .meta-chip {
@@ -307,25 +329,25 @@ input, select, textarea { font-family: inherit; }
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: rgba(0, 0, 0, 0.4);
 }
-.billboard-desc {
-  font-size: clamp(14px, 1.4vw, 16px);
-  color: var(--text-muted);
+.hero-desc {
+  font-size: clamp(14px, 1.3vw, 16px);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.6;
-  max-width: 640px;
-  margin-bottom: 26px;
+  max-width: 660px;
+  margin-bottom: 24px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.85);
 }
-.billboard-actions {
+.hero-actions {
   display: flex;
   align-items: center;
   gap: 14px;
   flex-wrap: wrap;
 }
-.btn-play {
+.btn-play-netflix {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -338,13 +360,14 @@ input, select, textarea { font-family: inherit; }
   letter-spacing: 0.5px;
   box-shadow: 0 6px 20px rgba(245, 197, 66, 0.35);
   transition: all 0.25s ease;
+  cursor: pointer;
 }
-.btn-play:hover {
+.btn-play-netflix:hover {
   background: linear-gradient(135deg, #ffd768 0%, #e5b334 100%);
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(245, 197, 66, 0.5);
 }
-.btn-info {
+.btn-info-netflix {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -357,12 +380,74 @@ input, select, textarea { font-family: inherit; }
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   transition: all 0.25s ease;
+  cursor: pointer;
 }
-.btn-info:hover {
+.btn-info-netflix:hover {
   background: rgba(255, 255, 255, 0.22);
   border-color: rgba(245, 197, 66, 0.5);
   color: var(--gold);
   transform: translateY(-2px);
+}
+
+/* Hero Slider Navigation & Chevrons */
+.hero-chevron-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(6, 11, 8, 0.45);
+  border: 1px solid rgba(245, 197, 66, 0.25);
+  color: #fff;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+  opacity: 0;
+}
+.hero-slider-wrap:hover .hero-chevron-btn {
+  opacity: 1;
+}
+.hero-chevron-btn:hover {
+  background: var(--gold);
+  color: #060b08;
+  border-color: var(--gold);
+  transform: translateY(-50%) scale(1.08);
+}
+.hero-chevron-prev { left: 24px; }
+.hero-chevron-next { right: 24px; }
+
+/* Slide Indicators (Netflix Style) */
+.hero-indicators {
+  position: absolute;
+  bottom: 24px;
+  right: 5%;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.hero-indicator-bar {
+  width: 28px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+.hero-indicator-bar:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+.hero-indicator-bar.active {
+  background: var(--gold);
+  width: 42px;
+  box-shadow: 0 0 10px rgba(245, 197, 66, 0.4);
 }
 
 /* ============================================================
@@ -1368,19 +1453,19 @@ footer {
   .nav-links { display: none; }
   .mobile-nav-strip { display: flex; }
 
-  .billboard {
-    min-height: 480px;
-    padding: 100px 16px 28px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    background-position: center 20%;
+  .hero-slider-wrap {
+    min-height: 520px;
   }
-  .billboard::before {
+  .hero-slide {
+    padding: 100px 16px 36px;
+    align-items: flex-end;
+    background-position: center 15%;
+  }
+  .hero-vignette {
     background: 
-      linear-gradient(180deg, rgba(6, 11, 8, 0.72) 0%, rgba(6, 11, 8, 0.45) 25%, rgba(6, 11, 8, 0.9) 65%, #060b08 98%) !important;
+      linear-gradient(0deg, #060b08 0%, rgba(6, 11, 8, 0.95) 45%, rgba(6, 11, 8, 0.5) 75%, rgba(6, 11, 8, 0.75) 100%) !important;
   }
-  .billboard-content {
+  .hero-overlay-content {
     background: rgba(6, 11, 8, 0.85);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -1391,53 +1476,54 @@ footer {
     width: 100%;
     box-sizing: border-box;
   }
-  .billboard-badge {
+  .hero-badge {
     font-size: 10px;
     padding: 4px 10px;
     letter-spacing: 1px;
     margin-bottom: 10px;
   }
-  .billboard-titles-wrap {
+  .hero-title-row {
     gap: 10px;
     margin-bottom: 8px;
   }
-  .billboard-title {
+  .hero-title {
     font-size: clamp(22px, 5.5vw, 28px);
     line-height: 1.15;
     margin-bottom: 0;
   }
-  .billboard-urdu {
+  .hero-urdu {
     font-size: clamp(18px, 4.5vw, 22px);
     margin-bottom: 0;
   }
-  .billboard-meta {
+  .hero-meta {
     gap: 8px;
     margin-bottom: 10px;
     font-size: 11px;
   }
-  .meta-chip {
-    padding: 2px 7px;
-    font-size: 10px;
-  }
-  .billboard-desc {
+  .hero-desc {
     font-size: 12px;
     line-height: 1.5;
     margin-bottom: 14px;
     color: rgba(255, 255, 255, 0.78);
     -webkit-line-clamp: 2;
   }
-  .billboard-actions {
+  .hero-actions {
     display: flex;
     gap: 8px;
     width: 100%;
   }
-  .billboard-actions .btn-play,
-  .billboard-actions .btn-info {
+  .btn-play-netflix, .btn-info-netflix {
     flex: 1;
     justify-content: center;
     padding: 11px 10px;
     font-size: 12px;
     font-weight: 800;
+  }
+  .hero-chevron-btn { display: none; }
+  .hero-indicators {
+    bottom: 12px;
+    right: 50%;
+    transform: translateX(50%);
   }
 
   .modal-card { margin: 10px; max-height: 92vh; border-radius: 12px; }
@@ -1552,6 +1638,26 @@ footer {
   .episodes-list { max-height: 240px; }
   .credits-box { grid-template-columns: 1fr; }
   .auth-modal-card { padding: 24px 18px; margin: 12px; }
+}
+
+/* Mobile-first touch + Urdu polish */
+* { -webkit-tap-highlight-color: transparent; }
+html, body { overflow-x: clip; }
+/* Nastaliq clips without tall line-height */
+.hero-urdu, .modal-urdu, .card-urdu, .urdu-title {
+  line-height: 2.1;
+  padding-top: 4px;
+}
+.m-pill, .nav-link, .chevron-btn, .ep-play-btn, .watch-action-btn {
+  min-height: 44px;
+}
+.m-pill { display: inline-flex; align-items: center; }
+.carousel-track { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.netflix-card img, .browse-card img { aspect-ratio: 16/9; object-fit: cover; background: #000; }
+@media (max-width: 600px) {
+  .watch-player-frame { margin: 0 -14px; border-radius: 0; }
+  .watch-player-frame iframe { aspect-ratio: 16/9; height: auto; }
+  .ep-name { font-size: 13px; }
 }
 </style>
 </head>

@@ -21,6 +21,101 @@ async function getCategories(env) {
   return DEFAULT_CATEGORIES;
 }
 
+async function getFeaturedIds(env) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/featured.json?t=${Date.now()}`);
+    if (res.ok) {
+      const list = await res.json();
+      if (Array.isArray(list)) {
+        return list.map(x => Number(x)).filter(n => !isNaN(n) && n > 0);
+      }
+    }
+  } catch {}
+  return [];
+}
+
+const AI_CACHE_URL = `${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/ai-cache.json`;
+const AI_CACHE_SAVE_URL = `${SUPABASE_URL}/storage/v1/object/thumbnails/config/ai-cache.json`;
+
+// Small persistent cache: drama name -> AI fields. Avoids paying for
+// web search + AI twice for the same drama (re-runs, episodes, playlists).
+let aiCacheMem = null;
+
+async function getAiCache() {
+  if (aiCacheMem) return aiCacheMem;
+  try {
+    const res = await fetch(`${AI_CACHE_URL}?t=${Date.now()}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        aiCacheMem = data;
+        return aiCacheMem;
+      }
+    }
+  } catch {}
+  aiCacheMem = {};
+  return aiCacheMem;
+}
+
+async function saveAiCacheEntry(key, fields, authToken) {
+  try {
+    const cache = await getAiCache();
+    cache[key] = { ...fields, _cachedAt: new Date().toISOString() };
+    // Cap size so the JSON file stays small.
+    const keys = Object.keys(cache);
+    if (keys.length > 300) {
+      keys.slice(0, keys.length - 300).forEach(k => delete cache[k]);
+    }
+    aiCacheMem = cache;
+    if (!authToken) return; // memory-only without admin session
+    await fetch(AI_CACHE_SAVE_URL, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        authorization: `Bearer ${authToken}`,
+        "content-type": "application/json",
+        "x-upsert": "true"
+      },
+      body: JSON.stringify(cache)
+    }).catch(() => {});
+  } catch {}
+}
+
+// "Dhoop Kinare Ep 5 | PTV Classic" -> "dhoop kinare"
+function cacheKeyForTitle(title) {
+  return String(title || "")
+    .toLowerCase()
+    .replace(/\s*\|\s*.*$/, "")
+    .replace(/\s*-\s*(ptv|pak spotlight|classic|full|drama|play).*$/i, "")
+    .replace(/\b(ep|episode|part|qist|his(sa|a)?)\s*\d+\b/gi, "")
+    .replace(/[^a-z0-9\u0600-\u06FF ]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+}
+
+// "Dhoop Kinare Episode 5" -> 5, "Part 2" -> 2, else ""
+function parseEpisodeNumber(title, description) {
+  const text = `${title || ""} ${description || ""}`;
+  const m = text.match(/\b(?:ep|episode|part|qist|his+a?)\s*\.?\s*#?\s*(\d{1,3})\b/i)
+    || String(title || "").match(/[(\[]\s*(\d{1,2})\s*[)\]]\s*$/)
+    || String(title || "").match(/\s(\d{1,2})\s*$/);
+  if (!m) return "";
+  const n = Number(m[1]);
+  return n > 0 && n < 500 ? String(n) : "";
+}
+
+// "Dhoop Kinare Ep 5 | PTV" -> "Dhoop Kinare"
+function cleanDramaTitle(title) {
+  return String(title || "")
+    .replace(/\s*\|\s*.*$/, "")
+    .replace(/\s*-\s*(PTV|Pak Spotlight|Classic|Full|Drama|Play|HD).*$/i, "")
+    .replace(/\s*\b(Ep|Episode|Part|Qist)\s*\.?\s*#?\s*\d+\b.*$/i, "")
+    .replace(/\s*[(\[]\s*\d{1,3}\s*[)\]]\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, OPTIONS",
@@ -112,37 +207,92 @@ async function identifyVideo(url, env) {
   };
 }
 
-async function aiAutofill(video, env) {
+async function aiAutofill(video, env, opts = {}) {
   var apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured in Cloudflare Worker secrets.");
   var model = env.OPENROUTER_DEFAULT_MODEL || DEFAULT_AI_MODEL;
   const allowedCategories = await getCategories(env);
   const categoriesListStr = allowedCategories.join(", ");
+  const authToken = opts.authToken || "";
+
+  const cleanedTitle = cleanDramaTitle(video.title);
+  const key = cacheKeyForTitle(video.title);
+
+  // 1. Free path: same drama filled before -> reuse, no AI cost at all.
+  if (!opts.skipCache && key) {
+    try {
+      const cache = await getAiCache();
+      const hit = cache[key];
+      if (hit && hit.title) {
+        const ep = parseEpisodeNumber(video.title, video.description);
+        return {
+          video,
+          cached: true,
+          fields: {
+            title: ep && hit.series_name ? `${hit.title.replace(/\s*\b(Ep|Episode|Part)\s*\d+.*$/i, "")} Ep ${ep}` : hit.title,
+            urdu_title: hit.urdu_title || "",
+            year: hit.year || String(video.publishedAt || "").slice(0, 4),
+            type: hit.type || allowedCategories[0] || "Long Play",
+            series_name: hit.series_name || cleanedTitle,
+            episode_number: ep || hit.episode_number || "",
+            writer: hit.writer || "",
+            director: hit.director || "",
+            produced: hit.produced || "",
+            cast: hit.cast || "",
+            description: hit.description || String(video.description || "").slice(0, 500),
+            seo_title: hit.seo_title || "",
+            seo_description: hit.seo_description || "",
+            thumbnail: video.thumbnail || ""
+          }
+        };
+      }
+    } catch {}
+  }
+
+  // 2. Decide if paid web search is even needed. YouTube descriptions
+  // from this channel often already list writer / director / cast.
+  const desc = String(video.description || "");
+  const hasCredits = /(writer|written by|تحریر|director|ہدایت|cast|فنکار|producer|پروڈیوسر)/i.test(desc);
+  const needsSearch = opts.forceSearch === true
+    ? true
+    : opts.skipSearch === true
+      ? false
+      : !(hasCredits && desc.length > 250);
+  // Reuse one series-level search for whole playlists.
+  const sharedCredits = opts.sharedCredits || null;
+  const useTools = needsSearch && !sharedCredits;
+
+  const yearHint = String(video.publishedAt || "").slice(0, 4);
+  const epHint = parseEpisodeNumber(video.title, video.description);
 
   var prompt =
-    "You are preparing a catalog entry for Pak Spotlight, a Pakistani classic PTV drama archive.\n\n" +
-    "You have web search available. Search ONCE for the drama title to find credits (writer, director, cast, year) if the YouTube metadata is incomplete.\n\n" +
-    "From the YouTube metadata AND web search results, extract these fields. Only return facts — do not fabricate.\n\n" +
-    "Choose category: Exactly one of: " + categoriesListStr + ".\n" +
-    "Episode number: only if clearly indicated. Year: only if explicitly stated.\n\n" +
-    "Generate SEO content:\n" +
-    "- seo_title: Search-engine-friendly title (e.g. \"Drama Name (Year) - PTV Classic | Pak Spotlight\")\n" +
-    "- seo_description: 150-160 char meta description summarizing the drama with key credits.\n\n" +
-    "IMPORTANT: Return ONLY a valid JSON object, nothing else. No markdown, no explanation.\n" +
-    "JSON fields: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description, seo_title, seo_description.\n\n" +
+    "Pak Spotlight = archive of classic Pakistani PTV dramas.\n" +
+    "Fill EVERY field below with your best answer from the YouTube info"
+    + (useTools ? " + one web search" : "")
+    + (sharedCredits ? ". Credits already known, reuse them" : "")
+    + ". Never leave a field empty when you can infer it. Clean the title (remove EPISODE/PART numbers, | PTV, HD, etc). " +
+    "Urdu title: always give the Urdu script title (you know these classic dramas). " +
+    "Year: use the drama's real release year; if unsure use " + (yearHint || "the upload year") + ". " +
+    "Episode: \"" + (epHint || "none seen") + "\". Series name: the drama serial name (same as title for serials, empty for standalone long plays). " +
+    "Description: 2-3 warm sentences for viewers, always filled. " +
+    "Category: exactly one of: " + categoriesListStr + ".\n" +
+    (sharedCredits ? "Known credits: " + JSON.stringify(sharedCredits) + "\n" : "") +
+    "Return ONLY a JSON object, no markdown. Keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description.\n\n" +
     "YouTube title: " + video.title + "\n" +
-    "YouTube description:\n" + (video.description || "").slice(0, 12000) + "\n" +
-    "Published date: " + video.publishedAt;
+    "YouTube description:\n" + desc.slice(0, 4000) + "\n" +
+    "Uploaded: " + video.publishedAt;
 
   var requestBody = {
     model: model,
     messages: [
-      { role: "system", content: "Return ONLY valid JSON. Search the web once for drama credits if needed. Never fabricate facts." },
+      { role: "system", content: "Return ONLY valid JSON with ALL keys filled, best effort. Never add explanations." },
       { role: "user", content: prompt }
     ],
-    tools: [{ type: "openrouter:web_search", max_results: 5, max_total_results: 5 }],
-    temperature: 0
+    temperature: 0.2
   };
+  if (useTools) {
+    requestBody.tools = [{ type: "openrouter:web_search", max_results: 3, max_total_results: 3 }];
+  }
 
   var response = await fetch(OPENROUTER_API_URL, {
     method: "POST",
@@ -234,30 +384,116 @@ async function aiAutofill(video, env) {
     }
   }
 
-  return {
-    video: video,
-    fields: {
-      title: out.title || video.title,
-      urdu_title: out.urdu_title || "",
-      year: out.year || "",
-      type: (allowedCategories.find(c => c.toLowerCase() === String(out.type || "").trim().toLowerCase()) || (allowedCategories.includes(out.type) ? out.type : (allowedCategories[0] || "Long Play"))),
-      series_name: out.series_name || "",
-      episode_number: out.episode_number || "",
-      writer: out.writer || "",
-      director: out.director || "",
-      produced: out.produced || "",
-      cast: out.cast || "",
-      description: out.description || video.description || "",
-      seo_title: out.seo_title || "",
-      seo_description: out.seo_description || "",
-      thumbnail: video.thumbnail || ""
-    }
+  const epFallback = parseEpisodeNumber(video.title, video.description);
+  const yearFallback = String(video.publishedAt || "").slice(0, 4);
+  const baseTitle = cleanDramaTitle(out.title || video.title);
+
+  const fields = {
+    title: baseTitle || video.title,
+    urdu_title: out.urdu_title || "",
+    year: out.year || yearFallback,
+    type: (allowedCategories.find(c => c.toLowerCase() === String(out.type || "").trim().toLowerCase()) || (allowedCategories.includes(out.type) ? out.type : (allowedCategories[0] || "Long Play"))),
+    series_name: out.series_name || (epFallback || /serial|series|ep|episode|part/i.test(video.title) ? baseTitle : ""),
+    episode_number: out.episode_number || epFallback,
+    writer: out.writer || sharedCredits?.writer || "",
+    director: out.director || sharedCredits?.director || "",
+    produced: out.produced || sharedCredits?.produced || "",
+    cast: out.cast || sharedCredits?.cast || "",
+    description: out.description || String(video.description || "").slice(0, 500),
+    seo_title: "",
+    seo_description: "",
+    thumbnail: video.thumbnail || ""
   };
+  fields.seo_title = `${fields.title}${fields.year ? ` (${fields.year})` : ""} - PTV Classic | Pak Spotlight`;
+  fields.seo_description = `${fields.title} — classic PTV drama${fields.writer ? ` by ${fields.writer}` : ""}${fields.cast ? ` starring ${String(fields.cast).split(",").slice(0, 3).join(",")}` : ""}. Watch on Pak Spotlight.`.slice(0, 160);
+
+  // Save for reuse (episodes / re-runs / playlists). Don't block response.
+  if (key && fields.title) {
+    const cacheable = { ...fields };
+    delete cacheable.thumbnail;
+    delete cacheable.seo_title;
+    delete cacheable.seo_description;
+    if (ctxRef.waitUntil) {
+      ctxRef.waitUntil(saveAiCacheEntry(key, cacheable, authToken));
+    } else {
+      saveAiCacheEntry(key, cacheable, authToken).catch(() => {});
+    }
+  }
+
+  return { video, searched: useTools, fields };
+}
+
+// Set by fetch handler so aiAutofill can background-save the cache.
+const ctxRef = { waitUntil: null };
+
+function playlistIdFromUrl(value) {
+  const s = String(value || "").trim();
+  try {
+    const u = new URL(s);
+    const p = u.searchParams.get("list");
+    if (p) return p;
+  } catch {}
+  const m = s.match(/(?:^|[^A-Za-z0-9_-])(PL[A-Za-z0-9_-]{10,}|UU[A-Za-z0-9_-]{10,}|[A-Za-z0-9_-]{13,})(?:[^A-Za-z0-9_-]|$)/);
+  return m ? m[1] : "";
+}
+
+async function fetchPlaylistMeta(playlistId, env) {
+  const data = await youtubeJson(`playlists?part=snippet,contentDetails&id=${encodeURIComponent(playlistId)}`, env);
+  const item = data.items?.[0];
+  if (!item) throw new Error("Playlist not found. Check the link.");
+  return {
+    id: playlistId,
+    title: item.snippet?.title || "Playlist",
+    description: item.snippet?.description || "",
+    count: item.contentDetails?.itemCount || 0,
+    thumbnail: item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.medium?.url || ""
+  };
+}
+
+async function fetchPlaylistItems(playlistId, env, max = 50) {
+  const items = [];
+  let pageToken = "";
+  while (items.length < max) {
+    const take = Math.min(50, max - items.length);
+    let path = `playlistItems?part=snippet,contentDetails&maxResults=${take}&playlistId=${encodeURIComponent(playlistId)}`;
+    if (pageToken) path += `&pageToken=${encodeURIComponent(pageToken)}`;
+    const data = await youtubeJson(path, env);
+    for (const it of data.items || []) {
+      const vid = it.snippet?.resourceId?.videoId || it.contentDetails?.videoId || "";
+      if (!vid) continue;
+      const thumbs = it.snippet?.thumbnails || {};
+      items.push({
+        id: vid,
+        title: it.snippet?.title || "",
+        description: it.snippet?.description || "",
+        publishedAt: it.snippet?.publishedAt || "",
+        position: it.snippet?.position ?? items.length,
+        thumbnail: thumbs.high?.url || thumbs.medium?.url || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`,
+        url: `https://www.youtube.com/watch?v=${vid}`
+      });
+    }
+    pageToken = data.nextPageToken || "";
+    if (!pageToken) break;
+  }
+  return items;
+}
+
+function supaRest(path, token, options = {}) {
+  return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+      ...(options.headers || {})
+    }
+  });
 }
 
 var index_default = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    ctxRef.waitUntil = ctx.waitUntil ? ctx.waitUntil.bind(ctx) : null;
 
     // Pre-flight CORS support
     if (request.method === "OPTIONS") {
@@ -315,6 +551,51 @@ var index_default = {
       }
     }
 
+    // Featured Hero Slider: Get Configured Featured IDs
+    if (url.pathname === "/api/featured" && request.method === "GET") {
+      try {
+        const featuredIds = await getFeaturedIds(env);
+        return json({ featuredIds });
+      } catch (e) {
+        return json({ featuredIds: [] });
+      }
+    }
+
+    // Featured Hero Slider: Save (Admin authenticated)
+    if (url.pathname === "/api/featured" && request.method === "POST") {
+      const auth = await requireUser(request);
+      if (auth.error) return json({ error: auth.error }, 401);
+      try {
+        const body = await request.json();
+        const incoming = body.featuredIds;
+        if (!Array.isArray(incoming)) {
+          return json({ error: "featuredIds must be an array of numbers." }, 400);
+        }
+        const cleaned = incoming.map(x => Number(x)).filter(n => !isNaN(n) && n > 0);
+
+        const storageUrl = `${SUPABASE_URL}/storage/v1/object/thumbnails/config/featured.json`;
+        const upRes = await fetch(storageUrl, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            authorization: `Bearer ${auth.token}`,
+            "content-type": "application/json",
+            "x-upsert": "true"
+          },
+          body: JSON.stringify(cleaned)
+        });
+
+        if (!upRes.ok) {
+          const upErr = await upRes.text();
+          return json({ error: `Failed to save featured list to storage: ${upErr}` }, 500);
+        }
+
+        return json({ success: true, featuredIds: cleaned });
+      } catch (e) {
+        return json({ error: e.message || String(e) }, 500);
+      }
+    }
+
     // 1. YouTube Search
     if (url.pathname === "/api/youtube-search" && request.method === "GET") {
       const auth = await requireUser(request);
@@ -358,7 +639,122 @@ var index_default = {
       try {
         const body = await request.json();
         const video = await identifyVideo(body.url, env);
-        return json(await aiAutofill(video, env));
+        return json(await aiAutofill(video, env, { authToken: auth.token }));
+      } catch (e) {
+        return json({ error: e.message || String(e) }, 400);
+      }
+    }
+
+    // 3b. Playlist preview — list videos, no AI cost
+    if (url.pathname === "/api/playlist-preview" && request.method === "POST") {
+      const auth = await requireUser(request);
+      if (auth.error) return json({ error: auth.error }, 401);
+      try {
+        const body = await request.json();
+        const pid = playlistIdFromUrl(body.url || body.playlistId);
+        if (!pid) return json({ error: "Paste a YouTube playlist link (with list=...)." }, 400);
+        const meta = await fetchPlaylistMeta(pid, env);
+        const items = await fetchPlaylistItems(pid, env, Math.min(Number(body.limit) || 50, 50));
+        return json({
+          playlist: meta,
+          suggestedSeries: cleanDramaTitle(meta.title),
+          items: items.map((it, i) => ({ ...it, episode: parseEpisodeNumber(it.title, "") || String(i + 1) }))
+        });
+      } catch (e) {
+        return json({ error: e.message || String(e) }, 400);
+      }
+    }
+
+    // 3c. Playlist import — ONE paid search for the whole series, rest is free.
+    if (url.pathname === "/api/playlist-import" && request.method === "POST") {
+      const auth = await requireUser(request);
+      if (auth.error) return json({ error: auth.error }, 401);
+      try {
+        const body = await request.json();
+        const pid = playlistIdFromUrl(body.url || body.playlistId);
+        if (!pid) return json({ error: "Paste a YouTube playlist link (with list=...)." }, 400);
+        const wantedIds = Array.isArray(body.videoIds) ? body.videoIds.map(String) : null;
+        const limit = Math.min(Number(body.limit) || 50, 50);
+        const meta = await fetchPlaylistMeta(pid, env);
+        let items = await fetchPlaylistItems(pid, env, limit);
+        if (wantedIds) items = items.filter(it => wantedIds.includes(it.id));
+        if (items.length === 0) return json({ error: "No videos found in this playlist." }, 400);
+
+        const seriesName = String(body.seriesName || "").trim() || cleanDramaTitle(meta.title);
+        const category = String(body.category || "").trim();
+        const allowedCategories = await getCategories(env);
+        const type = allowedCategories.find(c => c.toLowerCase() === category.toLowerCase())
+          || allowedCategories[0] || "Long Play";
+
+        // One AI call with search for episode 1 -> shared credits for all.
+        let shared = null;
+        try {
+          const first = await aiAutofill({
+            id: items[0].id,
+            title: items[0].title,
+            description: items[0].description,
+            publishedAt: items[0].publishedAt,
+            thumbnail: items[0].thumbnail
+          }, env, { authToken: auth.token, forceSearch: true });
+          shared = {
+            writer: first.fields.writer,
+            director: first.fields.director,
+            produced: first.fields.produced,
+            cast: first.fields.cast,
+            year: first.fields.year,
+            urdu_title: first.fields.urdu_title,
+            description: first.fields.description
+          };
+        } catch {}
+
+        const results = [];
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i];
+          try {
+            // Skip videos already in the archive (same YouTube URL).
+            const dupCheck = await supaRest(`Drama?select=id&youtube_url=eq.${encodeURIComponent(it.url)}`, auth.token);
+            const dupData = await dupCheck.json().catch(() => []);
+            if (Array.isArray(dupData) && dupData.length > 0) {
+              results.push({ id: it.id, title: it.title, status: "skipped", note: "Already added" });
+              continue;
+            }
+            const ep = parseEpisodeNumber(it.title, "") || String(i + 1);
+            const title = cleanDramaTitle(it.title) || `${seriesName} Ep ${ep}`;
+            const payload = {
+              title,
+              urdu_title: shared?.urdu_title || "",
+              year: shared?.year || String(it.publishedAt || "").slice(0, 4),
+              type,
+              series_name: seriesName,
+              episode_number: Number(ep) || null,
+              writer: shared?.writer || "",
+              director: shared?.director || "",
+              produced: shared?.produced || "",
+              cast: shared?.cast || "",
+              description: (it.description || shared?.description || "").slice(0, 800),
+              youtube_url: it.url,
+              thumbnail_url: it.thumbnail || ""
+            };
+            const ins = await supaRest("Drama", auth.token, {
+              method: "POST",
+              headers: { Prefer: "return=representation" },
+              body: JSON.stringify(payload)
+            });
+            if (!ins.ok) {
+              const t = await ins.text();
+              results.push({ id: it.id, title: it.title, status: "error", note: t.slice(0, 160) });
+              continue;
+            }
+            const row = await ins.json().catch(() => []);
+            results.push({ id: it.id, title, status: "added", dramaId: row?.[0]?.id || null, episode: ep });
+          } catch (e) {
+            results.push({ id: it.id, title: it.title, status: "error", note: e.message || String(e) });
+          }
+        }
+
+        const added = results.filter(r => r.status === "added").length;
+        const skipped = results.filter(r => r.status === "skipped").length;
+        return json({ success: true, series: seriesName, added, skipped, total: results.length, results });
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
       }
