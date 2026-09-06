@@ -54,6 +54,19 @@ a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 input, select, textarea { font-family: inherit; }
 
+/* Responsive Visibility Helpers */
+.desktop-only { display: block; }
+.mobile-only { display: none !important; }
+.mobile-hamburger-btn { display: none; }
+.mobile-bottom-nav { display: none; }
+.mobile-drawer-backdrop { display: none; }
+.mobile-drawer { display: none; }
+.mobile-search-modal { display: none; }
+.m-watch-topbar { display: none; }
+.m-watch-meta-block { display: none; }
+.m-episodes-section { display: none; }
+.m-credits-panel { display: none; }
+
 /* Top Navigation Bar (Netflix Glassmorphism Style) */
 .topbar {
   position: fixed;
@@ -1452,257 +1465,995 @@ footer {
 }
 
 @media (max-width: 850px) {
-  .nav-links { display: none; }
-  .mobile-nav-strip { display: flex; }
+  /* Visibility Toggles */
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
 
-  .hero-slider-wrap {
-    min-height: 520px;
-  }
-  .hero-slide {
-    padding: 100px 16px 36px;
-    align-items: flex-end;
-    background-position: center 15%;
-  }
-  .hero-vignette {
-    background: 
-      linear-gradient(0deg, #060b08 0%, rgba(6, 11, 8, 0.95) 45%, rgba(6, 11, 8, 0.5) 75%, rgba(6, 11, 8, 0.75) 100%) !important;
-  }
-  .hero-overlay-content {
-    background: rgba(6, 11, 8, 0.85);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(245, 197, 66, 0.25);
-    border-radius: 14px;
-    padding: 18px 16px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 25px rgba(245, 197, 66, 0.08);
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .hero-badge {
-    font-size: 10px;
-    padding: 4px 10px;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-  }
-  .hero-title-row {
-    gap: 10px;
-    margin-bottom: 8px;
-  }
-  .hero-title {
-    font-size: clamp(22px, 5.5vw, 28px);
-    line-height: 1.15;
-    margin-bottom: 0;
-  }
-  .hero-urdu {
-    font-size: clamp(18px, 4.5vw, 22px);
-    margin-bottom: 0;
-  }
-  .hero-meta {
-    gap: 8px;
-    margin-bottom: 10px;
-    font-size: 11px;
-  }
-  .hero-desc {
-    font-size: 12px;
-    line-height: 1.5;
-    margin-bottom: 14px;
-    color: rgba(255, 255, 255, 0.78);
-    -webkit-line-clamp: 2;
-  }
-  .hero-actions {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-  }
-  .btn-play-netflix, .btn-info-netflix {
-    flex: 1;
-    justify-content: center;
-    padding: 11px 10px;
-    font-size: 12px;
-    font-weight: 800;
-  }
-  .hero-chevron-btn { display: none; }
-  .hero-indicators {
-    bottom: 12px;
-    right: 50%;
-    transform: translateX(50%);
+  /* Body & Layout */
+  body {
+    background-color: #060b08;
+    padding-bottom: 68px; /* Room for fixed bottom nav */
   }
 
-  .modal-card { margin: 10px; max-height: 92vh; border-radius: 12px; }
-  .modal-body { padding: 20px 16px; }
-  .search-input { width: 140px; font-size: 12px; padding: 7px 30px; }
-  .search-input:focus { width: min(220px, calc(100vw - 180px)); }
-  .chevron-btn { display: none; }
-  .browse-view { padding: 80px 4% 40px; }
-  .rows-container { padding: 16px 4% 40px; gap: 28px; }
-}
-
-@media (max-width: 600px) {
+  /* Mobile Top Navigation Header (Screen 1) */
   .topbar {
-    padding: 8px 12px;
+    padding: 10px 14px;
+    background: rgba(6, 11, 8, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  .topbar.scrolled {
+    padding: 10px 14px;
+    background: rgba(6, 11, 8, 0.98);
+    border-bottom: 1px solid var(--border-gold);
+  }
+  .mobile-hamburger-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    z-index: 10;
+  }
+  .mobile-hamburger-btn span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: #fff;
+    border-radius: 2px;
+    transition: all 0.2s ease;
   }
   .brand-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 8px;
+    margin: 0;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
     gap: 8px;
   }
   .brand-logo {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
+    filter: drop-shadow(0 2px 8px rgba(245, 197, 66, 0.4));
   }
   .brand-name {
-    font-size: 13px;
-    letter-spacing: 0.5px;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    color: #fff;
+    line-height: 1;
   }
   .brand-sub {
-    display: none; /* Hide subtitle on mobile so it doesn't push the search and auth buttons */
+    display: none;
+  }
+  .nav-links {
+    display: none;
   }
   .topbar-right {
-    gap: 6px;
-    flex: 1;
+    display: flex;
+    align-items: center;
     justify-content: flex-end;
+    gap: 6px;
+    min-width: 36px;
   }
-  .search-wrapper {
-    flex: 1;
-    max-width: 135px;
-    min-width: 65px;
-  }
-  .search-input {
-    width: 100%;
-    font-size: 11px;
-    padding: 6px 20px 6px 26px;
-  }
-  .search-input:focus {
-    width: 100%;
-  }
-  .search-icon-svg {
-    left: 8px;
-    width: 12px;
-    height: 12px;
+  .topbar-right .search-wrapper {
+    display: none; /* Handled by bottom nav & search modal on mobile */
   }
   .btn-signin {
-    padding: 5px 8px;
+    padding: 5px 10px;
     font-size: 11px;
-    gap: 4px;
-    flex-shrink: 0;
+    font-weight: 700;
+    border-radius: 6px;
+    gap: 5px;
   }
-  .btn-signin svg {
-    width: 12px;
-    height: 12px;
+  .account-email, .account-arrow {
+    display: none;
   }
-  .account-email { display: none; }
-
-  .mobile-nav-strip {
-    padding: 6px 12px;
-    gap: 6px;
-    top: 48px;
-    mask-image: linear-gradient(to right, black 85%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, black 88%, transparent 100%);
-  }
-  .m-pill {
-    padding: 5px 12px;
-    font-size: 11px;
-  }
-
-  .rows-container {
-    padding: 12px 14px 40px;
-    gap: 24px;
-  }
-  .row-title {
-    font-size: 17px;
-  }
-  .carousel-track {
-    scroll-snap-type: x mandatory;
-    gap: 12px;
-    padding-bottom: 6px;
-  }
-  .netflix-card {
-    flex: 0 0 clamp(170px, 58vw, 230px);
-    scroll-snap-align: start;
-  }
-  .browse-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .card-info {
-    padding: 8px 10px;
-  }
-  .card-title {
+  .account-avatar {
+    width: 28px;
+    height: 28px;
     font-size: 12px;
-  }
-  .card-urdu {
-    font-size: 11px;
-  }
-  .card-tag {
-    font-size: 9px;
+    border: 1.5px solid var(--gold);
   }
 
-  .modal-close-btn { top: 10px; right: 10px; width: 32px; height: 32px; font-size: 14px; }
-  .episodes-list { max-height: 240px; }
-  .credits-box { grid-template-columns: 1fr; }
-  .auth-modal-card { padding: 24px 18px; margin: 12px; }
-}
-
-/* Mobile-first touch + Urdu polish */
-* { -webkit-tap-highlight-color: transparent; }
-html, body { overflow-x: clip; }
-/* Nastaliq clips without tall line-height */
-.hero-urdu, .modal-urdu, .card-urdu, .urdu-title {
-  line-height: 2.1;
-  padding-top: 4px;
-}
-.m-pill, .nav-link, .chevron-btn, .ep-play-btn, .watch-action-btn {
-  min-height: 44px;
-}
-.m-pill { display: inline-flex; align-items: center; }
-.carousel-track { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
-.netflix-card img, .browse-card img { aspect-ratio: 16/9; object-fit: cover; background: #000; }
-@media (max-width: 600px) {
-  .watch-player-frame { margin: 0 -14px; border-radius: 0; }
-  .watch-player-frame iframe { aspect-ratio: 16/9; height: auto; }
-  .ep-name { font-size: 13px; }
-
-  /* Netflix mobile: full black, poster + overlay + titles + center play */
-  body { background-color: #000; background-image: none; }
-  .topbar, .topbar.scrolled { background: rgba(0,0,0,0.92); }
-  .mobile-nav-strip { background: #000; }
-  .hero-slider-wrap { min-height: 540px; background: #000; }
-  .hero-slide { padding: 90px 5% 28px; background-position: center 25%; }
-  .hero-vignette {
-    background:
-      linear-gradient(0deg, #000 4%, rgba(0,0,0,0.88) 32%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.45) 100%) !important;
+  /* Mobile Sub-Navigation Category Tabs (Netflix Style: All, TV Shows, Movies, My List) */
+  .mobile-nav-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 10px 16px 8px;
+    background: rgba(6, 11, 8, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 52px;
+    z-index: 180;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
-  .hero-overlay-content {
-    background: none;
+  .mobile-nav-strip::-webkit-scrollbar { display: none; }
+  .m-pill {
+    background: transparent;
     border: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-shadow: none;
-    padding: 0;
+    color: rgba(255, 255, 255, 0.65);
+    padding: 4px 2px 8px;
+    border-radius: 0;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+    min-height: auto;
   }
-  .hero-badge { background: rgba(0,0,0,0.55); }
+  .m-pill:hover {
+    color: #fff;
+    background: transparent;
+    border: none;
+  }
+  .m-pill.active {
+    color: #ffffff;
+    font-weight: 700;
+    background: transparent;
+    border: none;
+  }
+  .m-pill.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2.5px;
+    background: var(--gold);
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(245, 197, 66, 0.5);
+  }
+
+  /* Mobile Netflix Hero Poster Card (Screen 1) */
+  .hero-slider-wrap {
+    min-height: auto;
+    padding: 12px 14px 4px;
+    background: transparent;
+  }
+  .hero-slide {
+    position: relative;
+    height: 390px;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 24px 16px 20px;
+    background-size: cover;
+    background-position: center 25%;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .hero-vignette {
+    background: linear-gradient(0deg, #060b08 0%, rgba(6, 11, 8, 0.88) 36%, rgba(6, 11, 8, 0.1) 68%, rgba(0, 0, 0, 0.45) 100%) !important;
+  }
   .hero-play-center {
     display: flex;
     position: absolute;
     z-index: 3;
-    top: 34%;
+    top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 78px;
-    height: 78px;
+    width: 62px;
+    height: 62px;
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    font-size: 30px;
+    font-size: 24px;
     color: #0b110e;
-    padding-left: 5px;
+    padding-left: 4px;
     background: linear-gradient(135deg, #ffd768, #d4a024);
-    box-shadow: 0 0 0 6px rgba(245,197,66,0.22), 0 10px 30px rgba(0,0,0,0.6);
+    box-shadow: 0 0 0 6px rgba(245, 197, 66, 0.22), 0 10px 25px rgba(0, 0, 0, 0.75);
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s;
   }
-  .hero-play-center:active { transform: translate(-50%,-50%) scale(0.93); }
-  .btn-play-netflix { display: none; }
-  .hero-actions { justify-content: center; }
-  .btn-info-netflix { padding: 10px 22px; font-size: 13px; }
-  .rows-container { background: #000; }
+  .hero-play-center:active {
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  .hero-overlay-content {
+    position: relative;
+    z-index: 4;
+    background: none;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .hero-badge {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    margin-bottom: 6px;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(245, 197, 66, 0.45);
+    color: var(--gold);
+    border-radius: 999px;
+    backdrop-filter: blur(6px);
+  }
+  .hero-title-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 6px;
+  }
+  .hero-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.15;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  }
+  .hero-urdu {
+    font-size: 17px;
+    color: var(--gold);
+    line-height: 1.5;
+    direction: rtl;
+  }
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 11px;
+  }
+  .hero-desc {
+    display: none;
+  }
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 280px;
+  }
+  .btn-play-netflix {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 800;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #f5c542, #d4a024);
+    color: #080e0a;
+    box-shadow: 0 4px 14px rgba(245, 197, 66, 0.35);
+  }
+  .btn-info-netflix {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    color: #fff;
+  }
+  .hero-chevron-btn, .hero-indicators {
+    display: none;
+  }
+
+  /* Horizontal Content Rails & Portrait Cards (Screen 1: Popular on Netflix / Trending Now) */
+  .rows-container {
+    padding: 10px 0 28px;
+    gap: 24px;
+  }
+  .row-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 16px;
+    margin-bottom: 8px;
+  }
+  .row-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .row-count-badge {
+    display: none;
+  }
+  .row-see-all {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+  }
+  .carousel-track {
+    padding: 2px 16px 12px;
+    gap: 10px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .netflix-card {
+    flex: 0 0 clamp(112px, 31vw, 136px);
+    scroll-snap-align: start;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    overflow: visible;
+    box-shadow: none;
+  }
+  .netflix-card:hover {
+    transform: none;
+    box-shadow: none;
+    background: transparent;
+  }
+  .netflix-card:active {
+    transform: scale(0.96);
+  }
+  .card-media {
+    aspect-ratio: 2/3;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: #0d1712;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  .card-play-hover {
+    display: none;
+  }
+  .card-info {
+    padding: 6px 2px 0;
+  }
+  .card-title-line {
+    display: block;
+    margin-bottom: 1px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+  }
+  .card-urdu {
+    font-size: 10px;
+    color: var(--gold);
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-meta-line {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 1px;
+  }
+  .chevron-btn {
+    display: none;
+  }
+
+  /* Browse Grid View */
+  .browse-view {
+    padding: 70px 14px 40px;
+  }
+  .browse-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .browse-header {
+    margin-bottom: 16px;
+  }
+  .browse-title {
+    font-size: 20px;
+  }
+
+  /* Fixed Bottom Navigation Bar (Screen 1 & 2 - Gold Accent) */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    z-index: 300;
+    background: rgba(6, 11, 8, 0.96);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(245, 197, 66, 0.18);
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .m-bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: var(--text-dim);
+    font-size: 10px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    flex: 1;
+    padding: 6px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .m-bottom-nav-item svg {
+    transition: stroke 0.2s, filter 0.2s;
+  }
+  .m-bottom-nav-item.active {
+    color: var(--gold);
+  }
+  .m-bottom-nav-item.active svg {
+    stroke: var(--gold);
+    filter: drop-shadow(0 0 6px rgba(245, 197, 66, 0.5));
+  }
+  footer {
+    padding: 24px 16px 80px;
+  }
+
+  /* Mobile Drawer Sidebar */
+  .mobile-drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 400;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .mobile-drawer-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .mobile-drawer {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 290px;
+    max-width: 82vw;
+    background: #09120d;
+    border-right: 1px solid var(--border-gold);
+    z-index: 410;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 12px 0 36px rgba(0, 0, 0, 0.85);
+  }
+  .mobile-drawer.open {
+    transform: translateX(0);
+  }
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .drawer-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .drawer-section-title {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-left: 6px;
+  }
+  .drawer-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .drawer-link:hover, .drawer-link.active {
+    background: rgba(245, 197, 66, 0.12);
+    color: var(--gold);
+  }
+  .drawer-link.gold {
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .drawer-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+  .drawer-footer {
+    margin-top: auto;
+    padding: 12px 6px 0;
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* Mobile Fullscreen Search Modal */
+  .mobile-search-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #060b08;
+    z-index: 500;
+    flex-direction: column;
+    padding: 12px 16px env(safe-area-inset-bottom);
+  }
+  .mobile-search-modal.open {
+    display: flex;
+  }
+  .m-search-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .m-search-input-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .m-search-input-wrap svg {
+    position: absolute;
+    left: 12px;
+    color: var(--text-dim);
+    pointer-events: none;
+  }
+  .m-search-input-wrap input {
+    width: 100%;
+    background: #0d1712;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 36px 10px 36px;
+    font-size: 14px;
+    color: #fff;
+    outline: none;
+  }
+  .m-search-input-wrap input:focus {
+    border-color: var(--gold);
+  }
+  .m-search-clear {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .m-search-cancel {
+    background: none;
+    border: none;
+    color: var(--gold);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 6px;
+  }
+  .m-search-results {
+    flex: 1;
+    overflow-y: auto;
+    padding-top: 14px;
+    padding-bottom: 60px;
+  }
+  .m-search-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .m-search-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+    text-align: center;
+    gap: 10px;
+  }
+  .m-search-prompt span {
+    font-size: 32px;
+  }
+
+  /* Mobile Drama Detail / Watch Screen (Screen 2 in Reference) */
+  .watch-page-container {
+    padding: 0 0 60px;
+  }
+  .m-watch-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: rgba(6, 11, 8, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    position: sticky;
+    top: 0;
+    z-index: 220;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .m-watch-back-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 8px 2px 0;
+  }
+  .m-watch-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    color: #fff;
+  }
+  .m-watch-brand img {
+    width: 24px;
+    height: 24px;
+  }
+  .m-watch-heart-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--gold);
+    cursor: pointer;
+    padding: 0 0 0 8px;
+    transition: transform 0.2s;
+  }
+  .m-watch-heart-btn:active {
+    transform: scale(1.25);
+  }
+  .watch-theater-wrap {
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid var(--border-gold);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 20px rgba(245, 197, 66, 0.1);
+  }
+  .watch-player-frame {
+    padding-top: 56.25%;
+    position: relative;
+  }
+  .m-watch-meta-block {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 16px 12px;
+    gap: 12px;
+  }
+  .m-watch-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .m-watch-title {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .m-watch-urdu {
+    font-family: var(--font-urdu);
+    font-size: 18px;
+    color: var(--gold);
+    direction: rtl;
+    line-height: 1.5;
+  }
+  .m-watch-badges-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .m-badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .m-badge.gold {
+    background: var(--gold);
+    color: #080e0a;
+    border-color: var(--gold);
+  }
+  .m-star-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gold);
+  }
+  .m-stars {
+    letter-spacing: 2px;
+    font-size: 15px;
+  }
+  .m-rating-text {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+  .m-actions-cluster {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 14px 0 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 4px 0;
+  }
+  .m-action-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 6px 12px;
+    transition: transform 0.15s;
+  }
+  .m-action-item:active {
+    transform: scale(0.92);
+  }
+  .m-action-icon {
+    font-size: 20px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .m-action-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .m-action-play-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffd768 0%, #d4a024 100%);
+    color: #060b08;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 6px rgba(245, 197, 66, 0.22), 0 8px 24px rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    padding-left: 3px;
+  }
+  .m-action-play-btn:active {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 8px rgba(245, 197, 66, 0.35), 0 4px 14px rgba(0, 0, 0, 0.7);
+  }
+  .m-watch-synopsis {
+    font-size: 13px;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 4px;
+  }
+  .m-episodes-section {
+    display: block;
+    padding: 14px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .m-episodes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .m-season-title {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .m-ep-total {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .m-episodes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .m-episode-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .m-episode-row.active {
+    background: rgba(245, 197, 66, 0.12);
+    border-color: var(--gold);
+  }
+  .m-ep-thumb-wrap {
+    width: 90px;
+    height: 54px;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    background: #0d1712;
+  }
+  .m-ep-thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .m-ep-thumb-play {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold);
+    font-size: 14px;
+  }
+  .m-ep-details {
+    flex: 1;
+    min-width: 0;
+  }
+  .m-ep-title-line {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    margin-bottom: 2px;
+  }
+  .m-ep-num {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--gold);
+    font-family: var(--font-serif);
+  }
+  .m-ep-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .m-ep-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .m-ep-action {
+    color: var(--gold);
+    font-size: 14px;
+    padding-left: 6px;
+  }
+  .m-credits-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 0 16px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 11px;
+  }
+  .watch-recommendations-section {
+    padding: 14px 0 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .watch-recommendations-section .section-title-wrap {
+    padding: 0 16px;
+    margin-bottom: 8px;
+  }
+  .watch-recommendations-section .section-title {
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .watch-recommendations-section .section-sub {
+    font-size: 11px;
+  }
 }
 </style>
 </head>
@@ -1710,6 +2461,11 @@ html, body { overflow-x: clip; }
 
 <!-- Header Topbar -->
 <header class="topbar" id="mainTopbar">
+  <button class="mobile-hamburger-btn" id="mobileMenuBtn" onclick="toggleMobileDrawer(true)" aria-label="Open menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
   <div class="brand-group">
     <a class="brand" href="#" onclick="showHomeView(); return false;">
       <img class="brand-logo" src="/logo.png" alt="Pak Spotlight">
@@ -1750,16 +2506,105 @@ html, body { overflow-x: clip; }
 <!-- Mobile Horizontal Category Strip -->
 <nav class="mobile-nav-strip" id="mobileNavStrip">
   <button class="m-pill active" id="mNav-home" onclick="showHomeView()">All</button>
-  <button class="m-pill" id="mNav-serial---series" onclick="showCategoryView('Serial / Series')">Serials</button>
-  <button class="m-pill" id="mNav-long-play" onclick="showCategoryView('Long Play')">Long Plays</button>
-  <button class="m-pill" id="mNav-comedy" onclick="showCategoryView('Comedy')">Comedy</button>
-  <button class="m-pill" id="mNav-shorts" onclick="showCategoryView('Shorts')">Shorts</button>
+  <button class="m-pill" id="mNav-serial---series" onclick="showCategoryView('Serial / Series')">TV Shows</button>
+  <button class="m-pill" id="mNav-long-play" onclick="showCategoryView('Long Play')">Movies</button>
+  <button class="m-pill" id="mNav-mylist" onclick="showMyListView()">My List</button>
 </nav>
 
 <!-- Main App Surface -->
 <main id="app">
   <!-- Rendered dynamically -->
 </main>
+
+<!-- Mobile Bottom Navigation Bar (Fixed Netflix Style - Gold Accents) -->
+<nav class="mobile-bottom-nav" id="mobileBottomNav">
+  <button class="m-bottom-nav-item active" id="mBottomNav-home" onclick="showHomeView()">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+      <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    </svg>
+    <span>Home</span>
+  </button>
+  <button class="m-bottom-nav-item" id="mBottomNav-search" onclick="openMobileSearch()">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <span>Search</span>
+  </button>
+  <button class="m-bottom-nav-item" id="mBottomNav-mylist" onclick="showMyListView()">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+    </svg>
+    <span>My List</span>
+  </button>
+  <button class="m-bottom-nav-item" id="mBottomNav-categories" onclick="toggleMobileDrawer(true)">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6"></line>
+      <line x1="8" y1="12" x2="21" y2="12"></line>
+      <line x1="8" y1="18" x2="21" y2="18"></line>
+      <line x1="3" y1="6" x2="3.01" y2="6"></line>
+      <line x1="3" y1="12" x2="3.01" y2="12"></line>
+      <line x1="3" y1="18" x2="3.01" y2="18"></line>
+    </svg>
+    <span>Categories</span>
+  </button>
+</nav>
+
+<!-- Mobile Drawer Sidebar -->
+<div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop" onclick="toggleMobileDrawer(false)"></div>
+<aside class="mobile-drawer" id="mobileDrawer">
+  <div class="drawer-header">
+    <div class="brand">
+      <img class="brand-logo" src="/logo.png" alt="Pak Spotlight">
+      <div class="brand-titles">
+        <span class="brand-name">PAK SPOTLIGHT</span>
+        <span class="brand-sub">Classic PTV Archive</span>
+      </div>
+    </div>
+    <button class="drawer-close-btn" onclick="toggleMobileDrawer(false)" aria-label="Close menu">✕</button>
+  </div>
+  <div class="drawer-content">
+    <div class="drawer-nav-section">
+      <div class="drawer-section-title">BROWSE ARCHIVE</div>
+      <a href="#" class="drawer-link active" onclick="showHomeView(); toggleMobileDrawer(false); return false;">🏠 Home</a>
+      <a href="#" class="drawer-link" onclick="showCategoryView('Serial / Series'); toggleMobileDrawer(false); return false;">📺 Drama Serials</a>
+      <a href="#" class="drawer-link" onclick="showCategoryView('Long Play'); toggleMobileDrawer(false); return false;">🎭 Long Plays & Telefilms</a>
+      <a href="#" class="drawer-link" onclick="showCategoryView('Comedy'); toggleMobileDrawer(false); return false;">😂 Comedy Masterpieces</a>
+      <a href="#" class="drawer-link" onclick="showCategoryView('Shorts'); toggleMobileDrawer(false); return false;">⚡ Shorts & Moments</a>
+      <a href="#" class="drawer-link" onclick="showMyListView(); toggleMobileDrawer(false); return false;">🔖 My List (Saved)</a>
+    </div>
+    <div class="drawer-divider"></div>
+    <div class="drawer-nav-section">
+      <div class="drawer-section-title">ADMINISTRATION</div>
+      <a href="/admin.html" class="drawer-link gold">⚙ Admin Studio</a>
+      <button class="drawer-link" onclick="openAuthModal(); toggleMobileDrawer(false);">🔑 Account / Sign In</button>
+    </div>
+    <div class="drawer-footer">
+      <span>Preserving the Golden Age of Pakistani Television · Free Cultural Archive</span>
+    </div>
+  </div>
+</aside>
+
+<!-- Mobile Fullscreen Search Modal -->
+<div class="mobile-search-modal" id="mobileSearchModal">
+  <div class="m-search-header">
+    <div class="m-search-input-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="mobileSearchInput" placeholder="Search classics, writers, cast..." autocomplete="off">
+      <button class="m-search-clear" id="mobileSearchClear" onclick="clearMobileSearch()">✕</button>
+    </div>
+    <button class="m-search-cancel" onclick="closeMobileSearch()">Cancel</button>
+  </div>
+  <div class="m-search-results" id="mobileSearchResults">
+    <div class="m-search-prompt">
+      <span>🔍</span>
+      <p>Type to instantly search legendary PTV classics, actors, writers, and directors</p>
+    </div>
+  </div>
+</div>
 
 <!-- Sign In / Admin Authentication Modal -->
 <div class="modal-overlay" id="authModal">
@@ -1862,9 +2707,15 @@ function renderNavCategories() {
   if (mobileNav) {
     mobileNav.innerHTML = `
       <button class="m-pill ${activeCategory === 'all' ? 'active' : ''}" id="mNav-home" onclick="showHomeView()">All</button>
-      ${categories.map(c => `
-        <button class="m-pill ${activeCategory === c ? 'active' : ''}" id="mNav-${sanitizeId(c)}" onclick="showCategoryView('${esc(c)}')">${esc(c)}</button>
-      `).join("")}
+      ${categories.map(c => {
+        let label = c;
+        if (c.toLowerCase().includes("serial") || c.toLowerCase().includes("series")) label = "TV Shows";
+        else if (c.toLowerCase().includes("long play")) label = "Movies";
+        return `
+          <button class="m-pill ${activeCategory === c ? 'active' : ''}" id="mNav-${sanitizeId(c)}" onclick="showCategoryView('${esc(c)}')">${esc(label)}</button>
+        `;
+      }).join("")}
+      <button class="m-pill ${activeCategory === 'mylist' ? 'active' : ''}" id="mNav-mylist" onclick="showMyListView()">My List</button>
     `;
   }
   const footerLinks = $("footerNavLinks");
@@ -2085,13 +2936,14 @@ function renderCarouselRow(title, rowId, groupList) {
           <span>${title}</span>
           <span class="row-count-badge">${groupList.length}</span>
         </h2>
+        <a href="#" class="row-see-all" onclick="handleSeeAll('${esc(title)}'); return false;">See all &gt;</a>
       </div>
       <div class="carousel-wrap">
-        <button class="chevron-btn chevron-left" onclick="scrollCarousel('${rowId}', -1)">❮</button>
+        <button class="chevron-btn chevron-left desktop-only" onclick="scrollCarousel('${rowId}', -1)">❮</button>
         <div class="carousel-track" id="track-${rowId}">
           ${groupList.map(g => renderNetflixCard(g)).join("")}
         </div>
-        <button class="chevron-btn chevron-right" onclick="scrollCarousel('${rowId}', 1)">❯</button>
+        <button class="chevron-btn chevron-right desktop-only" onclick="scrollCarousel('${rowId}', 1)">❯</button>
       </div>
     </div>
   `;
@@ -2187,6 +3039,7 @@ window.openWatchPage = function(id) {
   const d = rows.find(r => r.id === Number(id));
   if (!d) return;
   viewMode = "watch";
+  updateBottomNavActive("home");
 
   const isSer = isSeries(d) && !!String(d.series || "").trim();
   const episodes = isSer 
@@ -2211,8 +3064,20 @@ window.openWatchPage = function(id) {
 
   $("app").innerHTML = `
     <div class="watch-page-container">
-      <!-- Top Navigation & Breadcrumb -->
-      <div class="watch-nav-bar">
+      <!-- Mobile Sticky Top Bar (Screen 2 in Netflix Reference) -->
+      <div class="m-watch-topbar mobile-only">
+        <button class="m-watch-back-btn" onclick="goBackFromWatch()" aria-label="Back">‹</button>
+        <div class="m-watch-brand">
+          <img src="/logo.png" alt="Pak Spotlight">
+          <span>PAK SPOTLIGHT</span>
+        </div>
+        <button class="m-watch-heart-btn" id="mWatchHeartBtn" onclick="toggleMyListWatch(${d.id})" aria-label="Toggle My List">
+          ${isInMyList(d.id) ? '♥' : '♡'}
+        </button>
+      </div>
+
+      <!-- Desktop Breadcrumbs & Navigation -->
+      <div class="watch-nav-bar desktop-only">
         <button class="watch-back-btn" onclick="goBackFromWatch()">
           ← Back to Archive
         </button>
@@ -2236,7 +3101,7 @@ window.openWatchPage = function(id) {
       </div>
 
       <!-- Main Cinema Screen -->
-      <div class="watch-theater-wrap">
+      <div class="watch-theater-wrap" id="watchTheaterWrap">
         <div class="theater-glow"></div>
         <div class="watch-player-frame" id="watchPlayerFrame">
           ${initialYt ? `
@@ -2250,8 +3115,94 @@ window.openWatchPage = function(id) {
         </div>
       </div>
 
-      <!-- Details & Playlist Layout -->
-      <div class="watch-details-grid ${isSer && episodes.length > 1 ? 'has-playlist' : ''}">
+      <!-- Mobile Quick Meta & 3-Action Cluster (Screen 2) -->
+      <div class="m-watch-meta-block mobile-only">
+        <div class="m-watch-title-group">
+          <h1 class="m-watch-title">${esc(pageTitle)}</h1>
+          ${d.urdu ? `<div class="m-watch-urdu">${esc(d.urdu)}</div>` : ''}
+        </div>
+
+        <div class="m-watch-badges-row">
+          ${d.year ? `<span class="m-badge">${esc(d.year)}</span>` : ''}
+          <span class="m-badge gold">${esc(d.type)}</span>
+          ${isSer && episodes.length > 1 ? `<span class="m-badge">${episodes.length} Episodes</span>` : ''}
+          <span class="m-badge">PTV Classic</span>
+        </div>
+
+        <div class="m-star-rating">
+          <span class="m-stars">★★★★★</span>
+          <span class="m-rating-text">PTV Golden Era Masterpiece</span>
+        </div>
+
+        <!-- 3-Action Buttons Cluster: + My List | Big Round Play | Share -->
+        <div class="m-actions-cluster">
+          <button class="m-action-item" id="mActionMyList" onclick="toggleMyListWatch(${d.id})">
+            <span class="m-action-icon">${isInMyList(d.id) ? '✓' : '＋'}</span>
+            <span class="m-action-text">${isInMyList(d.id) ? 'In My List' : 'My List'}</span>
+          </button>
+
+          <button class="m-action-play-btn" onclick="scrollToPlayerAndPlay()" aria-label="Play Now">
+            ▶
+          </button>
+
+          <button class="m-action-item" onclick="copyWatchLink(${d.id})">
+            <span class="m-action-icon">ⓘ</span>
+            <span class="m-action-text" id="mActionShareText">Share</span>
+          </button>
+        </div>
+
+        <p class="m-watch-synopsis">${esc(cleanDescription(d.description))}</p>
+      </div>
+
+      <!-- Mobile Episode List (Screen 2) -->
+      ${isSer && episodes.length > 1 ? `
+        <div class="m-episodes-section mobile-only">
+          <div class="m-episodes-header">
+            <span class="m-season-title">Season 1</span>
+            <span class="m-ep-total">${episodes.length} Episodes</span>
+          </div>
+          <div class="m-episodes-list">
+            ${episodes.map((ep, idx) => {
+              const epYt = extractYouTubeId(ep.youtube);
+              const isPlaying = ep.id === currentEp.id;
+              const epThumb = ep.image || d.image || '/logo.png';
+              return `
+                <div class="m-episode-row ${isPlaying ? 'active' : ''}" onclick="switchWatchEpisode('${epYt}', ${ep.id}, this)">
+                  <div class="m-ep-thumb-wrap">
+                    <img src="${esc(epThumb)}" alt="${esc(ep.title)}" loading="lazy">
+                    <div class="m-ep-thumb-play">${isPlaying ? '❚❚' : '▶'}</div>
+                  </div>
+                  <div class="m-ep-details">
+                    <div class="m-ep-title-line">
+                      <span class="m-ep-num">Ep ${ep.episode ?? (idx + 1)}</span>
+                      <span class="m-ep-name">${esc(ep.title)}</span>
+                    </div>
+                    <div class="m-ep-sub">${ep.year ? 'Year: ' + esc(ep.year) : 'PTV Archive'} · ${isPlaying ? '▶ Now Playing' : 'Click to Watch'}</div>
+                  </div>
+                  <div class="m-ep-action">
+                    ${ep.youtube ? `
+                      <a href="${esc(ep.youtube)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="m-ep-yt-icon" title="Watch on YouTube">↗</a>
+                    ` : `
+                      <span style="font-size:12px;color:var(--gold)">▶</span>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Mobile Credits Panel -->
+      <div class="m-credits-panel mobile-only">
+        ${d.writer ? `<div class="credit-chip"><b>Playwright / Writer</b><span>${esc(d.writer)}</span></div>` : ''}
+        ${d.director ? `<div class="credit-chip"><b>Director</b><span>${esc(d.director)}</span></div>` : ''}
+        ${d.produced ? `<div class="credit-chip"><b>Producer</b><span>${esc(d.produced)}</span></div>` : ''}
+        ${d.cast ? `<div class="credit-chip full"><b>Star Cast</b><span>${esc(d.cast)}</span></div>` : ''}
+      </div>
+
+      <!-- Desktop Details & Playlist Layout -->
+      <div class="watch-details-grid desktop-only ${isSer && episodes.length > 1 ? 'has-playlist' : ''}">
         <!-- Details Column -->
         <div class="watch-info-column">
           <div class="watch-title-header">
@@ -2311,11 +3262,11 @@ window.openWatchPage = function(id) {
             <p class="section-sub">Curated classic masterpieces based on genre, writer, and style</p>
           </div>
           <div class="carousel-wrap">
-            <button class="chevron-btn chevron-left" onclick="scrollCarousel('rec-row', -1)">❮</button>
+            <button class="chevron-btn chevron-left desktop-only" onclick="scrollCarousel('rec-row', -1)">❮</button>
             <div class="carousel-track" id="track-rec-row">
               ${recommendations.map(g => renderNetflixCard(g)).join("")}
             </div>
-            <button class="chevron-btn chevron-right" onclick="scrollCarousel('rec-row', 1)">❯</button>
+            <button class="chevron-btn chevron-right desktop-only" onclick="scrollCarousel('rec-row', 1)">❯</button>
           </div>
         </div>
       ` : ''}
@@ -2369,11 +3320,216 @@ window.copyWatchLink = function(id) {
 };
 
 // ----------------------
+// WATCHLIST / MY LIST SYSTEM (LOCAL PERSISTENCE)
+// ----------------------
+window.getMyList = function() {
+  try {
+    const raw = localStorage.getItem("pakspotlight_mylist");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+window.isInMyList = function(id) {
+  const list = getMyList();
+  return list.includes(Number(id));
+};
+
+window.toggleMyList = function(id) {
+  const numId = Number(id);
+  let list = getMyList();
+  const idx = list.indexOf(numId);
+  let saved = false;
+  if (idx >= 0) {
+    list.splice(idx, 1);
+    saved = false;
+  } else {
+    list.unshift(numId);
+    saved = true;
+  }
+  try {
+    localStorage.setItem("pakspotlight_mylist", JSON.stringify(list));
+  } catch {}
+  return saved;
+};
+
+window.toggleMyListWatch = function(id) {
+  const isSaved = toggleMyList(id);
+  const heartBtn = $("mWatchHeartBtn");
+  if (heartBtn) {
+    heartBtn.textContent = isSaved ? "♥" : "♡";
+    heartBtn.style.transform = "scale(1.3)";
+    setTimeout(() => heartBtn.style.transform = "scale(1)", 200);
+  }
+  const actionBtn = $("mActionMyList");
+  if (actionBtn) {
+    actionBtn.innerHTML = `
+      <span class="m-action-icon">${isSaved ? '✓' : '＋'}</span>
+      <span class="m-action-text">${isSaved ? 'In My List' : 'My List'}</span>
+    `;
+  }
+};
+
+window.scrollToPlayerAndPlay = function() {
+  const frame = $("watchTheaterWrap") || $("watchPlayerFrame");
+  if (frame) {
+    frame.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+};
+
+window.showMyListView = function() {
+  activeCategory = "mylist";
+  updateNavActive("mNav-mylist");
+  updateBottomNavActive("mylist");
+  viewMode = "category";
+  const savedIds = getMyList();
+  const savedDramas = rows.filter(r => savedIds.includes(r.id));
+  const grouped = groupDramas(savedDramas);
+
+  if (!grouped.length) {
+    $("app").innerHTML = `
+      <div class="browse-view" style="text-align:center;padding:100px 20px 80px">
+        <div style="font-size:48px;margin-bottom:12px">🔖</div>
+        <h1 class="browse-title" style="margin-bottom:8px">Your List is Empty</h1>
+        <p style="font-size:14px;color:var(--text-muted);max-width:440px;margin:0 auto 24px;line-height:1.6">
+          Tap the <strong>+ My List</strong> button or heart icon on any classic drama to save it here for easy viewing.
+        </p>
+        <button onclick="showHomeView()" class="btn-play-netflix" style="display:inline-flex;padding:12px 28px;margin:0 auto">
+          Explore PTV Masterpieces
+        </button>
+      </div>
+    `;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  renderBrowseGrid("My List (Saved Classics)", grouped, false);
+};
+
+// ----------------------
+// MOBILE NAVIGATION & DRAWER HANDLERS
+// ----------------------
+window.toggleMobileDrawer = function(open) {
+  const drawer = $("mobileDrawer");
+  const backdrop = $("mobileDrawerBackdrop");
+  const isOpen = drawer && drawer.classList.contains("open");
+  const shouldOpen = open !== undefined ? open : !isOpen;
+  if (drawer && backdrop) {
+    if (shouldOpen) {
+      drawer.classList.add("open");
+      backdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+    } else {
+      drawer.classList.remove("open");
+      backdrop.classList.remove("open");
+      document.body.style.overflow = "";
+    }
+  }
+};
+
+window.updateBottomNavActive = function(tab) {
+  document.querySelectorAll(".m-bottom-nav-item").forEach(item => item.classList.remove("active"));
+  const activeEl = $(`mBottomNav-${tab}`);
+  if (activeEl) activeEl.classList.add("active");
+};
+
+// ----------------------
+// MOBILE SEARCH MODAL HANDLERS
+// ----------------------
+window.openMobileSearch = function() {
+  updateBottomNavActive("search");
+  const modal = $("mobileSearchModal");
+  if (modal) {
+    modal.classList.add("open");
+    document.body.style.overflow = "hidden";
+    const input = $("mobileSearchInput");
+    if (input) {
+      input.focus();
+      handleMobileSearchInput();
+    }
+  }
+};
+
+window.closeMobileSearch = function() {
+  const modal = $("mobileSearchModal");
+  if (modal) {
+    modal.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  updateBottomNavActive(viewMode === "home" ? "home" : (activeCategory === "mylist" ? "mylist" : "home"));
+};
+
+window.clearMobileSearch = function() {
+  const input = $("mobileSearchInput");
+  if (input) {
+    input.value = "";
+    input.focus();
+    handleMobileSearchInput();
+  }
+};
+
+function handleMobileSearchInput() {
+  const input = $("mobileSearchInput");
+  const results = $("mobileSearchResults");
+  if (!input || !results) return;
+  const q = input.value.trim().toLowerCase();
+  if (!q) {
+    results.innerHTML = `
+      <div class="m-search-prompt">
+        <span>🔍</span>
+        <p>Type to instantly search legendary PTV classics, actors, writers, and directors</p>
+      </div>
+    `;
+    return;
+  }
+  const matches = rows.filter(d => 
+    (d.title + " " + d.urdu + " " + d.writer + " " + d.director + " " + d.cast + " " + d.year + " " + d.type + " " + d.series).toLowerCase().includes(q)
+  );
+  const grouped = groupDramas(matches);
+  if (!grouped.length) {
+    results.innerHTML = `
+      <div class="m-search-prompt">
+        <span>📺</span>
+        <p style="color:#fff;font-weight:700">No classics found for "${esc(input.value)}"</p>
+        <p style="font-size:12px;margin-top:2px">Try searching by series name, actor, or writer.</p>
+      </div>
+    `;
+    return;
+  }
+  results.innerHTML = `
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:12px">Found ${grouped.length} ${grouped.length === 1 ? 'title' : 'titles'}</div>
+    <div class="m-search-grid">
+      ${grouped.map(g => renderNetflixCard(g)).join("")}
+    </div>
+  `;
+}
+
+window.handleSeeAll = function(title) {
+  const cleanTitle = String(title || "").trim();
+  const matchingCat = categories.find(c => c.toLowerCase() === cleanTitle.toLowerCase());
+  if (matchingCat) {
+    showCategoryView(matchingCat);
+    return;
+  }
+  if (cleanTitle.toLowerCase().includes("golden") || cleanTitle.toLowerCase().includes("vintage")) {
+    const goldenAge = groupDramas(rows).filter(g => {
+      const y = parseInt(g[0].year) || 0;
+      return y >= 1970 && y <= 1999;
+    });
+    renderBrowseGrid("Golden Age Classics (70s, 80s & 90s)", goldenAge, false);
+    return;
+  }
+  showCategoryView(cleanTitle);
+};
+
+// ----------------------
 // NAVIGATION & SEARCH HANDLERS
 // ----------------------
 window.showHomeView = function() {
   activeCategory = "all";
   updateNavActive("nav-home");
+  updateBottomNavActive("home");
   renderNetflixHome();
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
@@ -2385,6 +3541,7 @@ window.showCategoryView = function(category) {
     return;
   }
   updateNavActive("nav-" + sanitizeId(category));
+  updateBottomNavActive("home");
 
   const allGroups = groupDramas(rows);
   let filtered = allGroups;
@@ -2607,6 +3764,11 @@ function updateAuthUi(session) {
 }
 
 // Initialize
+const mInput = $("mobileSearchInput");
+if (mInput) {
+  mInput.addEventListener("input", handleMobileSearchInput);
+}
+
 Promise.all([loadData(), loadCategories()]).then(() => {
   renderNavCategories();
   renderNetflixHome();
