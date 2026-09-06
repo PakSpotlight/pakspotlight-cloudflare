@@ -466,10 +466,11 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .title-sub {
   font-size: 12px;
   color: var(--dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   margin-top: 1px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .ledger-col {
@@ -937,8 +938,6 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   .callno, .ledger-col { display: none; }
   .row-actions .ibtn:not(.kebab) { display: none; }
   .ledger-thumb { width: 88px; }
-
-  .title-sub { white-space: normal; }
 
   .form-grid { grid-template-columns: 1fr; }
 

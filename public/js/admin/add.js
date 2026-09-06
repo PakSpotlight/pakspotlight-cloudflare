@@ -131,7 +131,9 @@ function renderAddPane() {
           </div>
           <div class="check-list" id="plItemsListBox"></div>
 
-          <div class="divider-label">Import as</div>
+          <div class="divider-label">Series details, shared by every episode
+            <span id="plAiNote" style="font-weight:400; color:var(--dim)"></span>
+          </div>
           <div class="form-grid">
             <div class="field">
               <label for="plTarget">Serial</label>
@@ -172,7 +174,7 @@ function renderAddPane() {
             </div>
           </div>
           <p class="hint" style="font-size:11.5px; color:var(--dim); margin-top:10px">
-            Credits (writer, director, cast, year) are looked up once and copied to every episode. Videos already in the vault are skipped.
+            The AI read the first video for these details — check them, then import. Videos already in the vault are skipped.
           </p>
 
           <div class="sheet-foot">
@@ -275,6 +277,10 @@ async function handleAddFetch() {
       status.className = "status show ok";
       status.textContent = `Found ${plItems.length} videos. Review the list, then import.`;
       updatePlCount();
+
+      // One AI read of the first video fills the shared series details,
+      // so the admin only reviews briefly and then imports.
+      autoFillPlaylistDetails(data.items?.[0]);
     } catch (err) {
       status.className = "status show err";
       status.textContent = err.message;
@@ -342,6 +348,56 @@ async function handleAddFetch() {
     status.textContent = err.message;
   } finally {
     btn.disabled = false;
+  }
+}
+
+// One AI read of the first playlist video fills the shared series
+// details (writer, director, cast, year, Urdu title, category). Runs in
+// the background after the preview so the list shows instantly.
+async function autoFillPlaylistDetails(firstItem) {
+  if (!firstItem?.id) return;
+  const status = $("addFetchStatus");
+  try {
+    if (status) {
+      status.className = "status show info";
+      status.textContent = "AI is reading the first video for the shared series details…";
+    }
+    const res = await fetch("/api/ai-autofill", {
+      method: "POST",
+      headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+      body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${firstItem.id}` })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || "AI lookup failed.");
+    const f = data.fields || {};
+
+    if ($("plUrdu")) $("plUrdu").value = f.urdu_title || "";
+    if ($("plYear")) $("plYear").value = f.year || "";
+    if ($("plWriter")) $("plWriter").value = f.writer || "";
+    if ($("plDirector")) $("plDirector").value = f.director || "";
+    if ($("plCast")) $("plCast").value = f.cast || "";
+    if (f.type && $("plCategory")) {
+      const match = configuredCategories.find(c => c.toLowerCase() === String(f.type).toLowerCase());
+      if (match) $("plCategory").value = match;
+    }
+    // Prefer the AI's cleaned series name unless the admin already typed one.
+    const seriesBox = $("plSeriesName");
+    if (seriesBox && !seriesBox.dataset.touched && f.series_name) {
+      seriesBox.value = f.series_name;
+    }
+
+    if (status) {
+      status.className = "status show ok";
+      status.textContent = data.cached
+        ? `Found ${plItems.length} videos. Series details filled from a saved record — review and import.`
+        : `Found ${plItems.length} videos. AI filled the shared series details — review and import.`;
+    }
+  } catch (err) {
+    // Non-blocking: the admin can still fill details by hand.
+    if (status) {
+      status.className = "status show ok";
+      status.textContent = `Found ${plItems.length} videos. AI details unavailable (${err.message}) — fill them in by hand, then import.`;
+    }
   }
 }
 
@@ -478,7 +534,14 @@ async function runPlaylistImport() {
         url,
         seriesName,
         category: $("plCategory").value,
-        videoIds: selectedIds
+        videoIds: selectedIds,
+        credits: {
+          urdu_title: $("plUrdu").value.trim(),
+          year: $("plYear").value.trim(),
+          writer: $("plWriter").value.trim(),
+          director: $("plDirector").value.trim(),
+          cast: $("plCast").value.trim()
+        }
       })
     });
     const data = await res.json();

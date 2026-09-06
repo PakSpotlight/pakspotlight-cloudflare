@@ -692,26 +692,40 @@ var index_default = {
         const type = allowedCategories.find(c => c.toLowerCase() === category.toLowerCase())
           || allowedCategories[0] || "Long Play";
 
+        // Credits the admin reviewed in the preview form win. Anything
+        // left blank falls back to one AI read of the first video.
+        const given = body.credits && typeof body.credits === "object" ? body.credits : {};
+        const needsAi = !String(given.writer || "").trim()
+          || !String(given.director || "").trim()
+          || !String(given.cast || "").trim()
+          || !String(given.year || "").trim()
+          || !String(given.urdu_title || "").trim();
+
         // One AI call with search for episode 1 -> shared credits for all.
+        // Skipped entirely when the admin already supplied full credits.
         let shared = null;
-        try {
-          const first = await aiAutofill({
-            id: items[0].id,
-            title: items[0].title,
-            description: items[0].description,
-            publishedAt: items[0].publishedAt,
-            thumbnail: items[0].thumbnail
-          }, env, { authToken: auth.token, forceSearch: true });
-          shared = {
-            writer: first.fields.writer,
-            director: first.fields.director,
-            produced: first.fields.produced,
-            cast: first.fields.cast,
-            year: first.fields.year,
-            urdu_title: first.fields.urdu_title,
-            description: first.fields.description
-          };
-        } catch {}
+        if (needsAi) {
+          try {
+            const first = await aiAutofill({
+              id: items[0].id,
+              title: items[0].title,
+              description: items[0].description,
+              publishedAt: items[0].publishedAt,
+              thumbnail: items[0].thumbnail
+            }, env, { authToken: auth.token, forceSearch: true });
+            shared = {
+              writer: first.fields.writer,
+              director: first.fields.director,
+              produced: first.fields.produced,
+              cast: first.fields.cast,
+              year: first.fields.year,
+              urdu_title: first.fields.urdu_title,
+              description: first.fields.description
+            };
+          } catch {}
+        }
+
+        const pick = (field) => String(given[field] || "").trim() || shared?.[field] || "";
 
         const results = [];
         for (let i = 0; i < items.length; i++) {
@@ -728,15 +742,15 @@ var index_default = {
             const title = cleanDramaTitle(it.title) || `${seriesName} Ep ${ep}`;
             const payload = {
               title,
-              urdu_title: shared?.urdu_title || "",
-              year: shared?.year || String(it.publishedAt || "").slice(0, 4),
+              urdu_title: pick("urdu_title"),
+              year: pick("year") || String(it.publishedAt || "").slice(0, 4),
               type,
               series_name: seriesName,
               episode_number: Number(ep) || null,
-              writer: shared?.writer || "",
-              director: shared?.director || "",
-              produced: shared?.produced || "",
-              cast: shared?.cast || "",
+              writer: pick("writer"),
+              director: pick("director"),
+              produced: pick("produced"),
+              cast: pick("cast"),
               description: (it.description || shared?.description || "").slice(0, 800),
               youtube_url: it.url,
               thumbnail_url: it.thumbnail || ""
