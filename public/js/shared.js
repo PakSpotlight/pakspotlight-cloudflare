@@ -159,61 +159,66 @@ async function loadData() {
   const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
 
   console.log("🎬 loadData() starting...");
-  console.log("SUPABASE_URL:", SUPABASE_URL);
-  console.log("SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY ? "✓ defined" : "✗ undefined");
+  console.log("sbClient available:", !!sbClient);
 
+  // Try cache first
   try {
     const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
     const cachedRaw = localStorage.getItem(CACHE_KEY);
     if (cachedRaw && cachedTime && (Date.now() - Number(cachedTime) < CACHE_TTL)) {
       const parsed = JSON.parse(cachedRaw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        console.log("📦 Using cached data, rows:", parsed.length);
+        console.log("✓ Using cached data:", parsed.length, "rows");
         rows = parsed.map(mapRow);
+        return rows;
       }
     }
   } catch {}
 
-  try {
-    const dramUrl = `${SUPABASE_URL}/rest/v1/Drama?select=*&order=id.desc`;
-    console.log("📡 Fetching Drama table from:", dramUrl);
-    
-    const [dramaRes, featRes] = await Promise.all([
-      fetch(dramUrl, {
-        headers: {
-          apikey: SUPABASE_ANON_KEY
-        }
-      }),
-      fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/featured.json?t=${Date.now()}`).catch(() => null)
-    ]);
-
-    console.log("📊 Drama response status:", dramaRes.status, dramaRes.statusText);
-
-    if (dramaRes.ok) {
-      const data = await dramaRes.json();
-      console.log("✅ Successfully loaded Drama data, count:", data.length);
-      rows = (data || []).map(mapRow);
-      try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-        localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-      } catch {}
-    } else {
-      const errText = await dramaRes.text();
-      console.error("❌ Drama fetch failed:", dramaRes.status, errText);
-    }
-
-    if (featRes && featRes.ok) {
-      const featList = await featRes.json();
-      if (Array.isArray(featList)) {
-        featuredIds = featList.map(Number).filter(n => !isNaN(n) && n > 0);
-      }
-    }
-  } catch (err) {
-    console.error("❌ Error fetching dramas from Supabase:", err);
+  // Fetch from Supabase using client library
+  if (!sbClient) {
+    console.error("❌ Supabase client not initialized");
+    return [];
   }
 
-  console.log("🎬 loadData() finished. Rows loaded:", rows.length);
-  return rows;
+  try {
+    console.log("📡 Fetching Drama table from Supabase...");
+    
+    const { data, error } = await sbClient
+      .from('Drama')
+      .select('*')
+      .order('id', { ascending: false });
+
+    if (error) {
+      console.error("❌ Supabase error:", error);
+      return [];
+    }
+
+    console.log("✅ Successfully loaded Drama data, count:", data.length);
+    rows = (data || []).map(mapRow);
+
+    // Cache it
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+    } catch {}
+
+    // Load featured IDs
+    try {
+      const featRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/featured.json?t=${Date.now()}`);
+      if (featRes.ok) {
+        const featList = await featRes.json();
+        if (Array.isArray(featList)) {
+          featuredIds = featList.map(Number).filter(n => !isNaN(n) && n > 0);
+        }
+      }
+    } catch {}
+
+    return rows;
+  } catch (err) {
+    console.error("❌ Error fetching dramas:", err);
+    return [];
+  }
 }
 
 function getDramaById(id) {
