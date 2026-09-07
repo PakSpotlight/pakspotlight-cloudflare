@@ -158,20 +158,28 @@ async function loadData() {
   const CACHE_TIME_KEY = "pak_spotlight_dramas_cache_time";
   const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
 
+  console.log("🎬 loadData() starting...");
+  console.log("SUPABASE_URL:", SUPABASE_URL);
+  console.log("SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY ? "✓ defined" : "✗ undefined");
+
   try {
     const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
     const cachedRaw = localStorage.getItem(CACHE_KEY);
     if (cachedRaw && cachedTime && (Date.now() - Number(cachedTime) < CACHE_TTL)) {
       const parsed = JSON.parse(cachedRaw);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        console.log("📦 Using cached data, rows:", parsed.length);
         rows = parsed.map(mapRow);
       }
     }
   } catch {}
 
   try {
+    const dramUrl = `${SUPABASE_URL}/rest/v1/Drama?select=*&order=id.desc`;
+    console.log("📡 Fetching Drama table from:", dramUrl);
+    
     const [dramaRes, featRes] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/Drama?select=*&order=id.desc`, {
+      fetch(dramUrl, {
         headers: {
           apikey: SUPABASE_ANON_KEY
         }
@@ -179,13 +187,19 @@ async function loadData() {
       fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/featured.json?t=${Date.now()}`).catch(() => null)
     ]);
 
+    console.log("📊 Drama response status:", dramaRes.status, dramaRes.statusText);
+
     if (dramaRes.ok) {
       const data = await dramaRes.json();
+      console.log("✅ Successfully loaded Drama data, count:", data.length);
       rows = (data || []).map(mapRow);
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify(data));
         localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
       } catch {}
+    } else {
+      const errText = await dramaRes.text();
+      console.error("❌ Drama fetch failed:", dramaRes.status, errText);
     }
 
     if (featRes && featRes.ok) {
@@ -195,9 +209,10 @@ async function loadData() {
       }
     }
   } catch (err) {
-    console.error("Error fetching dramas from Supabase:", err);
+    console.error("❌ Error fetching dramas from Supabase:", err);
   }
 
+  console.log("🎬 loadData() finished. Rows loaded:", rows.length);
   return rows;
 }
 
