@@ -173,8 +173,7 @@ async function loadData() {
     const [dramaRes, featRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/Drama?select=*&order=id.desc`, {
         headers: {
-          apikey: SUPABASE_ANON_KEY,
-          authorization: `Bearer ${SUPABASE_ANON_KEY}`
+          apikey: SUPABASE_ANON_KEY
         }
       }),
       fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/featured.json?t=${Date.now()}`).catch(() => null)
