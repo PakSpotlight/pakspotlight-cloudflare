@@ -1,10 +1,10 @@
-// Pak Spotlight Worker — Uses OpenRouter AI for auto-fill
+// Pak Spotlight Worker — Uses Google Gemini AI for auto-fill
 
 var SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
 var YOUTUBE_HANDLE = "@pkspotlight";
-var OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-var DEFAULT_AI_MODEL = "deepseek/deepseek-v4-flash-0731";
+var GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
+var DEFAULT_AI_MODEL = "gemini-2.0-flash";
 
 const DEFAULT_CATEGORIES = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
 
@@ -209,9 +209,9 @@ async function identifyVideo(url, env) {
 }
 
 async function aiAutofill(video, env, opts = {}) {
-  var apiKey = env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured in Cloudflare Worker secrets.");
-  var model = env.OPENROUTER_DEFAULT_MODEL || DEFAULT_AI_MODEL;
+  var apiKey = env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured in Cloudflare Worker secrets.");
+  var model = env.GEMINI_MODEL || DEFAULT_AI_MODEL;
   const allowedCategories = await getCategories(env);
   const categoriesListStr = allowedCategories.join(", ");
   const authToken = opts.authToken || "";
@@ -250,8 +250,6 @@ async function aiAutofill(video, env, opts = {}) {
     } catch {}
   }
 
-  // 2. Decide if paid web search is even needed. YouTube descriptions
-  // from this channel often already list writer / director / cast.
   const desc = String(video.description || "");
   const hasCredits = /(writer|written by|تحریر|director|ہدایت|cast|فنکار|producer|پروڈیوسر)/i.test(desc);
   const needsSearch = opts.forceSearch === true
@@ -259,19 +257,16 @@ async function aiAutofill(video, env, opts = {}) {
     : opts.skipSearch === true
       ? false
       : !(hasCredits && desc.length > 250);
-  // Reuse one series-level search for whole playlists.
   const sharedCredits = opts.sharedCredits || null;
-  const useTools = needsSearch && !sharedCredits;
 
   const yearHint = String(video.publishedAt || "").slice(0, 4);
   const epHint = parseEpisodeNumber(video.title, video.description);
 
   var prompt =
     "Pak Spotlight = archive of classic Pakistani PTV dramas.\n" +
-    "Fill EVERY field below with your best answer from the YouTube info"
-    + (useTools ? " + one web search" : "")
-    + (sharedCredits ? ". Credits already known, reuse them" : "")
-    + ". Never leave a field empty when you can infer it. Clean the title (remove EPISODE/PART numbers, | PTV, HD, etc). " +
+    "Fill EVERY field below with your best answer from the YouTube info."
+    + (sharedCredits ? " Credits already known, reuse them." : "")
+    + " Never leave a field empty when you can infer it. Clean the title (remove EPISODE/PART numbers, | PTV, HD, etc). " +
     "Urdu title: always give the Urdu script title (you know these classic dramas). " +
     "Year: use the drama's real release year; if unsure use " + (yearHint || "the upload year") + ". " +
     "Episode: \"" + (epHint || "none seen") + "\". Series name: the drama serial name (same as title for serials, empty for standalone long plays). " +
@@ -284,85 +279,34 @@ async function aiAutofill(video, env, opts = {}) {
     "Uploaded: " + video.publishedAt;
 
   var requestBody = {
-    model: model,
-    messages: [
-      { role: "system", content: "Return ONLY valid JSON with ALL keys filled, best effort. Never add explanations." },
-      { role: "user", content: prompt }
-    ],
-    temperature: 0.2
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.2,
+      responseMimeType: "application/json"
+    }
   };
-  if (useTools) {
-    requestBody.tools = [{ type: "openrouter:web_search", max_results: 3, max_total_results: 3 }];
-  }
 
-  var response = await fetch(OPENROUTER_API_URL, {
+  var response = await fetch(`${GEMINI_API_URL}/${model}:generateContent?key=${apiKey}`, {
     method: "POST",
-    headers: {
-      "Authorization": "Bearer " + apiKey,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://pakspotlight.com",
-      "X-Title": "Pak Spotlight"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(requestBody)
   });
 
   if (!response.ok) {
     var errData = {};
     try { errData = await response.json(); } catch {}
-    throw new Error(errData.error?.message || "OpenRouter API request failed (" + response.status + ").");
+    throw new Error(errData.error?.message || "Gemini API request failed (" + response.status + ").");
   }
 
   var data = await response.json();
-  var out = {};
-  var rawContent = "";
-
-  if (data.choices) {
-    for (var i = data.choices.length - 1; i >= 0; i--) {
-      var choice = data.choices[i];
-      var msg = choice?.message;
-      if (!msg) continue;
-
-      if (msg.content && msg.content.trim()) {
-        rawContent = msg.content;
-        break;
-      }
-
-      if (msg.tool_calls) {
-        for (var tc of msg.tool_calls) {
-          var arg = tc?.function?.arguments;
-          if (arg && arg.trim().startsWith("{")) {
-            rawContent = arg;
-            break;
-          }
-        }
-        if (rawContent) break;
-      }
-    }
-  }
-
-  if (!rawContent && data.choices?.length === 1) {
-    rawContent = data.choices[0]?.message?.content || "";
-  }
+  var rawContent = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
   if (!rawContent) {
-    delete requestBody.tools;
-    var retryResp = await fetch(OPENROUTER_API_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + apiKey,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://pakspotlight.com",
-        "X-Title": "Pak Spotlight"
-      },
-      body: JSON.stringify(requestBody)
-    });
-    if (retryResp.ok) {
-      var retryData = await retryResp.json();
-      rawContent = retryData.choices?.[0]?.message?.content || "";
-    }
+    throw new Error("Gemini returned an empty response. Please try again.");
   }
 
-  rawContent = (rawContent || "").trim();
+  var out = {};
+  rawContent = rawContent.trim();
 
   try {
     out = JSON.parse(rawContent);
@@ -408,7 +352,6 @@ async function aiAutofill(video, env, opts = {}) {
   fields.seo_title = `${fields.title}${fields.year ? ` (${fields.year})` : ""} - PTV Classic | Pak Spotlight`;
   fields.seo_description = `${fields.title} — classic PTV drama${fields.writer ? ` by ${fields.writer}` : ""}${fields.cast ? ` starring ${String(fields.cast).split(",").slice(0, 3).join(",")}` : ""}. Watch on Pak Spotlight.`.slice(0, 160);
 
-  // Save for reuse (episodes / re-runs / playlists). Don't block response.
   if (key && fields.title) {
     const cacheable = { ...fields };
     delete cacheable.thumbnail;
@@ -421,7 +364,7 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  return { video, searched: useTools, fields };
+  return { video, searched: false, fields };
 }
 
 // Set by fetch handler so aiAutofill can background-save the cache.
