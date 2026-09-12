@@ -281,7 +281,7 @@ async function aiAutofill(video, env, opts = {}) {
   // ── PRIMARY: Cloudflare Workers AI ──
   if (env.AI) {
     try {
-      const cfResp = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      const cfResp = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
         messages: [
           { role: "system", content: "Return ONLY valid JSON with ALL keys filled, best effort. Never add explanations." },
           { role: "user", content: prompt }
