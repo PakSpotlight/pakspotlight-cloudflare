@@ -238,8 +238,9 @@
       const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim() && ["serial / series", "series", "serial"].includes(String(currentDrama.type || "").toLowerCase().trim());
       const baseTitle = isSer ? currentDrama.series : currentDrama.title;
       const epNum = isSer && currentEp ? (currentEp.episode ?? currentEpisodes.indexOf(currentEp) + 1) : null;
+      const epTitle = isSer && currentEp ? cleanDramaTitle(currentEp.title) : "";
       const pageTitle = epNum ? `${baseTitle} — Episode ${epNum}` : baseTitle;
-      const displayTitle = epNum ? `${baseTitle} — Episode ${epNum}` : baseTitle;
+      const displayTitle = epNum ? (epTitle && epTitle !== baseTitle ? epTitle : `${baseTitle} — Episode ${epNum}`) : baseTitle;
       document.title = `${pageTitle} — Watch Classic PTV | Pak Spotlight`;
 
       const initialYt = extractYouTubeId(currentEp.youtube);
