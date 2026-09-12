@@ -1,10 +1,8 @@
-// Pak Spotlight Worker — Cloudflare AI (primary) + Gemini (fallback)
+// Pak Spotlight Worker — Cloudflare AI
 
 var SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
 var YOUTUBE_HANDLE = "@pkspotlight";
-var GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-var DEFAULT_AI_MODEL = "gemini-2.0-flash";
 
 const DEFAULT_CATEGORIES = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
 
@@ -37,8 +35,6 @@ async function getFeaturedIds(env) {
 const AI_CACHE_URL = `${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/ai-cache.json`;
 const AI_CACHE_SAVE_URL = `${SUPABASE_URL}/storage/v1/object/thumbnails/config/ai-cache.json`;
 
-// Small persistent cache: drama name -> AI fields. Avoids paying for
-// web search + AI twice for the same drama (re-runs, episodes, playlists).
 let aiCacheMem = null;
 
 async function getAiCache() {
@@ -61,13 +57,12 @@ async function saveAiCacheEntry(key, fields, authToken) {
   try {
     const cache = await getAiCache();
     cache[key] = { ...fields, _cachedAt: new Date().toISOString() };
-    // Cap size so the JSON file stays small.
     const keys = Object.keys(cache);
     if (keys.length > 300) {
       keys.slice(0, keys.length - 300).forEach(k => delete cache[k]);
     }
     aiCacheMem = cache;
-    if (!authToken) return; // memory-only without admin session
+    if (!authToken) return;
     await fetch(AI_CACHE_SAVE_URL, {
       method: "POST",
       headers: {
@@ -81,7 +76,6 @@ async function saveAiCacheEntry(key, fields, authToken) {
   } catch {}
 }
 
-// "Dhoop Kinare Ep 5 | PTV Classic" -> "dhoop kinare"
 function cacheKeyForTitle(title) {
   return String(title || "")
     .toLowerCase()
@@ -94,7 +88,6 @@ function cacheKeyForTitle(title) {
     .slice(0, 80);
 }
 
-// "Dhoop Kinare Episode 5" -> 5, "Part 2" -> 2, else ""
 function parseEpisodeNumber(title, description) {
   const text = `${title || ""} ${description || ""}`;
   const m = text.match(/\b(?:ep|episode|part|qist|his+a?)\s*\.?\s*#?\s*(\d{1,3})\b/i)
@@ -105,7 +98,6 @@ function parseEpisodeNumber(title, description) {
   return n > 0 && n < 500 ? String(n) : "";
 }
 
-// "Dhoop Kinare Ep 5 | PTV" -> "Dhoop Kinare"
 function cleanDramaTitle(title) {
   return String(title || "")
     .replace(/\s*\|\s*.*$/, "")
@@ -192,7 +184,6 @@ async function identifyVideo(url, env) {
   const item = data.items?.[0];
   if (!item) throw new Error("YouTube video not found.");
 
-  // Best available thumbnail
   const thumbs = item.snippet?.thumbnails || {};
   const thumbnail = thumbs.maxres?.url || thumbs.standard?.url || thumbs.high?.url || thumbs.medium?.url || thumbs.default?.url || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 
@@ -216,7 +207,6 @@ async function aiAutofill(video, env, opts = {}) {
   const cleanedTitle = cleanDramaTitle(video.title);
   const key = cacheKeyForTitle(video.title);
 
-  // 1. Free path: same drama filled before -> reuse, no AI cost at all.
   if (!opts.skipCache && key) {
     try {
       const cache = await getAiCache();
@@ -248,12 +238,6 @@ async function aiAutofill(video, env, opts = {}) {
   }
 
   const desc = String(video.description || "");
-  const hasCredits = /(writer|written by|تحریر|director|ہدایت|cast|فنکار|producer|پروڈیوسر)/i.test(desc);
-  const needsSearch = opts.forceSearch === true
-    ? true
-    : opts.skipSearch === true
-      ? false
-      : !(hasCredits && desc.length > 250);
   const sharedCredits = opts.sharedCredits || null;
 
   const yearHint = String(video.publishedAt || "").slice(0, 4);
@@ -278,58 +262,27 @@ async function aiAutofill(video, env, opts = {}) {
   var rawContent = "";
   var aiProvider = "";
 
-  // ── PRIMARY: Cloudflare Workers AI ──
   if (env.AI) {
     try {
-      const cfResp = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
+      const cfResp = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
         messages: [
-          { role: "system", content: "Return ONLY valid JSON with ALL keys filled, best effort. Never add explanations." },
+          { role: "system", content: "You are a JSON-only API. Output ONLY a valid JSON object. No explanation, no markdown, no code fences. Just the raw JSON." },
           { role: "user", content: prompt }
         ],
-        temperature: 0.2,
-        max_tokens: 1024
+        temperature: 0.1,
+        max_tokens: 2048
       });
       rawContent = (cfResp?.result?.response || cfResp?.response || "").trim();
       if (rawContent) aiProvider = "cloudflare";
     } catch (cfErr) {
-      console.warn("Cloudflare AI failed, falling back to Gemini:", cfErr?.message || cfErr);
-    }
-  }
-
-  // ── FALLBACK: Google Gemini ──
-  if (!rawContent) {
-    const geminiKey = env.GEMINI_API_KEY;
-    if (geminiKey) {
-      try {
-        const geminiModel = env.GEMINI_MODEL || DEFAULT_AI_MODEL;
-        const geminiResp = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
-          })
-        });
-        if (!geminiResp.ok) {
-          var geminiErr = {};
-          try { geminiErr = await geminiResp.json(); } catch {}
-          console.warn("Gemini API error:", geminiErr.error?.message || geminiResp.status);
-        } else {
-          var geminiData = await geminiResp.json();
-          rawContent = (geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
-          if (rawContent) aiProvider = "gemini";
-        }
-      } catch (geminiErr) {
-        console.warn("Gemini request failed:", geminiErr?.message || geminiErr);
-      }
+      console.warn("Cloudflare AI failed:", cfErr?.message || cfErr);
     }
   }
 
   if (!rawContent) {
-    throw new Error("Both Cloudflare AI and Gemini failed. Please try again.");
+    throw new Error("AI failed. Please try again.");
   }
 
-  // Parse JSON from response
   var out = {};
   try {
     out = JSON.parse(rawContent);
@@ -348,7 +301,7 @@ async function aiAutofill(video, env, opts = {}) {
     }
 
     if (!out.title) {
-      throw new Error("AI returned unreadable content. Please try again. Raw: " + rawContent.slice(0, 200));
+      throw new Error("AI returned unreadable content. Please try again.");
     }
   }
 
@@ -390,7 +343,6 @@ async function aiAutofill(video, env, opts = {}) {
   return { video, searched: false, provider: aiProvider, fields };
 }
 
-// Set by fetch handler so aiAutofill can background-save the cache.
 const ctxRef = { waitUntil: null };
 
 function playlistIdFromUrl(value) {
@@ -463,15 +415,10 @@ var index_default = {
     const url = new URL(request.url);
     ctxRef.waitUntil = ctx.waitUntil ? ctx.waitUntil.bind(ctx) : null;
 
-    // Pre-flight CORS support
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: CORS_HEADERS
-      });
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
 
-    // Categories: Get Configured Categories
     if (url.pathname === "/api/categories" && request.method === "GET") {
       try {
         const categories = await getCategories(env);
@@ -481,7 +428,6 @@ var index_default = {
       }
     }
 
-    // Categories: Save (Admin authenticated)
     if (url.pathname === "/api/categories" && request.method === "POST") {
       const auth = await requireUser(request);
       if (auth.error) return json({ error: auth.error }, 401);
@@ -495,7 +441,6 @@ var index_default = {
         if (cleaned.length === 0) {
           return json({ error: "At least one valid category name is required." }, 400);
         }
-
         const storageUrl = `${SUPABASE_URL}/storage/v1/object/thumbnails/config/categories.json`;
         const upRes = await fetch(storageUrl, {
           method: "POST",
@@ -507,19 +452,16 @@ var index_default = {
           },
           body: JSON.stringify(cleaned)
         });
-
         if (!upRes.ok) {
           const upErr = await upRes.text();
           return json({ error: `Failed to save categories to storage: ${upErr}` }, 500);
         }
-
         return json({ success: true, categories: cleaned });
       } catch (e) {
         return json({ error: e.message || String(e) }, 500);
       }
     }
 
-    // Featured Hero Slider: Get Configured Featured IDs
     if (url.pathname === "/api/featured" && request.method === "GET") {
       try {
         const featuredIds = await getFeaturedIds(env);
@@ -529,7 +471,6 @@ var index_default = {
       }
     }
 
-    // Featured Hero Slider: Save (Admin authenticated)
     if (url.pathname === "/api/featured" && request.method === "POST") {
       const auth = await requireUser(request);
       if (auth.error) return json({ error: auth.error }, 401);
@@ -540,7 +481,6 @@ var index_default = {
           return json({ error: "featuredIds must be an array of numbers." }, 400);
         }
         const cleaned = incoming.map(x => Number(x)).filter(n => !isNaN(n) && n > 0);
-
         const storageUrl = `${SUPABASE_URL}/storage/v1/object/thumbnails/config/featured.json`;
         const upRes = await fetch(storageUrl, {
           method: "POST",
@@ -552,19 +492,16 @@ var index_default = {
           },
           body: JSON.stringify(cleaned)
         });
-
         if (!upRes.ok) {
           const upErr = await upRes.text();
           return json({ error: `Failed to save featured list to storage: ${upErr}` }, 500);
         }
-
         return json({ success: true, featuredIds: cleaned });
       } catch (e) {
         return json({ error: e.message || String(e) }, 500);
       }
     }
 
-    // 1. YouTube Search
     if (url.pathname === "/api/youtube-search" && request.method === "GET") {
       const auth = await requireUser(request);
       if (auth.error) return json({ error: auth.error }, 401);
@@ -588,7 +525,6 @@ var index_default = {
       }
     }
 
-    // 2. Identify Video from URL
     if (url.pathname === "/api/identify" && request.method === "POST") {
       const auth = await requireUser(request);
       if (auth.error) return json({ error: auth.error }, 401);
@@ -600,7 +536,6 @@ var index_default = {
       }
     }
 
-    // 3. AI Auto-Fill metadata
     if (url.pathname === "/api/ai-autofill" && request.method === "POST") {
       const auth = await requireUser(request);
       if (auth.error) return json({ error: auth.error }, 401);
@@ -617,7 +552,6 @@ var index_default = {
       }
     }
 
-    // 3b. Playlist preview — list videos, no AI cost
     if (url.pathname === "/api/playlist-preview" && request.method === "POST") {
       const auth = await requireUser(request);
       if (auth.error) return json({ error: auth.error }, 401);
@@ -637,7 +571,6 @@ var index_default = {
       }
     }
 
-    // 3c. Playlist import — ONE paid search for the whole series, rest is free.
     if (url.pathname === "/api/playlist-import" && request.method === "POST") {
       const auth = await requireUser(request);
       if (auth.error) return json({ error: auth.error }, 401);
@@ -658,8 +591,6 @@ var index_default = {
         const type = allowedCategories.find(c => c.toLowerCase() === category.toLowerCase())
           || allowedCategories[0] || "Long Play";
 
-        // Credits the admin reviewed in the preview form win. Anything
-        // left blank falls back to one AI read of the first video.
         const given = body.credits && typeof body.credits === "object" ? body.credits : {};
         const needsAi = !String(given.writer || "").trim()
           || !String(given.director || "").trim()
@@ -667,8 +598,6 @@ var index_default = {
           || !String(given.year || "").trim()
           || !String(given.urdu_title || "").trim();
 
-        // One AI call with search for episode 1 -> shared credits for all.
-        // Skipped entirely when the admin already supplied full credits.
         let shared = null;
         if (needsAi) {
           try {
@@ -697,7 +626,6 @@ var index_default = {
         for (let i = 0; i < items.length; i++) {
           const it = items[i];
           try {
-            // Skip videos already in the archive (same YouTube URL).
             const dupCheck = await supaRest(`Drama?select=id&youtube_url=eq.${encodeURIComponent(it.url)}`, auth.token);
             const dupData = await dupCheck.json().catch(() => []);
             if (Array.isArray(dupData) && dupData.length > 0) {
@@ -746,7 +674,6 @@ var index_default = {
       }
     }
 
-    // 4. Proxy YouTube Thumbnail to bypass browser CORS for canvas/blob upload
     if (url.pathname === "/api/proxy-thumbnail" && request.method === "GET") {
       try {
         let imageUrl = url.searchParams.get("url");
@@ -755,35 +682,25 @@ var index_default = {
           imageUrl = `https://i.ytimg.com/vi/${encodeURIComponent(id)}/maxresdefault.jpg`;
         }
         if (!imageUrl) return json({ error: "Missing url or id parameter." }, 400);
-
         let imgRes = await fetch(imageUrl);
-        // Fallback to hqdefault if maxresdefault is 404 (common on older YouTube videos)
         if (!imgRes.ok && imageUrl.includes("maxresdefault.jpg")) {
           const fallbackUrl = imageUrl.replace("maxresdefault.jpg", "hqdefault.jpg");
           imgRes = await fetch(fallbackUrl);
         }
-
         if (!imgRes.ok) {
           return json({ error: `Failed to fetch image from source: ${imgRes.status}` }, 502);
         }
-
         const contentType = imgRes.headers.get("content-type") || "image/jpeg";
         const bodyBuffer = await imgRes.arrayBuffer();
-
         return new Response(bodyBuffer, {
           status: 200,
-          headers: {
-            "content-type": contentType,
-            "cache-control": "public, max-age=86400",
-            ...CORS_HEADERS
-          }
+          headers: { "content-type": contentType, "cache-control": "public, max-age=86400", ...CORS_HEADERS }
         });
       } catch (e) {
         return json({ error: e.message || String(e) }, 500);
       }
     }
 
-    // 5. Store Thumbnail directly to Supabase Storage Bucket
     if (url.pathname === "/api/store-thumbnail" && request.method === "POST") {
       const auth = await requireUser(request);
       if (auth.error) return json({ error: auth.error }, 401);
@@ -793,8 +710,6 @@ var index_default = {
         if (!dramaId || !imageUrl) {
           return json({ error: "dramaId and imageUrl are required." }, 400);
         }
-
-        // Fetch the image binary
         let imgRes = await fetch(imageUrl);
         if (!imgRes.ok && imageUrl.includes("maxresdefault.jpg")) {
           imgRes = await fetch(imageUrl.replace("maxresdefault.jpg", "hqdefault.jpg"));
@@ -802,11 +717,8 @@ var index_default = {
         if (!imgRes.ok) {
           return json({ error: "Failed to download image from YouTube." }, 502);
         }
-
         const contentType = imgRes.headers.get("content-type") || "image/jpeg";
         const imgBuffer = await imgRes.arrayBuffer();
-
-        // Upload to Supabase Storage 'thumbnails' bucket
         const storagePath = `drama/${dramaId}.jpg`;
         const storageUrl = `${SUPABASE_URL}/storage/v1/object/thumbnails/${storagePath}`;
         const upRes = await fetch(storageUrl, {
@@ -819,15 +731,11 @@ var index_default = {
           },
           body: imgBuffer
         });
-
         if (!upRes.ok) {
           const upErr = await upRes.text();
           return json({ error: `Supabase Storage upload failed: ${upErr}` }, 500);
         }
-
         const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/thumbnails/${storagePath}?t=${Date.now()}`;
-
-        // Update Drama record with the public thumbnail URL
         const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/Drama?id=eq.${dramaId}`, {
           method: "PATCH",
           headers: {
@@ -837,33 +745,28 @@ var index_default = {
           },
           body: JSON.stringify({ thumbnail_url: publicUrl })
         });
-
         if (!patchRes.ok) {
           const patchErr = await patchRes.text();
           return json({ error: `Storage uploaded, but database update failed: ${patchErr}`, publicUrl }, 500);
         }
-
         return json({ success: true, publicUrl });
       } catch (e) {
         return json({ error: e.message || String(e) }, 500);
       }
     }
 
-    // Rewrite /watch to /watch.html so clean watch URLs work directly
     if (url.pathname === "/watch") {
       const watchUrl = new URL(request.url);
       watchUrl.pathname = "/watch.html";
       return env.ASSETS.fetch(new Request(watchUrl, request));
     }
 
-    // Rewrite /browse to /browse.html
     if (url.pathname === "/browse") {
       const browseUrl = new URL(request.url);
       browseUrl.pathname = "/browse.html";
       return env.ASSETS.fetch(new Request(browseUrl, request));
     }
 
-    // Static assets fallback
     return env.ASSETS.fetch(request);
   }
 };
