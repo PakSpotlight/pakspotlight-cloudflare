@@ -235,7 +235,7 @@
         return;
       }
 
-      const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim();
+      const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim() && ["serial / series", "series", "serial"].includes(String(currentDrama.type || "").toLowerCase().trim());
       const baseTitle = isSer ? currentDrama.series : currentDrama.title;
       const epNum = isSer && currentEp ? (currentEp.episode ?? currentEpisodes.indexOf(currentEp) + 1) : null;
       const pageTitle = epNum ? `${baseTitle} — Episode ${epNum}` : baseTitle;
