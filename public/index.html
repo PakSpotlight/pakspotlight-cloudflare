@@ -283,27 +283,14 @@
             <div class="hero-backdrop" style="background-image: url('${esc(item.image || '/logo.png')}')"></div>
             <div class="hero-vignette"></div>
             <div class="hero-foreground">
-              <div class="hero-text-card">
-                <div class="hero-tag">★ PTV Spotlight</div>
-                <div class="hero-title-row">
-                  <h1 class="hero-title">${esc(fTitle)}</h1>
-                  ${item.urdu ? `<span class="hero-urdu">${esc(item.urdu)}</span>` : ''}
-                </div>
-                <div class="hero-meta">
-                  <span class="m-badge gold">${esc(item.type || 'Drama')}</span>
-                  ${item.year ? `<span class="m-badge">${esc(item.year)}</span>` : ''}
-                  ${isSer && item.episode ? `<span class="m-badge">Ep ${item.episode}</span>` : ''}
-                  ${item.writer ? `<span class="hero-meta-credit">Writer: ${esc(item.writer)}</span>` : ''}
-                </div>
-                <p class="hero-desc">${esc(cleanDescription(item.description))}</p>
+                <h1 class="hero-title">${esc(fTitle)}</h1>
+                ${item.urdu ? `<div class="hero-urdu">${esc(item.urdu)}</div>` : ''}
                 <div class="hero-actions">
                   <a href="/watch.html?id=${heroWatchId}" class="hero-btn-play">▶ Play</a>
                   <button class="hero-btn-mylist" onclick="const added=toggleMyList(${item.id}); this.querySelector('span').textContent=added?'✓ In List':'＋ My List';">
                     <span>${isInMyList(item.id) ? '✓ In List' : '＋ My List'}</span>
                   </button>
-                  <a href="/watch.html?id=${heroWatchId}" class="hero-btn-info">ⓘ Details</a>
                 </div>
-              </div>
             </div>
           </div>
         `;
