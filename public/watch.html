@@ -207,6 +207,18 @@
       if (ytLink && currentEp.youtube) {
         ytLink.href = currentEp.youtube;
       }
+      // Update titles
+      const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim() && ["serial / series", "series", "serial"].includes(String(currentDrama.type || "").toLowerCase().trim());
+      if (isSer && currentEp) {
+        const epNum = currentEp.episode ?? currentEpisodes.indexOf(currentEp) + 1;
+        const epTitle = cleanDramaTitle(currentEp.title);
+        const newTitle = epTitle && epTitle !== currentDrama.series ? epTitle : `${currentDrama.series} — Episode ${epNum}`;
+        const mobileTitle = $("mobileWatchTitle");
+        const desktopTitle = $("desktopWatchTitle");
+        if (mobileTitle) mobileTitle.textContent = newTitle;
+        if (desktopTitle) desktopTitle.textContent = newTitle;
+        document.title = `${newTitle} — Watch Classic PTV | Pak Spotlight`;
+      }
       // Update active rows
       document.querySelectorAll(".m-episode-row").forEach(r => {
         const isThis = r.getAttribute("data-epid") === String(epId);
@@ -293,7 +305,7 @@
              ============================================================ -->
         <div class="m-watch-meta-block mobile-only">
           <div class="m-watch-title-group">
-            <h1 class="m-watch-title">${esc(displayTitle)}</h1>
+            <h1 class="m-watch-title" id="mobileWatchTitle">${esc(displayTitle)}</h1>
             ${currentDrama.urdu ? `<div class="m-watch-urdu">${esc(currentDrama.urdu)}</div>` : ''}
           </div>
 
@@ -382,7 +394,7 @@
             </div>
 
             <div>
-              <h1 class="watch-main-title">${esc(displayTitle)}</h1>
+              <h1 class="watch-main-title" id="desktopWatchTitle">${esc(displayTitle)}</h1>
               ${currentDrama.urdu ? `<div class="watch-urdu-title">${esc(currentDrama.urdu)}</div>` : ''}
             </div>
 
