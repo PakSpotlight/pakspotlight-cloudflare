@@ -236,7 +236,10 @@
       }
 
       const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim();
-      const pageTitle = isSer ? currentDrama.series : currentDrama.title;
+      const baseTitle = isSer ? currentDrama.series : currentDrama.title;
+      const epNum = isSer && currentEp ? (currentEp.episode ?? currentEpisodes.indexOf(currentEp) + 1) : null;
+      const pageTitle = epNum ? `${baseTitle} — Episode ${epNum}` : baseTitle;
+      const displayTitle = epNum ? `${baseTitle} — Episode ${epNum}` : baseTitle;
       document.title = `${pageTitle} — Watch Classic PTV | Pak Spotlight`;
 
       const initialYt = extractYouTubeId(currentEp.youtube);
@@ -289,7 +292,7 @@
              ============================================================ -->
         <div class="m-watch-meta-block mobile-only">
           <div class="m-watch-title-group">
-            <h1 class="m-watch-title">${esc(pageTitle)}</h1>
+            <h1 class="m-watch-title">${esc(displayTitle)}</h1>
             ${currentDrama.urdu ? `<div class="m-watch-urdu">${esc(currentDrama.urdu)}</div>` : ''}
           </div>
 
@@ -300,10 +303,12 @@
             <span class="m-badge">PTV Classic</span>
           </div>
 
-          <!-- 5 Gold Stars Rating (Screen 2) -->
-          <div class="m-star-rating">
-            <span class="m-stars">★★★★★</span>
-            <span class="m-rating-text">PTV Golden Era Masterpiece</span>
+          <!-- Credits Section -->
+          <div class="m-watch-credits">
+            ${currentDrama.writer ? `<div class="m-credit-row"><span class="m-credit-label">Writer</span><span class="m-credit-value">${esc(currentDrama.writer)}</span></div>` : ''}
+            ${currentDrama.director ? `<div class="m-credit-row"><span class="m-credit-label">Director</span><span class="m-credit-value">${esc(currentDrama.director)}</span></div>` : ''}
+            ${currentDrama.cast ? `<div class="m-credit-row"><span class="m-credit-label">Cast</span><span class="m-credit-value">${esc(currentDrama.cast)}</span></div>` : ''}
+            ${currentDrama.producer ? `<div class="m-credit-row"><span class="m-credit-label">Producer</span><span class="m-credit-value">${esc(currentDrama.producer)}</span></div>` : ''}
           </div>
 
           <!-- 3-Action Cluster: + My List | Big Round Play | Share -->
@@ -376,7 +381,7 @@
             </div>
 
             <div>
-              <h1 class="watch-main-title">${esc(pageTitle)}</h1>
+              <h1 class="watch-main-title">${esc(displayTitle)}</h1>
               ${currentDrama.urdu ? `<div class="watch-urdu-title">${esc(currentDrama.urdu)}</div>` : ''}
             </div>
 
