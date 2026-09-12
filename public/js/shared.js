@@ -226,11 +226,16 @@ function getDramaById(id) {
 }
 
 function heroPick() {
+  const picks = [];
   for (const id of featuredIds) {
     const d = rows.find(r => r.id === id && r.image && r.title);
-    if (d) return d;
+    if (d) picks.push(d);
   }
-  return rows.find(r => r.image && r.title && r.description) || rows[0] || {};
+  if (picks.length === 0) {
+    const fallback = rows.find(r => r.image && r.title && r.description) || rows[0];
+    if (fallback) picks.push(fallback);
+  }
+  return picks;
 }
 
 function scrollCarousel(rowId, direction) {

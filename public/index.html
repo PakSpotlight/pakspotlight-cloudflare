@@ -246,13 +246,10 @@
         return;
       }
 
-      const featured = heroPick();
-      const isSer = isSeries(featured) && !!featured.series;
-      const fTitle = isSer ? featured.series : featured.title;
-      const heroWatchId = seriesStartId(featured) || featured.id;
+      const heroItems = heroPick();
       const allGroups = groupDramas(rows);
 
-      // Newest titles first (series keyed by their first episode's id)
+      // Newest titles first
       const recentGroups = [...allGroups].sort((a, b) => b[0].id - a[0].id);
       const recentTop = recentGroups.slice(0, 20);
 
@@ -276,40 +273,58 @@
         return y >= 1970 && y <= 1999;
       });
 
-      app.innerHTML = `
-        <!-- Cinematic Netflix Hero Billboard -->
-        <section class="hero-billboard">
-          <div class="hero-backdrop" style="background-image: url('${esc(featured.image || '/logo.png')}')"></div>
-          <div class="hero-vignette"></div>
-          <div class="hero-foreground">
-            <div class="hero-tag">★ PTV Spotlight</div>
-            <div class="hero-title-row">
-              <h1 class="hero-title">${esc(fTitle)}</h1>
-              ${featured.urdu ? `<span class="hero-urdu">${esc(featured.urdu)}</span>` : ''}
-            </div>
-            <div class="hero-meta">
-              <span class="m-badge gold">${esc(featured.type || 'Drama')}</span>
-              ${featured.year ? `<span class="m-badge">${esc(featured.year)}</span>` : ''}
-              ${isSer && featured.episode ? `<span class="m-badge">Episode ${featured.episode}</span>` : ''}
-              ${featured.writer ? `<span class="hero-meta-credit">Writer: ${esc(featured.writer)}</span>` : ''}
-            </div>
-            <p class="hero-desc">${esc(cleanDescription(featured.description))}</p>
-            <div class="hero-actions">
-              <a href="/watch.html?id=${heroWatchId}" class="hero-btn-play">
-                ▶ Play
-              </a>
-              <button class="hero-btn-mylist" id="heroMyListBtn" onclick="const added=toggleMyList(${featured.id}); $('heroMyListIcon').textContent=added?'✓':'＋'; $('heroMyListLabel').textContent=added?'In List':'My List';">
-                <span id="heroMyListIcon">${isInMyList(featured.id) ? '✓' : '＋'}</span>
-                <span id="heroMyListLabel">${isInMyList(featured.id) ? 'In List' : 'My List'}</span>
-              </button>
-              <a href="/watch.html?id=${heroWatchId}" class="hero-btn-info">
-                ⓘ More Details
-              </a>
+      // Build hero slides HTML
+      const heroSlidesHtml = heroItems.map((item, i) => {
+        const isSer = isSeries(item) && !!item.series;
+        const fTitle = isSer ? item.series : item.title;
+        const heroWatchId = seriesStartId(item) || item.id;
+        return `
+          <div class="hero-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
+            <div class="hero-slide-content">
+              <div class="hero-backdrop" style="background-image: url('${esc(item.image || '/logo.png')}')"></div>
+              <div class="hero-vignette"></div>
+              <div class="hero-foreground">
+                <div class="hero-tag">★ PTV Spotlight</div>
+                <div class="hero-title-row">
+                  <h1 class="hero-title">${esc(fTitle)}</h1>
+                  ${item.urdu ? `<span class="hero-urdu">${esc(item.urdu)}</span>` : ''}
+                </div>
+                <div class="hero-meta">
+                  <span class="m-badge gold">${esc(item.type || 'Drama')}</span>
+                  ${item.year ? `<span class="m-badge">${esc(item.year)}</span>` : ''}
+                  ${isSer && item.episode ? `<span class="m-badge">Episode ${item.episode}</span>` : ''}
+                  ${item.writer ? `<span class="hero-meta-credit">Writer: ${esc(item.writer)}</span>` : ''}
+                </div>
+                <p class="hero-desc">${esc(cleanDescription(item.description))}</p>
+                <div class="hero-actions">
+                  <a href="/watch.html?id=${heroWatchId}" class="hero-btn-play">▶ Play</a>
+                  <button class="hero-btn-mylist" onclick="const added=toggleMyList(${item.id}); this.querySelector('span').textContent=added?'✓ In List':'＋ My List';">
+                    <span>${isInMyList(item.id) ? '✓ In List' : '＋ My List'}</span>
+                  </button>
+                  <a href="/watch.html?id=${heroWatchId}" class="hero-btn-info">ⓘ More Details</a>
+                </div>
+              </div>
             </div>
           </div>
+        `;
+      }).join("");
+
+      // Build dots
+      const heroDotsHtml = heroItems.length > 1
+        ? `<div class="hero-dots">${heroItems.map((_, i) => `<button class="hero-dot ${i === 0 ? 'active' : ''}" onclick="goToHeroSlide(${i})" aria-label="Slide ${i + 1}"></button>`).join("")}</div>`
+        : "";
+
+      const heroArrowsHtml = heroItems.length > 1
+        ? `<button class="hero-arrow left" onclick="heroSlideDir(-1)">‹</button><button class="hero-arrow right" onclick="heroSlideDir(1)">›</button>`
+        : "";
+
+      app.innerHTML = `
+        <section class="hero-billboard" id="heroBillboard">
+          <div class="hero-slides" id="heroSlides">${heroSlidesHtml}</div>
+          ${heroDotsHtml}
+          ${heroArrowsHtml}
         </section>
 
-        <!-- Horizontal Category Carousels (Pure artwork poster cards on mobile) -->
         <div class="rows-container">
           ${recentTop.length > 5 ? renderCarouselRow("Recently Added", "recent", recentTop, "/browse.html") : ''}
           ${categoryRowsHtml}
@@ -317,6 +332,45 @@
           ${renderCarouselRow("Complete Masterpiece Collection", "all", allGroups, "/browse.html")}
         </div>
       `;
+
+      // Auto-rotate hero slides
+      if (heroItems.length > 1) {
+        startHeroSlider();
+      }
+    }
+
+    // Hero Slider Controls
+    let heroIndex = 0;
+    let heroTimer = null;
+    let heroTotal = 0;
+
+    function startHeroSlider() {
+      const slides = document.querySelectorAll(".hero-slide");
+      heroTotal = slides.length;
+      heroIndex = 0;
+      clearInterval(heroTimer);
+      heroTimer = setInterval(() => heroSlideDir(1), 6000);
+    }
+
+    function goToHeroSlide(idx) {
+      heroIndex = idx;
+      updateHeroSlide();
+      clearInterval(heroTimer);
+      heroTimer = setInterval(() => heroSlideDir(1), 6000);
+    }
+
+    function heroSlideDir(dir) {
+      heroIndex = (heroIndex + dir + heroTotal) % heroTotal;
+      updateHeroSlide();
+    }
+
+    function updateHeroSlide() {
+      document.querySelectorAll(".hero-slide").forEach((s, i) => {
+        s.classList.toggle("active", i === heroIndex);
+      });
+      document.querySelectorAll(".hero-dot").forEach((d, i) => {
+        d.classList.toggle("active", i === heroIndex);
+      });
     }
 
     // Initialize Home Page

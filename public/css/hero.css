@@ -7,11 +7,37 @@
   width: 100%;
   min-height: 520px;
   max-height: 76vh;
+  overflow: hidden;
+  background: radial-gradient(circle at top right, rgba(20, 45, 30, 0.6), transparent 70%), var(--bg-deep, #060b08);
+}
+
+.hero-slides {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hero-slide-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: flex-end;
   padding: 100px 5% 44px;
-  overflow: hidden;
-  background: radial-gradient(circle at top right, rgba(20, 45, 30, 0.6), transparent 70%), var(--bg-deep, #060b08);
 }
 
 .hero-backdrop {
@@ -22,6 +48,15 @@
   background-repeat: no-repeat;
   z-index: 1;
   transition: transform 0.4s ease;
+}
+
+.hero-slide.active .hero-backdrop {
+  animation: heroZoom 8s ease-in-out forwards;
+}
+
+@keyframes heroZoom {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
 }
 
 .hero-vignette {
@@ -183,6 +218,73 @@
   transform: translateY(-2px);
 }
 
+/* Hero Slider Dots */
+.hero-dots {
+  position: absolute;
+  bottom: 18px;
+  right: 5%;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.hero-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.hero-dot.active {
+  background: var(--gold, #f5c542);
+  border-color: var(--gold, #f5c542);
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(245, 197, 66, 0.5);
+}
+
+.hero-dot:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* Hero Slider Arrows */
+.hero-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s, background 0.3s;
+  backdrop-filter: blur(8px);
+}
+
+.hero-billboard:hover .hero-arrow {
+  opacity: 1;
+}
+
+.hero-arrow:hover {
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--gold, #f5c542);
+}
+
+.hero-arrow.left { left: 2%; }
+.hero-arrow.right { right: 2%; }
+
 /* ============================================================
    MOBILE RESPONSIVE HERO (SCREEN <= 850px)
    ============================================================ */
@@ -190,6 +292,13 @@
   .hero-billboard {
     min-height: 320px;
     max-height: 420px;
+  }
+
+  .hero-slides {
+    min-height: 320px;
+  }
+
+  .hero-slide-content {
     padding: 24px 16px 20px;
     align-items: flex-end;
   }
@@ -237,5 +346,14 @@
   .hero-btn-mylist, .hero-btn-info {
     padding: 8px 12px;
     font-size: 12px;
+  }
+
+  .hero-dots {
+    bottom: 10px;
+    right: 16px;
+  }
+
+  .hero-arrow {
+    display: none !important;
   }
 }
