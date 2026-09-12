@@ -7,6 +7,9 @@
     "directory": "public",
     "binding": "ASSETS"
   },
+  "ai": {
+    "binding": "AI"
+  },
   "vars": {
     "GEMINI_MODEL": "gemini-2.0-flash"
   }

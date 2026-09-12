@@ -1,4 +1,4 @@
-// Pak Spotlight Worker — Uses Google Gemini AI for auto-fill
+// Pak Spotlight Worker — Cloudflare AI (primary) + Gemini (fallback)
 
 var SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
@@ -209,9 +209,6 @@ async function identifyVideo(url, env) {
 }
 
 async function aiAutofill(video, env, opts = {}) {
-  var apiKey = env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured in Cloudflare Worker secrets.");
-  var model = env.GEMINI_MODEL || DEFAULT_AI_MODEL;
   const allowedCategories = await getCategories(env);
   const categoriesListStr = allowedCategories.join(", ");
   const authToken = opts.authToken || "";
@@ -278,36 +275,62 @@ async function aiAutofill(video, env, opts = {}) {
     "YouTube description:\n" + desc.slice(0, 4000) + "\n" +
     "Uploaded: " + video.publishedAt;
 
-  var requestBody = {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: {
-      temperature: 0.2,
-      responseMimeType: "application/json"
+  var rawContent = "";
+  var aiProvider = "";
+
+  // ── PRIMARY: Cloudflare Workers AI ──
+  if (env.AI) {
+    try {
+      const cfResp = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+        messages: [
+          { role: "system", content: "Return ONLY valid JSON with ALL keys filled, best effort. Never add explanations." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.2,
+        max_tokens: 1024
+      });
+      rawContent = (cfResp?.result?.response || cfResp?.response || "").trim();
+      if (rawContent) aiProvider = "cloudflare";
+    } catch (cfErr) {
+      console.warn("Cloudflare AI failed, falling back to Gemini:", cfErr?.message || cfErr);
     }
-  };
-
-  var response = await fetch(`${GEMINI_API_URL}/${model}:generateContent?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(requestBody)
-  });
-
-  if (!response.ok) {
-    var errData = {};
-    try { errData = await response.json(); } catch {}
-    throw new Error(errData.error?.message || "Gemini API request failed (" + response.status + ").");
   }
 
-  var data = await response.json();
-  var rawContent = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  // ── FALLBACK: Google Gemini ──
+  if (!rawContent) {
+    const geminiKey = env.GEMINI_API_KEY;
+    if (geminiKey) {
+      try {
+        const geminiModel = env.GEMINI_MODEL || DEFAULT_AI_MODEL;
+        const geminiResp = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+          })
+        });
+        if (!geminiResp.ok) {
+          var geminiErr = {};
+          try { geminiErr = await geminiResp.json(); } catch {}
+          console.warn("Gemini API error:", geminiErr.error?.message || geminiResp.status);
+        } else {
+          var geminiData = await geminiResp.json();
+          rawContent = (geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
+          if (rawContent) aiProvider = "gemini";
+        }
+      } catch (geminiErr) {
+        console.warn("Gemini request failed:", geminiErr?.message || geminiErr);
+      }
+    }
+  }
 
   if (!rawContent) {
-    throw new Error("Gemini returned an empty response. Please try again.");
+    throw new Error("Both Cloudflare AI and Gemini failed. Please try again.");
   }
 
+  // Parse JSON from response
   var out = {};
-  rawContent = rawContent.trim();
-
   try {
     out = JSON.parse(rawContent);
   } catch (e) {
@@ -364,7 +387,7 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  return { video, searched: false, fields };
+  return { video, searched: false, provider: aiProvider, fields };
 }
 
 // Set by fetch handler so aiAutofill can background-save the cache.
