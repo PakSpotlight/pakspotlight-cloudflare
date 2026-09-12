@@ -280,10 +280,10 @@
         const heroWatchId = seriesStartId(item) || item.id;
         return `
           <div class="hero-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
-            <div class="hero-slide-content">
-              <div class="hero-backdrop" style="background-image: url('${esc(item.image || '/logo.png')}')"></div>
-              <div class="hero-vignette"></div>
-              <div class="hero-foreground">
+            <div class="hero-backdrop" style="background-image: url('${esc(item.image || '/logo.png')}')"></div>
+            <div class="hero-vignette"></div>
+            <div class="hero-foreground">
+              <div class="hero-text-card">
                 <div class="hero-tag">★ PTV Spotlight</div>
                 <div class="hero-title-row">
                   <h1 class="hero-title">${esc(fTitle)}</h1>
@@ -292,7 +292,7 @@
                 <div class="hero-meta">
                   <span class="m-badge gold">${esc(item.type || 'Drama')}</span>
                   ${item.year ? `<span class="m-badge">${esc(item.year)}</span>` : ''}
-                  ${isSer && item.episode ? `<span class="m-badge">Episode ${item.episode}</span>` : ''}
+                  ${isSer && item.episode ? `<span class="m-badge">Ep ${item.episode}</span>` : ''}
                   ${item.writer ? `<span class="hero-meta-credit">Writer: ${esc(item.writer)}</span>` : ''}
                 </div>
                 <p class="hero-desc">${esc(cleanDescription(item.description))}</p>
@@ -301,7 +301,7 @@
                   <button class="hero-btn-mylist" onclick="const added=toggleMyList(${item.id}); this.querySelector('span').textContent=added?'✓ In List':'＋ My List';">
                     <span>${isInMyList(item.id) ? '✓ In List' : '＋ My List'}</span>
                   </button>
-                  <a href="/watch.html?id=${heroWatchId}" class="hero-btn-info">ⓘ More Details</a>
+                  <a href="/watch.html?id=${heroWatchId}" class="hero-btn-info">ⓘ Details</a>
                 </div>
               </div>
             </div>
@@ -343,23 +343,53 @@
     let heroIndex = 0;
     let heroTimer = null;
     let heroTotal = 0;
+    let heroPaused = false;
 
     function startHeroSlider() {
       const slides = document.querySelectorAll(".hero-slide");
       heroTotal = slides.length;
       heroIndex = 0;
       clearInterval(heroTimer);
-      heroTimer = setInterval(() => heroSlideDir(1), 6000);
+      heroTimer = setInterval(() => {
+        if (!heroPaused) heroSlideDir(1);
+      }, 5000);
+
+      // Pause on hover (desktop)
+      const bb = $("heroBillboard");
+      if (bb) {
+        bb.addEventListener("mouseenter", () => { heroPaused = true; });
+        bb.addEventListener("mouseleave", () => { heroPaused = false; });
+      }
+
+      // Touch swipe
+      if (bb) {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        bb.addEventListener("touchstart", e => {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        bb.addEventListener("touchend", e => {
+          const dx = e.changedTouches[0].clientX - touchStartX;
+          const dy = e.changedTouches[0].clientY - touchStartY;
+          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+            heroSlideDir(dx < 0 ? 1 : -1);
+          }
+        }, { passive: true });
+      }
     }
 
     function goToHeroSlide(idx) {
       heroIndex = idx;
       updateHeroSlide();
       clearInterval(heroTimer);
-      heroTimer = setInterval(() => heroSlideDir(1), 6000);
+      heroTimer = setInterval(() => {
+        if (!heroPaused) heroSlideDir(1);
+      }, 5000);
     }
 
     function heroSlideDir(dir) {
+      if (heroTotal <= 1) return;
       heroIndex = (heroIndex + dir + heroTotal) % heroTotal;
       updateHeroSlide();
     }
