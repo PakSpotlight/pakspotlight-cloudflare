@@ -4,7 +4,7 @@ var SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
 var YOUTUBE_HANDLE = "@pkspotlight";
 var GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-var DEFAULT_AI_MODEL = "gemini-2.5-flash";
+var DEFAULT_AI_MODEL = "gemini-3.5-flash";
 
 const DEFAULT_CATEGORIES = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
 
