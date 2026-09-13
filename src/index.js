@@ -117,6 +117,8 @@ function cleanDramaTitle(title) {
     .trim();
 }
 
+function escHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, OPTIONS",
@@ -849,11 +851,118 @@ var index_default = {
       }
     }
 
+    // ── SEO: Dynamic Sitemap ──
+    if (url.pathname === "/sitemap.xml") {
+      try {
+        const dramas = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=id,title,year,type,series_name,episode_number&order=id.desc`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
+        const dramaList = await dramas.json().catch(() => []);
+        const base = "https://pak-spotlight.pakifun3.workers.dev";
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+        xml += `  <url><loc>${base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n`;
+        xml += `  <url><loc>${base}/browse</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n`;
+        for (const d of (Array.isArray(dramaList) ? dramaList : [])) {
+          xml += `  <url><loc>${base}/watch?id=${d.id}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n`;
+        }
+        xml += '</urlset>';
+        return new Response(xml, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
+      } catch {
+        return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://pak-spotlight.pakifun3.workers.dev/</loc></url></urlset>', { headers: { "content-type": "application/xml; charset=utf-8" } });
+      }
+    }
+
+    // ── SEO: Bot detection ──
+    const ua = request.headers.get("user-agent") || "";
+    const isBot = /googlebot|bingbot|yandex|baidu|duckduckbot|slurp|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot/i.test(ua);
+
     // Rewrite /watch to /watch.html so clean watch URLs work directly
     if (url.pathname === "/watch") {
       const watchUrl = new URL(request.url);
       watchUrl.pathname = "/watch.html";
-      return env.ASSETS.fetch(new Request(watchUrl, request));
+      const resp = await env.ASSETS.fetch(new Request(watchUrl, request));
+      if (!isBot) return resp;
+      // SSR: inject drama meta tags for bots
+      try {
+        const dramaId = url.searchParams.get("id");
+        if (dramaId) {
+          const dr = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=*&id=eq.${dramaId}`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
+          const dramaArr = await dr.json().catch(() => []);
+          const d = dramaArr?.[0];
+          if (d) {
+            let html = await resp.text();
+            const title = `${d.title || "Classic PTV Drama"}${d.year ? ` (${d.year})` : ""} — Watch on Pak Spotlight`;
+            const desc = (d.description || `${d.title} — classic PTV drama on Pak Spotlight. ${d.writer ? "Written by " + d.writer + "." : ""} ${d.cast ? "Starring " + d.cast + "." : ""}`).slice(0, 160);
+            const thumb = d.thumbnail_url || "https://pak-spotlight.pakifun3.workers.dev/logo.png";
+            const url_ = `${url.origin}/watch?id=${dramaId}`;
+            const metaTags =
+              `<title>${escHtml(title)}</title>\n` +
+              `<meta name="description" content="${escHtml(desc)}">\n` +
+              `<link rel="canonical" href="${escHtml(url_)}">\n` +
+              `<meta property="og:type" content="video.other">\n` +
+              `<meta property="og:title" content="${escHtml(title)}">\n` +
+              `<meta property="og:description" content="${escHtml(desc)}">\n` +
+              `<meta property="og:image" content="${escHtml(thumb)}">\n` +
+              `<meta property="og:url" content="${escHtml(url_)}">\n` +
+              `<meta property="og:site_name" content="Pak Spotlight">\n` +
+              `<meta name="twitter:card" content="summary_large_image">\n` +
+              `<meta name="twitter:title" content="${escHtml(title)}">\n` +
+              `<meta name="twitter:description" content="${escHtml(desc)}">\n` +
+              `<meta name="twitter:image" content="${escHtml(thumb)}">\n` +
+              `<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoObject","name":"${escHtml(d.title)}","description":"${escHtml(desc)}","thumbnailUrl":"${escHtml(thumb)}","uploadDate":"${d.year || ""}","genre":"Pakistani Classic Drama"}</script>\n`;
+            html = html.replace("</head>", metaTags + "</head>");
+            return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
+          }
+        }
+      } catch {}
+      return resp;
+    }
+
+    // SSR homepage for bots
+    if (url.pathname === "/") {
+      const resp = await env.ASSETS.fetch(request);
+      if (!isBot) return resp;
+      try {
+        const dr = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=id,title,urdu_title,year,type,writer,director,cast,description,thumbnail_url&order=id.desc&limit=50`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
+        const dramaArr = await dr.json().catch(() => []);
+        const dramas = Array.isArray(dramaArr) ? dramaArr : [];
+        if (dramas.length > 0) {
+          let html = await resp.text();
+          let dramaListHtml = '<div style="padding:80px 20px 40px;max-width:1200px;margin:0 auto">';
+          dramaListHtml += '<h1 style="color:#f5f5f5;font-size:28px;margin-bottom:8px">Pak Spotlight — Classic PTV Drama Archive</h1>';
+          dramaListHtml += '<p style="color:#999;margin-bottom:30px">Preserving the Golden Age of Pakistani Television</p>';
+          for (const d of dramas) {
+            const desc = (d.description || "").slice(0, 120);
+            dramaListHtml += `<article style="margin-bottom:20px;padding:16px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid rgba(255,255,255,0.08)">`;
+            dramaListHtml += `<h2 style="color:#fff;font-size:18px;margin:0 0 4px"><a href="/watch?id=${d.id}" style="color:#f5c542;text-decoration:none">${escHtml(d.title || "")}</a></h2>`;
+            if (d.urdu_title) dramaListHtml += `<div style="color:#f5c542;font-size:14px;margin-bottom:4px;direction:rtl">${escHtml(d.urdu_title)}</div>`;
+            dramaListHtml += `<div style="color:#999;font-size:12px;margin-bottom:6px">`;
+            if (d.year) dramaListHtml += `<span>${escHtml(d.year)}</span> · `;
+            if (d.type) dramaListHtml += `<span>${escHtml(d.type)}</span>`;
+            if (d.writer) dramaListHtml += ` · <span>Writer: ${escHtml(d.writer)}</span>`;
+            if (d.cast) dramaListHtml += ` · <span>Cast: ${escHtml(d.cast)}</span>`;
+            dramaListHtml += `</div>`;
+            if (desc) dramaListHtml += `<p style="color:#ccc;font-size:14px;margin:0">${escHtml(desc)}...</p>`;
+            dramaListHtml += `</article>`;
+          }
+          dramaListHtml += '</div>';
+          html = html.replace('<div class="home-loading" id="homeLoading">', dramaListHtml);
+          const siteMeta =
+            `<meta property="og:type" content="website">\n` +
+            `<meta property="og:title" content="Pak Spotlight — Classic PTV Drama Archive">\n` +
+            `<meta property="og:description" content="Stream the golden age of Pakistani television. Classic drama serials, legendary long plays, and comedy masterpieces.">\n` +
+            `<meta property="og:image" content="https://pak-spotlight.pakifun3.workers.dev/logo.png">\n` +
+            `<meta property="og:url" content="https://pak-spotlight.pakifun3.workers.dev/">\n` +
+            `<meta property="og:site_name" content="Pak Spotlight">\n` +
+            `<meta name="twitter:card" content="summary_large_image">\n` +
+            `<meta name="twitter:title" content="Pak Spotlight — Classic PTV Drama Archive">\n` +
+            `<meta name="twitter:description" content="Stream the golden age of Pakistani television.">\n` +
+            `<meta name="twitter:image" content="https://pak-spotlight.pakifun3.workers.dev/logo.png">\n` +
+            `<link rel="canonical" href="https://pak-spotlight.pakifun3.workers.dev/">\n` +
+            `<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Pak Spotlight","url":"https://pak-spotlight.pakifun3.workers.dev","description":"Classic PTV Drama Archive","potentialAction":{"@type":"SearchAction","target":"https://pak-spotlight.pakifun3.workers.dev/browse?q={search_term_string}","query-input":"required name=search_term_string"}}</script>\n`;
+          html = html.replace("</head>", siteMeta + "</head>");
+          return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
+        }
+      } catch {}
+      return resp;
     }
 
     // Rewrite /browse to /browse.html
