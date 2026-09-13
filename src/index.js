@@ -258,18 +258,17 @@ async function aiAutofill(video, env, opts = {}) {
   const epHint = parseEpisodeNumber(video.title, video.description);
 
   var prompt =
-    "Pak Spotlight = archive of classic Pakistani PTV dramas.\n" +
-    "Fill EVERY field below with your best answer from the YouTube info."
-    + (sharedCredits ? " Credits already known, reuse them." : "")
-    + " Never leave a field empty when you can infer it. Clean the title (remove EPISODE/PART numbers, | PTV, HD, etc). " +
-    "Urdu title: always give the Urdu script title (you know these classic dramas). " +
-    "Year: use the drama's real release year; if unsure use " + (yearHint || "the upload year") + ". " +
-    "Episode: \"" + (epHint || "none seen") + "\". Series name: the drama serial name (same as title for serials, empty for standalone long plays). " +
-    "Description: 2-3 warm sentences for viewers, always filled. " +
-    "Category: exactly one of: " + categoriesListStr + ".\n" +
-    (sharedCredits ? "Known credits: " + JSON.stringify(sharedCredits) + "\n" : "") +
-    "Return ONLY a JSON object, no markdown. Keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description.\n\n" +
-    "YouTube title: " + video.title + "\n" +
+    "Pak Spotlight = archive of classic Pakistani PTV dramas. You are a PTV drama metadata expert.\n\n" +
+    "TASK: Return a SINGLE JSON object for this drama with ALL these keys filled:\n" +
+    '{"title":"cleaned drama title","urdu_title":"URDU SCRIPT title of the drama","year":"release year as number","type":"exactly one of: ' + categoriesListStr + '","series_name":"serial name if part of series, else empty string","episode_number":"episode number as string if serial, else empty string","writer":"writer name","director":"director name","produced":"production company or person","cast":"main cast comma separated","description":"2-3 sentences describing the drama for viewers"}\n\n' +
+    "RULES:\n" +
+    "- NEVER return markdown code blocks, return ONLY the raw JSON object\n" +
+    "- NEVER leave urdu_title empty — you MUST provide the Urdu script title\n" +
+    "- NEVER leave writer, director, cast empty — use your knowledge of classic PTV dramas\n" +
+    "- Year: use the drama's real release year; hints: " + (yearHint || "unknown") + "\n" +
+    "- Episode hint: " + (epHint || "none") + "\n" +
+    (sharedCredits ? "- Known credits: " + JSON.stringify(sharedCredits) + "\n" : "") +
+    "\nYouTube title: " + video.title + "\n" +
     "YouTube description:\n" + desc.slice(0, 4000) + "\n" +
     "Uploaded: " + video.publishedAt;
 
@@ -281,13 +280,13 @@ async function aiAutofill(video, env, opts = {}) {
     try {
       const cfResp = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
         messages: [
-          { role: "system", content: "Return ONLY valid JSON with ALL keys filled, best effort. Never add explanations." },
+          { role: "system", content: "You are a PTV drama metadata expert. Return ONLY a valid JSON object with ALL 11 keys filled. Never leave any key empty. Never add markdown or explanations." },
           { role: "user", content: prompt }
         ],
         temperature: 0.2,
-        max_tokens: 1024
+        max_tokens: 2048
       });
-      rawContent = (cfResp?.result?.response || cfResp?.response || "").trim();
+      rawContent = (cfResp?.response || cfResp?.result?.response || "").trim();
       if (rawContent) aiProvider = "cloudflare";
     } catch (cfErr) {
       console.warn("Cloudflare AI failed:", cfErr?.message || cfErr);
