@@ -1,6 +1,6 @@
 // Pak Spotlight Worker — Cloudflare AI (Only)
 
-var SUPABASE_URL = "https://supabase.co";
+var SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
 var YOUTUBE_HANDLE = "@pkspotlight";
 
@@ -126,6 +126,9 @@ function json(data, status = 200) {
   });
 }
 
+// Global scope tracker for WaitUntil logic hooks
+const ctxRef = { waitUntil: null };
+
 function getBearer(request) {
   const h = request.headers.get("authorization") || "";
   return h.startsWith("Bearer ") ? h.slice(7) : "";
@@ -160,7 +163,7 @@ function videoId(value) {
 
 async function youtubeJson(path, env) {
   if (!env.YOUTUBE_API_KEY) throw new Error("YOUTUBE_API_KEY is not configured in Cloudflare.");
-  const u = new URL(`https://googleapis.com{path}`);
+  const u = new URL(`https://www.googleapis.com/youtube/v3/${path}`);
   u.searchParams.set("key", env.YOUTUBE_API_KEY);
   const r = await fetch(u);
   const data = await r.json();
@@ -185,7 +188,7 @@ async function identifyVideo(url, env) {
   if (!item) throw new Error("YouTube video not found.");
 
   const thumbs = item.snippet?.thumbnails || {};
-  const thumbnail = thumbs.maxres?.url || thumbs.standard?.url || thumbs.high?.url || thumbs.medium?.url || thumbs.default?.url || `https://ytimg.com{id}/hqdefault.jpg`;
+  const thumbnail = thumbs.maxres?.url || thumbs.standard?.url || thumbs.high?.url || thumbs.medium?.url || thumbs.default?.url || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 
   return {
     id: item.id,
@@ -239,7 +242,6 @@ async function aiAutofill(video, env, opts = {}) {
 
   const desc = String(video.description || "");
   const sharedCredits = opts.sharedCredits || null;
-
   const yearHint = String(video.publishedAt || "").slice(0, 4);
   const epHint = parseEpisodeNumber(video.title, video.description);
 
@@ -267,8 +269,3 @@ async function aiAutofill(video, env, opts = {}) {
       const cfResp = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
         messages: [
           { role: "system", content: "Return ONLY valid JSON with ALL keys filled, best effort. Never add explanations." },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.2,
-        max_tokens: 1024
-      });
