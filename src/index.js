@@ -876,10 +876,11 @@ var index_default = {
 
     // Rewrite /watch to /watch.html so clean watch URLs work directly
     if (url.pathname === "/watch") {
-      const watchUrl = new URL(request.url);
-      watchUrl.pathname = "/watch.html";
-      const resp = await env.ASSETS.fetch(new Request(watchUrl, request));
-      if (!isBot) return resp;
+      if (!isBot) {
+        const watchUrl = new URL(request.url);
+        watchUrl.pathname = "/watch.html";
+        return env.ASSETS.fetch(watchUrl.toString());
+      }
       // SSR: inject drama meta tags for bots
       try {
         const dramaId = url.searchParams.get("id");
@@ -888,14 +889,15 @@ var index_default = {
           const dramaArr = await dr.json().catch(() => []);
           const d = dramaArr?.[0];
           if (d) {
-            let html = await resp.text();
+            const watchUrl2 = new URL(request.url);
+            watchUrl2.pathname = "/watch.html";
+            const assetResp = await env.ASSETS.fetch(watchUrl2.toString());
+            const html = await assetResp.text();
             const title = `${d.title || "Classic PTV Drama"}${d.year ? ` (${d.year})` : ""} — Watch on Pak Spotlight`;
             const desc = (d.description || `${d.title} — classic PTV drama on Pak Spotlight. ${d.writer ? "Written by " + d.writer + "." : ""} ${d.cast ? "Starring " + d.cast + "." : ""}`).slice(0, 160);
             const thumb = d.thumbnail_url || "https://pak-spotlight.pakifun3.workers.dev/logo.png";
             const url_ = `${url.origin}/watch?id=${dramaId}`;
-            const metaTags =
-              `<title>${escHtml(title)}</title>\n` +
-              `<meta name="description" content="${escHtml(desc)}">\n` +
+            const extraTags =
               `<link rel="canonical" href="${escHtml(url_)}">\n` +
               `<meta property="og:type" content="video.other">\n` +
               `<meta property="og:title" content="${escHtml(title)}">\n` +
@@ -908,24 +910,50 @@ var index_default = {
               `<meta name="twitter:description" content="${escHtml(desc)}">\n` +
               `<meta name="twitter:image" content="${escHtml(thumb)}">\n` +
               `<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoObject","name":"${escHtml(d.title)}","description":"${escHtml(desc)}","thumbnailUrl":"${escHtml(thumb)}","uploadDate":"${d.year || ""}","genre":"Pakistani Classic Drama"}</script>\n`;
-            html = html.replace("</head>", metaTags + "</head>");
-            return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
+            const titleTag = `<title>${escHtml(title)}</title>`;
+            const descTag = `<meta name="description" content="${escHtml(desc)}">`;
+            const htmlStr = String(html);
+            const tIdx = htmlStr.indexOf("<title>");
+            const tEnd = htmlStr.indexOf("</title>", tIdx);
+            const dIdx = htmlStr.indexOf('<meta name="description"');
+            const dEnd = htmlStr.indexOf(">", dIdx);
+            const headIdx = htmlStr.indexOf("</head>");
+            let modified = "";
+            if (tIdx >= 0 && tEnd >= 0 && headIdx >= 0) {
+              modified = htmlStr.slice(0, tIdx) + titleTag + htmlStr.slice(tEnd + 8);
+            } else {
+              modified = htmlStr;
+            }
+            const mIdx = modified.indexOf('<meta name="description"');
+            const mEnd = modified.indexOf(">", mIdx);
+            if (mIdx >= 0 && mEnd >= 0) {
+              modified = modified.slice(0, mIdx) + descTag + modified.slice(mEnd + 1);
+            }
+            const hIdx = modified.indexOf("</head>");
+            if (hIdx >= 0) {
+              modified = modified.slice(0, hIdx) + extraTags + modified.slice(hIdx);
+            }
+            return new Response(modified, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
           }
         }
-      } catch {}
-      return resp;
+      } catch (e) { console.error("SSR watch error:", e); }
+      const fallbackUrl = new URL(request.url);
+      fallbackUrl.pathname = "/watch.html";
+      return env.ASSETS.fetch(fallbackUrl.toString());
     }
 
     // SSR homepage for bots
     if (url.pathname === "/") {
-      const resp = await env.ASSETS.fetch(request);
-      if (!isBot) return resp;
+      if (!isBot) {
+        return env.ASSETS.fetch(request);
+      }
       try {
         const dr = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=id,title,urdu_title,year,type,writer,director,cast,description,thumbnail_url&order=id.desc&limit=50`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
         const dramaArr = await dr.json().catch(() => []);
         const dramas = Array.isArray(dramaArr) ? dramaArr : [];
         if (dramas.length > 0) {
-          let html = await resp.text();
+          const assetResp = await env.ASSETS.fetch(request.url);
+          let html = await assetResp.text();
           let dramaListHtml = '<div style="padding:80px 20px 40px;max-width:1200px;margin:0 auto">';
           dramaListHtml += '<h1 style="color:#f5f5f5;font-size:28px;margin-bottom:8px">Pak Spotlight — Classic PTV Drama Archive</h1>';
           dramaListHtml += '<p style="color:#999;margin-bottom:30px">Preserving the Golden Age of Pakistani Television</p>';
@@ -961,15 +989,15 @@ var index_default = {
           html = html.replace("</head>", siteMeta + "</head>");
           return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
         }
-      } catch {}
-      return resp;
+      } catch (e) { console.error("SSR homepage error:", e.message || e); }
+      return env.ASSETS.fetch(request.url);
     }
 
     // Rewrite /browse to /browse.html
     if (url.pathname === "/browse") {
       const browseUrl = new URL(request.url);
       browseUrl.pathname = "/browse.html";
-      return env.ASSETS.fetch(new Request(browseUrl, request));
+      return env.ASSETS.fetch(browseUrl.toString());
     }
 
     // Static assets fallback
