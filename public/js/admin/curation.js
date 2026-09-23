@@ -1,5 +1,5 @@
 /**
- * Pak Spotlight Vault — curation
+ * Classic TV Pakistan Vault — curation
  * What the home page spotlights, how titles are shelved, and upkeep tools.
  */
 

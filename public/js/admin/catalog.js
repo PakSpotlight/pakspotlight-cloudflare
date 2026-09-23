@@ -1,5 +1,5 @@
 /**
- * Pak Spotlight Vault — catalog ledger (serials + single titles in one list)
+ * Classic TV Pakistan Vault — catalog ledger (serials + single titles in one list)
  */
 
 let catalogSearch = "";

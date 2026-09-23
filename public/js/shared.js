@@ -1,5 +1,5 @@
 /**
- * Pak Spotlight — Shared JavaScript Utilities & API Layer
+ * Classic TV Pakistan — Shared JavaScript Utilities & API Layer
  */
 
 const SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
@@ -52,7 +52,7 @@ function normalize(s) {
 function cleanDramaTitle(title) {
   return String(title || "")
     .replace(/\s*\|\s*.*$/, "")
-    .replace(/\s*-\s*(PTV|Pak Spotlight|Classic|Full|Drama|Play|HD).*$/i, "")
+    .replace(/\s*-\s*(PTV|Classic TV Pakistan|Classic|Full|Drama|Play|HD).*$/i, "")
     .replace(/\s*\b(Ep|Episode|Part|Qist|His+a?)\s*\.?\s*#?\s*\d+\b.*$/i, "")
     .replace(/\s*[(\[]\s*\d{1,3}\s*[)\]]\s*$/, "")
     .replace(/\s*[-–—:]+\s*$/, "")

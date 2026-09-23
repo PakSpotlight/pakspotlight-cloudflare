@@ -1,5 +1,5 @@
 /**
- * Pak Spotlight Vault — state, auth & console shell
+ * Classic TV Pakistan Vault — state, auth & console shell
  */
 
 const SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
@@ -35,7 +35,7 @@ const icon = name => ICONS[name] || "";
 function cleanDramaTitle(title) {
   return String(title || "")
     .replace(/\s*\|\s*.*$/, "")
-    .replace(/\s*-\s*(PTV|Pak Spotlight|Classic|Full|Drama|Play|HD).*$/i, "")
+    .replace(/\s*-\s*(PTV|Classic TV Pakistan|Classic|Full|Drama|Play|HD).*$/i, "")
     .replace(/\s*\b(Ep|Episode|Part|Qist|His+a?)\s*\.?\s*#?\s*\d+\b.*$/i, "")
     .replace(/\s*[(\[]\s*\d{1,3}\s*[)\]]\s*$/, "")
     .replace(/\s*[-–—:]+\s*$/, "")
@@ -179,11 +179,11 @@ function renderLoginView(errorMsg = "") {
     <div class="login-card">
       <img src="/logo.png" alt="">
       <div class="login-title">Vault sign-in</div>
-      <div class="login-sub">Catalog access for Pak Spotlight admins</div>
+      <div class="login-sub">Catalog access for Classic TV Pakistan admins</div>
       <form id="studioLoginForm">
         <div class="field">
           <label for="loginEmail">Email</label>
-          <input type="email" id="loginEmail" required placeholder="admin@pakspotlight.com" autocomplete="username">
+          <input type="email" id="loginEmail" required placeholder="admin@classictvpakistan.com" autocomplete="username">
         </div>
         <div class="field">
           <label for="loginPass">Password</label>

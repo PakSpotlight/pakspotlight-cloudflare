@@ -1,7 +1,7 @@
-# Pak Spotlight — Agent Instructions
+# Classic TV Pakistan — Agent Instructions
 
 ## Project Overview
-Pak Spotlight is a Classic PTV Drama Archive built as a Cloudflare Workers full-stack app with Supabase for data/storage and OpenRouter for AI.
+Classic TV Pakistan is a Classic PTV Drama Archive built as a Cloudflare Workers full-stack app with Supabase for data/storage and OpenRouter for AI.
 
 - **Frontend**: `public/index.html` (SPA) + `public/admin.html` (standalone admin)
 - **Backend**: `src/index.js` (Cloudflare Worker API)

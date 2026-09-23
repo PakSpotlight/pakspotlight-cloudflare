@@ -1,4 +1,4 @@
-Pak Spotlight — Admin Login Build
+Classic TV Pakistan — Admin Login Build
 
 1. Upload the contents of this ZIP to the GitHub repository.
 2. In Supabase, create your private Admin user under Authentication > Users. Use an email and strong password.

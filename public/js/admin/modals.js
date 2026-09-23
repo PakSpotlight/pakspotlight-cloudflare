@@ -1,5 +1,5 @@
 /**
- * Pak Spotlight Vault — sheets (dialogs), action menus, deletes, toast
+ * Classic TV Pakistan Vault — sheets (dialogs), action menus, deletes, toast
  */
 
 function openModal(html) {

@@ -1,4 +1,4 @@
-// Pak Spotlight Worker — Cloudflare AI (primary) + Gemini (fallback)
+// Classic TV Pakistan Worker — Cloudflare AI (primary) + Gemini (fallback)
 
 var SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
@@ -109,7 +109,7 @@ function parseEpisodeNumber(title, description) {
 function cleanDramaTitle(title) {
   return String(title || "")
     .replace(/\s*\|\s*.*$/, "")
-    .replace(/\s*-\s*(PTV|Pak Spotlight|Classic|Full|Drama|Play|HD).*$/i, "")
+    .replace(/\s*-\s*(PTV|Classic TV Pakistan|Classic|Full|Drama|Play|HD).*$/i, "")
     .replace(/\s*\b(Ep|Episode|Part|Qist|His+a?)\s*\.?\s*#?\s*\d+\b.*$/i, "")
     .replace(/\s*[(\[]\s*\d{1,3}\s*[)\]]\s*$/i, "")
     .replace(/\s*[-–—:]+\s*$/, "")
@@ -262,7 +262,7 @@ async function aiAutofill(video, env, opts = {}) {
   const epHint = parseEpisodeNumber(video.title, video.description);
 
   var prompt =
-    "Pak Spotlight = archive of classic Pakistani PTV dramas.\n" +
+    "Classic TV Pakistan = archive of classic Pakistani PTV dramas.\n" +
     "Fill EVERY field below with your best answer from the YouTube info."
     + (sharedCredits ? " Credits already known, reuse them." : "")
     + " Never leave a field empty when you can infer it. Clean the title (remove EPISODE/PART numbers, | PTV, HD, etc). " +
@@ -374,8 +374,8 @@ async function aiAutofill(video, env, opts = {}) {
     seo_description: "",
     thumbnail: video.thumbnail || ""
   };
-  fields.seo_title = `${fields.title}${fields.year ? ` (${fields.year})` : ""} - PTV Classic | Pak Spotlight`;
-  fields.seo_description = `${fields.title} — classic PTV drama${fields.writer ? ` by ${fields.writer}` : ""}${fields.cast ? ` starring ${String(fields.cast).split(",").slice(0, 3).join(",")}` : ""}. Watch on Pak Spotlight.`.slice(0, 160);
+  fields.seo_title = `${fields.title}${fields.year ? ` (${fields.year})` : ""} - PTV Classic | Classic TV Pakistan`;
+  fields.seo_description = `${fields.title} — classic PTV drama${fields.writer ? ` by ${fields.writer}` : ""}${fields.cast ? ` starring ${String(fields.cast).split(",").slice(0, 3).join(",")}` : ""}. Watch on Classic TV Pakistan.`.slice(0, 160);
 
   if (key && fields.title) {
     const cacheable = { ...fields };
@@ -893,8 +893,8 @@ var index_default = {
             watchUrl2.pathname = "/watch.html";
             const assetResp = await env.ASSETS.fetch(watchUrl2.toString());
             const html = await assetResp.text();
-            const title = `${d.title || "Classic PTV Drama"}${d.year ? ` (${d.year})` : ""} — Watch on Pak Spotlight`;
-            const desc = (d.description || `${d.title} — classic PTV drama on Pak Spotlight. ${d.writer ? "Written by " + d.writer + "." : ""} ${d.cast ? "Starring " + d.cast + "." : ""}`).slice(0, 160);
+            const title = `${d.title || "Classic PTV Drama"}${d.year ? ` (${d.year})` : ""} — Watch on Classic TV Pakistan`;
+            const desc = (d.description || `${d.title} — classic PTV drama on Classic TV Pakistan. ${d.writer ? "Written by " + d.writer + "." : ""} ${d.cast ? "Starring " + d.cast + "." : ""}`).slice(0, 160);
             const thumb = d.thumbnail_url || "https://pak-spotlight.pakifun3.workers.dev/logo.png";
             const url_ = `${url.origin}/watch?id=${dramaId}`;
             const extraTags =
@@ -904,7 +904,7 @@ var index_default = {
               `<meta property="og:description" content="${escHtml(desc)}">\n` +
               `<meta property="og:image" content="${escHtml(thumb)}">\n` +
               `<meta property="og:url" content="${escHtml(url_)}">\n` +
-              `<meta property="og:site_name" content="Pak Spotlight">\n` +
+`<meta property="og:site_name" content="Classic TV Pakistan">\n` +
               `<meta name="twitter:card" content="summary_large_image">\n` +
               `<meta name="twitter:title" content="${escHtml(title)}">\n` +
               `<meta name="twitter:description" content="${escHtml(desc)}">\n` +
@@ -955,7 +955,7 @@ var index_default = {
           const assetResp = await env.ASSETS.fetch(request.url);
           let html = await assetResp.text();
           let dramaListHtml = '<div style="padding:80px 20px 40px;max-width:1200px;margin:0 auto">';
-          dramaListHtml += '<h1 style="color:#f5f5f5;font-size:28px;margin-bottom:8px">Pak Spotlight — Classic PTV Drama Archive</h1>';
+          dramaListHtml += '<h1 style="color:#f5f5f5;font-size:28px;margin-bottom:8px">Classic TV Pakistan — Classic PTV Drama Archive</h1>';
           dramaListHtml += '<p style="color:#999;margin-bottom:30px">Preserving the Golden Age of Pakistani Television</p>';
           for (const d of dramas) {
             const desc = (d.description || "").slice(0, 120);
@@ -975,17 +975,17 @@ var index_default = {
           html = html.replace('<div class="home-loading" id="homeLoading">', dramaListHtml);
           const siteMeta =
             `<meta property="og:type" content="website">\n` +
-            `<meta property="og:title" content="Pak Spotlight — Classic PTV Drama Archive">\n` +
+            `<meta property="og:title" content="Classic TV Pakistan — Classic PTV Drama Archive">\n` +
             `<meta property="og:description" content="Stream the golden age of Pakistani television. Classic drama serials, legendary long plays, and comedy masterpieces.">\n` +
             `<meta property="og:image" content="https://pak-spotlight.pakifun3.workers.dev/logo.png">\n` +
             `<meta property="og:url" content="https://pak-spotlight.pakifun3.workers.dev/">\n` +
-            `<meta property="og:site_name" content="Pak Spotlight">\n` +
+            `<meta property="og:site_name" content="Classic TV Pakistan">\n` +
             `<meta name="twitter:card" content="summary_large_image">\n` +
-            `<meta name="twitter:title" content="Pak Spotlight — Classic PTV Drama Archive">\n` +
+            `<meta name="twitter:title" content="Classic TV Pakistan — Classic PTV Drama Archive">\n` +
             `<meta name="twitter:description" content="Stream the golden age of Pakistani television.">\n` +
             `<meta name="twitter:image" content="https://pak-spotlight.pakifun3.workers.dev/logo.png">\n` +
             `<link rel="canonical" href="https://pak-spotlight.pakifun3.workers.dev/">\n` +
-            `<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Pak Spotlight","url":"https://pak-spotlight.pakifun3.workers.dev","description":"Classic PTV Drama Archive","potentialAction":{"@type":"SearchAction","target":"https://pak-spotlight.pakifun3.workers.dev/browse?q={search_term_string}","query-input":"required name=search_term_string"}}</script>\n`;
+            `<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Classic TV Pakistan","url":"https://pak-spotlight.pakifun3.workers.dev","description":"Classic PTV Drama Archive","potentialAction":{"@type":"SearchAction","target":"https://pak-spotlight.pakifun3.workers.dev/browse?q={search_term_string}","query-input":"required name=search_term_string"}}</script>\n`;
           html = html.replace("</head>", siteMeta + "</head>");
           return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
         }

@@ -1,5 +1,5 @@
 /**
- * Pak Spotlight Vault — add content
+ * Classic TV Pakistan Vault — add content
  * One paste box: paste a video link (AI fills the details) or a playlist
  * link (import many episodes under one series).
  */
