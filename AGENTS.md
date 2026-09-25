@@ -33,7 +33,7 @@ git push origin main
 
 1. **Every change MUST be pushed to GitHub after thorough testing.** No exceptions.
 2. **Test the AI endpoint** before pushing any changes to `src/index.js`. The AI must return valid JSON.
-3. **Test on the live site** at `https://pak-spotlight.pakifun3.workers.dev/` after deploying.
+3. **Test on the live site** at `https://classictvpakistan.com/` after deploying.
 4. **Never commit secrets.** `.env` is gitignored. Use `wrangler secret put` for Cloudflare.
 5. **Run `npx wrangler deploy`** after every code change — the site won't update without it.
 
@@ -41,7 +41,7 @@ git push origin main
 
 Before pushing any change:
 - [ ] `npx wrangler deploy` succeeds
-- [ ] Site loads at `https://pak-spotlight.pakifun3.workers.dev/`
+- [ ] Site loads at `https://classictvpakistan.com/`
 - [ ] Admin login works
 - [ ] AI auto-fill returns valid JSON (test with a YouTube URL)
 - [ ] No console errors in browser or Cloudflare logs

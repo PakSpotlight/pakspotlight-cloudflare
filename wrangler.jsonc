@@ -3,6 +3,11 @@
   "name": "pak-spotlight",
   "main": "src/index.js",
   "compatibility_date": "2026-09-01",
+  "routes": [
+    { "pattern": "classictvpakistan.com", "custom_domain": true },
+    { "pattern": "www.classictvpakistan.com", "custom_domain": true }
+  ],
+  "workers_dev": true,
   "assets": {
     "directory": "public",
     "binding": "ASSETS",

@@ -298,31 +298,38 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  // ── FALLBACK: Google Gemini ──
+  // ── FALLBACK: Google Gemini (multi-model so quota/overload on one never kills the flow) ──
   if (!rawContent) {
     const geminiKey = env.GEMINI_API_KEY;
     if (geminiKey) {
-      try {
-        const geminiModel = env.GEMINI_MODEL || DEFAULT_AI_MODEL;
-        const geminiResp = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+      const geminiModels = [
+        env.GEMINI_MODEL || DEFAULT_AI_MODEL,
+        "gemini-3-flash-preview",
+        "gemini-2.5-flash-lite"
+      ].filter((m, i, arr) => m && arr.indexOf(m) === i);
+      for (const geminiModel of geminiModels) {
+        try {
+          const body = {
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
-          })
-        });
-        if (!geminiResp.ok) {
-          var geminiErr = {};
-          try { geminiErr = await geminiResp.json(); } catch {}
-          console.warn("Gemini API error:", geminiErr.error?.message || geminiResp.status);
-        } else {
+          };
+          const geminiResp = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+          if (!geminiResp.ok) {
+            var geminiErr = {};
+            try { geminiErr = await geminiResp.json(); } catch {}
+            console.warn(`Gemini (${geminiModel}) error:`, geminiErr.error?.message || geminiResp.status);
+            continue;
+          }
           var geminiData = await geminiResp.json();
           rawContent = (geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
-          if (rawContent) aiProvider = "gemini";
+          if (rawContent) { aiProvider = `gemini:${geminiModel}`; break; }
+        } catch (geminiErr) {
+          console.warn(`Gemini (${geminiModel}) request failed:`, geminiErr?.message || geminiErr);
         }
-      } catch (geminiErr) {
-        console.warn("Gemini request failed:", geminiErr?.message || geminiErr);
       }
     }
   }
@@ -856,7 +863,7 @@ var index_default = {
       try {
         const dramas = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=id,title,year,type,series_name,episode_number&order=id.desc`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
         const dramaList = await dramas.json().catch(() => []);
-        const base = "https://pak-spotlight.pakifun3.workers.dev";
+        const base = "https://classictvpakistan.com";
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
         xml += `  <url><loc>${base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n`;
         xml += `  <url><loc>${base}/browse</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n`;
@@ -866,7 +873,7 @@ var index_default = {
         xml += '</urlset>';
         return new Response(xml, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
       } catch {
-        return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://pak-spotlight.pakifun3.workers.dev/</loc></url></urlset>', { headers: { "content-type": "application/xml; charset=utf-8" } });
+        return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://classictvpakistan.com/</loc></url></urlset>', { headers: { "content-type": "application/xml; charset=utf-8" } });
       }
     }
 
@@ -895,7 +902,7 @@ var index_default = {
             const html = await assetResp.text();
             const title = `${d.title || "Classic PTV Drama"}${d.year ? ` (${d.year})` : ""} — Watch on Classic TV Pakistan`;
             const desc = (d.description || `${d.title} — classic PTV drama on Classic TV Pakistan. ${d.writer ? "Written by " + d.writer + "." : ""} ${d.cast ? "Starring " + d.cast + "." : ""}`).slice(0, 160);
-            const thumb = d.thumbnail_url || "https://pak-spotlight.pakifun3.workers.dev/logo.png";
+            const thumb = d.thumbnail_url || "https://classictvpakistan.com/logo.png";
             const url_ = `${url.origin}/watch?id=${dramaId}`;
             const extraTags =
               `<link rel="canonical" href="${escHtml(url_)}">\n` +
@@ -977,15 +984,15 @@ var index_default = {
             `<meta property="og:type" content="website">\n` +
             `<meta property="og:title" content="Classic TV Pakistan — Classic PTV Drama Archive">\n` +
             `<meta property="og:description" content="Stream the golden age of Pakistani television. Classic drama serials, legendary long plays, and comedy masterpieces.">\n` +
-            `<meta property="og:image" content="https://pak-spotlight.pakifun3.workers.dev/logo.png">\n` +
-            `<meta property="og:url" content="https://pak-spotlight.pakifun3.workers.dev/">\n` +
+            `<meta property="og:image" content="https://classictvpakistan.com/logo.png">\n` +
+            `<meta property="og:url" content="https://classictvpakistan.com/">\n` +
             `<meta property="og:site_name" content="Classic TV Pakistan">\n` +
             `<meta name="twitter:card" content="summary_large_image">\n` +
             `<meta name="twitter:title" content="Classic TV Pakistan — Classic PTV Drama Archive">\n` +
             `<meta name="twitter:description" content="Stream the golden age of Pakistani television.">\n` +
-            `<meta name="twitter:image" content="https://pak-spotlight.pakifun3.workers.dev/logo.png">\n` +
-            `<link rel="canonical" href="https://pak-spotlight.pakifun3.workers.dev/">\n` +
-            `<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Classic TV Pakistan","url":"https://pak-spotlight.pakifun3.workers.dev","description":"Classic PTV Drama Archive","potentialAction":{"@type":"SearchAction","target":"https://pak-spotlight.pakifun3.workers.dev/browse?q={search_term_string}","query-input":"required name=search_term_string"}}</script>\n`;
+            `<meta name="twitter:image" content="https://classictvpakistan.com/logo.png">\n` +
+            `<link rel="canonical" href="https://classictvpakistan.com/">\n` +
+            `<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Classic TV Pakistan","url":"https://classictvpakistan.com","description":"Classic PTV Drama Archive","potentialAction":{"@type":"SearchAction","target":"https://classictvpakistan.com/browse?q={search_term_string}","query-input":"required name=search_term_string"}}</script>\n`;
           html = html.replace("</head>", siteMeta + "</head>");
           return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
         }
