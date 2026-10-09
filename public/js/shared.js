@@ -434,7 +434,7 @@ function renderPosterCard(d, epCount = 1) {
   const playId = seriesStartId(d) || d.id;
 
   return `
-    <div class="netflix-card" onclick="window.location.href='/watch.html?id=${playId}'" title="${esc(title)}">
+    <div class="netflix-card" onclick="window.location.href='/watch?id=${playId}'" title="${esc(title)}">
       <div class="card-media">
         ${d.image ? `
           <img src="${esc(d.image)}" alt="${esc(title)}" loading="lazy" onerror="this.onerror=null; this.src='/logo.png';">
@@ -522,7 +522,7 @@ function updateAuthUi(session) {
             <div style="font-weight:700;color:#fff;font-size:12px;overflow:hidden;text-overflow:ellipsis">${esc(email)}</div>
             <div style="font-size:10px;color:var(--gold);margin-top:2px;font-weight:700">AUTHORIZED ADMIN</div>
           </div>
-          <a class="account-dropdown-item gold" href="/admin.html">
+          <a class="account-dropdown-item gold" href="/admin">
             ⚙ Admin Studio
           </a>
           <button class="account-dropdown-item" onclick="handleSignOut()">
@@ -570,7 +570,7 @@ function initAuth() {
         updateAuthUi(data.session);
 
         setTimeout(() => {
-          window.location.href = "/admin.html";
+          window.location.href = "/admin";
         }, 500);
       } catch (err) {
         status.className = "auth-status-msg err";

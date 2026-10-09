@@ -204,7 +204,7 @@ function renderTitleRow(g, i) {
         <div class="row-actions">
           <button class="ibtn ${g.pinned ? 'active' : ''}" type="button" data-act="pin" data-i="${i}" title="${g.pinned ? 'Remove from home spotlight' : 'Pin to home spotlight'}">${icon(g.pinned ? 'pinFilled' : 'pin')}</button>
           <button class="ibtn" type="button" data-act="edit" data-i="${i}" title="Edit details">${icon('pencil')}</button>
-          <a class="ibtn" href="/watch.html?id=${g.firstId}" target="_blank" rel="noopener" title="Watch on site">${icon('external')}</a>
+          <a class="ibtn" href="/watch?id=${g.firstId}" target="_blank" rel="noopener" title="Watch on site">${icon('external')}</a>
           <button class="ibtn danger" type="button" data-act="delete" data-i="${i}" title="Delete">${icon('trash')}</button>
           ${isSeries ? `<button class="ibtn" type="button" data-act="expand" data-i="${i}" title="Show episodes" style="transform:rotate(${open ? '180deg' : '0deg'})">${icon('chevron')}</button>` : ''}
           <button class="ibtn kebab" type="button" data-act="kebab" data-i="${i}" title="More actions">${icon('kebab')}</button>

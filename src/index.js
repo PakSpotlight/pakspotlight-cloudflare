@@ -136,6 +136,17 @@ function json(data, status = 200) {
   });
 }
 
+// Permanent redirect helper — Google only consolidates signals on 301/308.
+function redirect(location, status = 301) {
+  return new Response(null, {
+    status,
+    headers: {
+      location,
+      "cache-control": "public, max-age=3600"
+    }
+  });
+}
+
 function getBearer(request) {
   const h = request.headers.get("authorization") || "";
   return h.startsWith("Bearer ") ? h.slice(7) : "";
@@ -478,6 +489,32 @@ var index_default = {
         status: 204,
         headers: CORS_HEADERS
       });
+    }
+
+    // ── SEO: one canonical host + one canonical (extensionless) URL shape ──
+    // www.* serves identical content, and /index.html|/browse.html|/watch.html
+    // serve identical content to their clean counterparts. Consolidate on 301 so
+    // Google only ever indexes https://classictvpakistan.com/<clean url>.
+    if (request.method === "GET" || request.method === "HEAD") {
+      if (url.hostname === "www.classictvpakistan.com") {
+        url.hostname = "classictvpakistan.com";
+        return redirect(url.toString());
+      }
+      const CLEAN_HTML_PATHS = { "/index.html": "/", "/browse.html": "/browse", "/watch.html": "/watch", "/admin.html": "/admin" };
+      if (CLEAN_HTML_PATHS[url.pathname]) {
+        url.pathname = CLEAN_HTML_PATHS[url.pathname];
+        return redirect(url.toString());
+      }
+      // Trailing-slash and bare /index variants of the same pages.
+      if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
+        const stripped = url.pathname.replace(/\/+$/, "");
+        url.pathname = stripped === "" || stripped === "/index" ? "/" : stripped;
+        return redirect(url.toString());
+      }
+      if (url.pathname === "/index") {
+        url.pathname = "/";
+        return redirect(url.toString());
+      }
     }
 
     // Categories: Get Configured Categories
@@ -861,14 +898,18 @@ var index_default = {
     // ── SEO: Dynamic Sitemap ──
     if (url.pathname === "/sitemap.xml") {
       try {
-        const dramas = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=id,title,year,type,series_name,episode_number&order=id.desc`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
+        const dramas = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=id,title,created_at&order=id.desc`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
         const dramaList = await dramas.json().catch(() => []);
         const base = "https://classictvpakistan.com";
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
         xml += `  <url><loc>${base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n`;
         xml += `  <url><loc>${base}/browse</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n`;
         for (const d of (Array.isArray(dramaList) ? dramaList : [])) {
-          xml += `  <url><loc>${base}/watch?id=${d.id}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n`;
+          if (!d.title) continue;
+          const lastmod = d.created_at && !isNaN(Date.parse(d.created_at))
+            ? `<lastmod>${new Date(d.created_at).toISOString().slice(0, 10)}</lastmod>`
+            : "";
+          xml += `  <url><loc>${base}/watch?id=${d.id}</loc>${lastmod}<changefreq>monthly</changefreq><priority>0.7</priority></url>\n`;
         }
         xml += '</urlset>';
         return new Response(xml, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
@@ -900,10 +941,69 @@ var index_default = {
             watchUrl2.pathname = "/watch.html";
             const assetResp = await env.ASSETS.fetch(watchUrl2.toString());
             const html = await assetResp.text();
-            const title = `${d.title || "Classic PTV Drama"}${d.year ? ` (${d.year})` : ""} — Watch on Classic TV Pakistan`;
-            const desc = (d.description || `${d.title} — classic PTV drama on Classic TV Pakistan. ${d.writer ? "Written by " + d.writer + "." : ""} ${d.cast ? "Starring " + d.cast + "." : ""}`).slice(0, 160);
+            const h1Text = `${d.title || "Classic PTV Drama"}${d.year ? ` (${d.year})` : ""}`;
+            const title = `${h1Text} — Watch on Classic TV Pakistan`;
             const thumb = d.thumbnail_url || "https://classictvpakistan.com/logo.png";
-            const url_ = `${url.origin}/watch?id=${dramaId}`;
+            const url_ = `https://classictvpakistan.com/watch?id=${dramaId}`;
+
+            // The stored description is frequently just a block of hashtags, so
+            // build a real, unique sentence for the meta description, the SSR
+            // body copy and the JSON-LD block.
+            const s1 = `Watch ${h1Text} online free on Classic TV Pakistan — a classic Pakistani ${d.type || "drama"} preserved from the PTV archives.`;
+            const credits = [d.writer ? `Written by ${d.writer}` : "", d.director ? `directed by ${d.director}` : ""].filter(Boolean);
+            const s2 = credits.length ? `${credits.join(", ")}.` : "";
+            const s3 = d.cast ? `Starring ${d.cast}.` : "";
+            const summary = [s1, s2, s3].filter(Boolean).join(" ");
+            let desc = summary.slice(0, 160);
+            const stop = desc.lastIndexOf(".");
+            if (stop > 110) {
+              desc = desc.slice(0, stop + 1);
+            } else {
+              const cut = desc.lastIndexOf(" ");
+              if (cut > 110) desc = desc.slice(0, cut).replace(/[\s,;:]+$/, "");
+            }
+            const rawDesc = String(d.description || "").trim();
+            const prose = rawDesc && (rawDesc.split("#").length - 1) < 3 ? rawDesc : "";
+            const ytMatch = String(d.youtube_url || "").match(/[?&]v=([\w-]{6,})/);
+            const embedUrl = ytMatch ? `https://www.youtube.com/embed/${ytMatch[1]}` : "";
+
+            const metaBits = [];
+            if (d.year) metaBits.push(escHtml(String(d.year)));
+            if (d.type) metaBits.push(escHtml(d.type));
+            if (d.series_name && d.episode_number) metaBits.push(`${escHtml(d.series_name)} · Episode ${escHtml(String(d.episode_number))}`);
+            else if (d.series_name) metaBits.push(escHtml(d.series_name));
+
+            const creditBits = [];
+            if (d.writer) creditBits.push(`<li><strong>Writer:</strong> ${escHtml(d.writer)}</li>`);
+            if (d.director) creditBits.push(`<li><strong>Director:</strong> ${escHtml(d.director)}</li>`);
+            if (d.cast) creditBits.push(`<li><strong>Cast:</strong> ${escHtml(d.cast)}</li>`);
+            if (d.year) creditBits.push(`<li><strong>Year:</strong> ${escHtml(String(d.year))}</li>`);
+
+            const catPath = `/browse?cat=${encodeURIComponent(d.type || "Serial / Series")}`;
+            const bodyBlock =
+              `<main class="drama-seo-copy" style="max-width:820px;margin:0 auto;padding:96px 20px 56px;color:#e8e8e8;font-family:'Outfit',system-ui,sans-serif">` +
+              `<nav aria-label="Breadcrumb" style="font-size:13px;color:#9aa0a6;margin-bottom:16px"><a href="/" style="color:#f5c542;text-decoration:none">Home</a> › <a href="${escHtml(catPath)}" style="color:#f5c542;text-decoration:none">${escHtml(d.type || "Drama")}</a> › <span>${escHtml(d.title || "")}</span></nav>` +
+              `<h1 style="font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff">${escHtml(h1Text)}</h1>` +
+              (d.urdu_title ? `<div style="direction:rtl;color:#f5c542;font-size:18px;margin-bottom:10px">${escHtml(d.urdu_title)}</div>` : "") +
+              (metaBits.length ? `<p style="color:#9aa0a6;font-size:14px;margin:0 0 18px">${metaBits.join(" · ")}</p>` : "") +
+              `<p style="font-size:16px;line-height:1.75;color:#dcdcdc;margin:0 0 14px">${escHtml(summary)}</p>` +
+              (prose ? `<p style="font-size:15px;line-height:1.75;color:#c9c9c9;margin:0 0 14px">${escHtml(prose)}</p>` : "") +
+              (creditBits.length ? `<ul style="color:#c9c9c9;font-size:14px;line-height:1.9;padding-left:20px;margin:0 0 20px">${creditBits.join("")}</ul>` : "") +
+              `<p style="font-size:14px;margin:0"><a href="/browse" style="color:#f5c542;text-decoration:none">Browse the full classic drama archive →</a></p>` +
+              `</main>`;
+
+            const jsonLd = {
+              "@context": "https://schema.org",
+              "@type": "VideoObject",
+              name: d.title || "",
+              description: summary,
+              thumbnailUrl: [thumb],
+              uploadDate: d.year || undefined,
+              genre: "Pakistani Classic Drama",
+              inLanguage: "ur",
+              ...(embedUrl ? { embedUrl, contentUrl: d.youtube_url } : {}),
+              publisher: { "@type": "Organization", name: "Classic TV Pakistan", url: "https://classictvpakistan.com/" }
+            };
             const extraTags =
               `<link rel="canonical" href="${escHtml(url_)}">\n` +
               `<meta property="og:type" content="video.other">\n` +
@@ -911,12 +1011,12 @@ var index_default = {
               `<meta property="og:description" content="${escHtml(desc)}">\n` +
               `<meta property="og:image" content="${escHtml(thumb)}">\n` +
               `<meta property="og:url" content="${escHtml(url_)}">\n` +
-`<meta property="og:site_name" content="Classic TV Pakistan">\n` +
+              `<meta property="og:site_name" content="Classic TV Pakistan">\n` +
               `<meta name="twitter:card" content="summary_large_image">\n` +
               `<meta name="twitter:title" content="${escHtml(title)}">\n` +
               `<meta name="twitter:description" content="${escHtml(desc)}">\n` +
               `<meta name="twitter:image" content="${escHtml(thumb)}">\n` +
-              `<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoObject","name":"${escHtml(d.title)}","description":"${escHtml(desc)}","thumbnailUrl":"${escHtml(thumb)}","uploadDate":"${d.year || ""}","genre":"Pakistani Classic Drama"}</script>\n`;
+              `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>\n`;
             const titleTag = `<title>${escHtml(title)}</title>`;
             const descTag = `<meta name="description" content="${escHtml(desc)}">`;
             const htmlStr = String(html);
@@ -940,13 +1040,34 @@ var index_default = {
             if (hIdx >= 0) {
               modified = modified.slice(0, hIdx) + extraTags + modified.slice(hIdx);
             }
+            // Render the drama details into the document body so crawlers see
+            // real, unique content instead of an empty shell (the UI itself is
+            // client-rendered and invisible to bots).
+            const bIdx = modified.lastIndexOf("</body>");
+            if (bIdx >= 0) {
+              modified = modified.slice(0, bIdx) + bodyBlock + modified.slice(bIdx);
+            }
             return new Response(modified, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
           }
         }
       } catch (e) { console.error("SSR watch error:", e); }
+      // No valid drama for this URL (missing/unknown id): keep the page out of
+      // the index instead of letting a near-empty duplicate compete with the
+      // real /watch?id=<n> pages.
       const fallbackUrl = new URL(request.url);
       fallbackUrl.pathname = "/watch.html";
-      return env.ASSETS.fetch(fallbackUrl.toString());
+      const fallbackResp = await env.ASSETS.fetch(fallbackUrl.toString());
+      if (fallbackResp.ok) {
+        try {
+          const fhtml = await fallbackResp.text();
+          const fIdx = fhtml.indexOf("</head>");
+          if (fIdx >= 0) {
+            const patched = fhtml.slice(0, fIdx) + '<meta name="robots" content="noindex, follow">\n<link rel="canonical" href="https://classictvpakistan.com/watch">\n' + fhtml.slice(fIdx);
+            return new Response(patched, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
+          }
+        } catch { /* fall through to the raw asset */ }
+      }
+      return fallbackResp;
     }
 
     // SSR homepage for bots
@@ -991,7 +1112,6 @@ var index_default = {
             `<meta name="twitter:title" content="Classic TV Pakistan — Classic PTV Drama Archive">\n` +
             `<meta name="twitter:description" content="Stream the golden age of Pakistani television.">\n` +
             `<meta name="twitter:image" content="https://classictvpakistan.com/logo.png">\n` +
-            `<link rel="canonical" href="https://classictvpakistan.com/">\n` +
             `<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Classic TV Pakistan","url":"https://classictvpakistan.com","description":"Classic PTV Drama Archive","potentialAction":{"@type":"SearchAction","target":"https://classictvpakistan.com/browse?q={search_term_string}","query-input":"required name=search_term_string"}}</script>\n`;
           html = html.replace("</head>", siteMeta + "</head>");
           return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });

@@ -79,7 +79,7 @@ function openTitleActionSheet(g) {
     btn.onclick = () => {
       const act = btn.dataset.sheetAct;
       closeModal();
-      if (act === "watch") window.open(`/watch.html?id=${g.firstId}`, "_blank");
+      if (act === "watch") window.open(`/watch?id=${g.firstId}`, "_blank");
       else if (act === "pin" || act === "unpin") toggleHeroFeature(g);
       else if (act === "edit") g.kind === "series" ? openSeriesEditModal(g.name) : openEditRecordModal(g.episodes[0].id);
       else if (act === "add-ep") openAddEpisodeModal(g.name);

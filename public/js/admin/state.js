@@ -157,11 +157,11 @@ function updateTopAuthUi() {
   if (authSession?.user) {
     box.innerHTML = `
       <span class="vault-user-email">${esc(authSession.user.email)}</span>
-      <a class="btn btn-quiet btn-sm" href="/index.html">Open site</a>
+      <a class="btn btn-quiet btn-sm" href="/">Open site</a>
       <button class="btn btn-quiet btn-sm" onclick="handleSignOut()">Sign out</button>
     `;
   } else {
-    box.innerHTML = `<a class="btn btn-quiet btn-sm" href="/index.html">Open site</a>`;
+    box.innerHTML = `<a class="btn btn-quiet btn-sm" href="/">Open site</a>`;
   }
 }
 

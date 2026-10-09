@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Browse &amp; Search — Classic TV Pakistan</title>
 <meta name="description" content="Browse and search the complete Classic TV Pakistan classic PTV drama archive by category, title, writer, or cast.">
+<link rel="canonical" href="https://classictvpakistan.com/browse">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +27,7 @@
       <span></span><span></span><span></span>
     </button>
     <div class="brand-group">
-      <a href="/index.html" class="brand">
+      <a href="/" class="brand">
         <img src="/logo.png" alt="Classic TV Pakistan Logo" class="brand-logo">
         <div class="brand-titles">
           <span class="brand-name">CLASSIC TV PAKISTAN</span>
@@ -34,7 +35,7 @@
         </div>
       </a>
       <nav class="nav-links desktop-only" id="desktopCategoryLinks">
-        <a href="/index.html" class="nav-link">Home</a>
+        <a href="/" class="nav-link">Home</a>
       </nav>
     </div>
     <div class="topbar-right">
@@ -93,7 +94,7 @@
        MOBILE BOTTOM NAV
        ============================================================ -->
   <nav class="mobile-bottom-nav">
-    <button class="m-bottom-nav-item" onclick="window.location.href='/index.html'">
+    <button class="m-bottom-nav-item" onclick="window.location.href='/'">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
         <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -130,7 +131,7 @@
   <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop" onclick="toggleMobileDrawer(false)"></div>
   <div class="mobile-drawer" id="mobileDrawer">
     <div class="drawer-header">
-      <a href="/index.html" class="brand" style="gap:8px">
+      <a href="/" class="brand" style="gap:8px">
         <img src="/logo.png" alt="" style="width:28px;height:28px">
         <span style="font-family:var(--font-serif);font-size:14px;font-weight:900;letter-spacing:1.5px;color:#fff">CLASSIC TV PAKISTAN</span>
       </a>
@@ -138,7 +139,7 @@
     </div>
     <div class="drawer-content" id="drawerLinksBox">
       <div class="drawer-section-title">Browse Archive</div>
-      <a href="/index.html" class="drawer-link">🏠 Home</a>
+      <a href="/" class="drawer-link">🏠 Home</a>
     </div>
   </div>
 
@@ -218,7 +219,7 @@
       const deskNav = $("desktopCategoryLinks");
       if (deskNav) {
         deskNav.innerHTML = `
-          <a href="/index.html" class="nav-link">Home</a>
+          <a href="/" class="nav-link">Home</a>
           ${categories.map(c => `
             <a href="javascript:void(0)" onclick="selectCategory('${esc(c)}')" class="nav-link ${activeCat === c ? 'active' : ''}">${esc(c)}</a>
           `).join("")}
@@ -255,7 +256,7 @@
       if (drawerBox) {
         drawerBox.innerHTML = `
           <div class="drawer-section-title">Browse Archive</div>
-          <a href="/index.html" class="drawer-link">🏠 Home</a>
+          <a href="/" class="drawer-link">🏠 Home</a>
           ${categories.map(c => `
             <a href="javascript:void(0)" onclick="selectCategory('${esc(c)}'); toggleMobileDrawer(false);" class="drawer-link ${activeCat === c ? 'active' : ''}">📁 ${esc(c)}</a>
           `).join("")}
