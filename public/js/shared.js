@@ -123,7 +123,7 @@ function groupDramas(list) {
     groups.get(key).push(d);
   }
   return Array.from(groups.values()).map(arr => {
-    arr.sort((a, b) => (a.episode ?? 9999) - (b.episode ?? 9999));
+    arr.sort((a, b) => ((a.episode == null ? 9999 : a.episode) - (b.episode == null ? 9999 : b.episode)));
     const rep = arr.find(x => !!x.image) || arr[0];
     if (rep && !arr[0].image && rep.image) {
       arr[0] = { ...arr[0], image: rep.image };
@@ -253,7 +253,7 @@ function getDramaSeriesEpisodes(drama) {
   if (!isSer) return [drama];
   return rows
     .filter(x => normalize(x.series) === normalize(drama.series))
-    .sort((a, b) => (a.episode ?? 9999) - (b.episode ?? 9999));
+    .sort((a, b) => ((a.episode == null ? 9999 : a.episode) - (b.episode == null ? 9999 : b.episode)));
 }
 
 // Where a "play this title" link should land: episode 1 of a serial
@@ -473,7 +473,7 @@ function openAuthModal() {
     msg.className = "auth-status-msg";
     msg.textContent = "";
   }
-  setTimeout(() => $("authEmail")?.focus(), 50);
+  setTimeout(() => { const emailInput = $("authEmail"); if (emailInput) emailInput.focus(); }, 50);
 }
 
 function closeAuthModal() {
@@ -505,7 +505,7 @@ function updateAuthUi(session) {
   const container = $("topbarAuthArea");
   if (!container) return;
 
-  if (session?.user) {
+  if (session && session.user) {
     const email = session.user.email || "Admin";
     const initial = email.charAt(0).toUpperCase();
     const shortName = email.split("@")[0];
@@ -580,7 +580,7 @@ function initAuth() {
   }
 
   sbClient.auth.getSession().then(({ data }) => {
-    updateAuthUi(data?.session);
+    updateAuthUi(data && data.session);
   });
 
   sbClient.auth.onAuthStateChange((event, session) => {

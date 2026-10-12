@@ -111,7 +111,7 @@ async function saveFeaturedList(statusEl = null, quiet = false) {
   try {
     const res = await fetch("/api/featured", {
       method: "POST",
-      headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+      headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
       body: JSON.stringify({ featuredIds: configuredFeaturedIds })
     });
     if (!res.ok) throw new Error("Could not save the spotlight order.");
@@ -192,7 +192,7 @@ async function saveCategoriesConfig() {
   try {
     await fetch("/api/categories", {
       method: "POST",
-      headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+      headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
       body: JSON.stringify({ categories: configuredCategories })
     });
     status.className = "status show ok";
@@ -303,7 +303,7 @@ async function runSyncArtwork(statusEl = null) {
       if (!ytId) continue;
       const storeRes = await fetch("/api/store-thumbnail", {
         method: "POST",
-        headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+        headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
         body: JSON.stringify({ dramaId: d.id, imageUrl: `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` })
       });
       if (storeRes.ok) success++;

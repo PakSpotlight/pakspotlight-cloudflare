@@ -27,7 +27,7 @@ function buildTitleGroups() {
   }
 
   const series = Array.from(map.values()).map(g => {
-    g.episodes.sort((a, b) => (a.episode_number ?? 9999) - (b.episode_number ?? 9999));
+    g.episodes.sort((a, b) => ((a.episode_number == null ? 9999 : a.episode_number) - (b.episode_number == null ? 9999 : b.episode_number)));
     return g;
   });
 
@@ -230,7 +230,7 @@ function renderReel(g, i, open) {
           </div>
           ${g.episodes.map((ep, idx) => `
             <div class="ep-row">
-              <span class="ep-no">${ep.episode_number ?? idx + 1}</span>
+              <span class="ep-no">${ep.episode_number == null ? idx + 1 : ep.episode_number}</span>
               <div class="ep-thumb">
                 ${ep.thumbnail_url
                   ? `<img src="${esc(ep.thumbnail_url)}" alt="" loading="lazy" onerror="this.remove();">`
@@ -254,7 +254,9 @@ function renderReel(g, i, open) {
 // ----------------------------------------------------
 function onLedgerClick(e) {
   const actBtn = e.target.closest("[data-act]");
-  const iAttr = actBtn?.dataset.i ?? e.target.closest(".title-row")?.dataset.i;
+  const rowBtn = actBtn && actBtn.dataset ? actBtn.dataset.i : null;
+  const rowEl = e.target.closest(".title-row");
+  const iAttr = rowBtn != null ? rowBtn : (rowEl && rowEl.dataset ? rowEl.dataset.i : null);
   if (iAttr == null) return;
   const g = ledgerGroups[Number(iAttr)];
   if (!g) return;

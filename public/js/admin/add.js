@@ -243,17 +243,17 @@ async function handleAddFetch() {
     try {
       const res = await fetch("/api/playlist-preview", {
         method: "POST",
-        headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+        headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
         body: JSON.stringify({ url, limit: 50 })
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || "Could not read this playlist.");
 
       plItems = (data.items || []).map((it, i) => ({ ...it, ep: it.episode || String(i + 1), selected: true }));
-      plPlaylistTitle = data.playlist?.title || "";
+      plPlaylistTitle = (data.playlist && data.playlist.title) || "";
 
       $("playlistDetected").innerHTML = `
-        <img src="${esc(data.items?.[0]?.thumbnail || '/logo.png')}" alt="" onerror="this.src='/logo.png';">
+        <img src="${esc((data.items && data.items[0] && data.items[0].thumbnail) || '/logo.png')}" alt="" onerror="this.src='/logo.png';">
         <div class="detected-meta">
           <div class="detected-title">${esc(plPlaylistTitle)}</div>
           <div class="detected-sub">${plItems.length} videos in this playlist</div>
@@ -280,7 +280,7 @@ async function handleAddFetch() {
 
       // One AI read of the first video fills the shared series details,
       // so the admin only reviews briefly and then imports.
-      autoFillPlaylistDetails(data.items?.[0]);
+      autoFillPlaylistDetails(data.items && data.items[0]);
     } catch (err) {
       status.className = "status show err";
       status.textContent = err.message;
@@ -298,7 +298,7 @@ async function handleAddFetch() {
   try {
     const res = await fetch("/api/ai-autofill", {
       method: "POST",
-      headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+      headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
       body: JSON.stringify({ url })
     });
     const data = await res.json();
@@ -306,9 +306,9 @@ async function handleAddFetch() {
 
     const f = data.fields || {};
     $("videoDetected").innerHTML = `
-      <img src="${esc(f.thumbnail || data.video?.thumbnail || '/logo.png')}" alt="" onerror="this.src='/logo.png';">
+      <img src="${esc(f.thumbnail || (data.video && data.video.thumbnail) || '/logo.png')}" alt="" onerror="this.src='/logo.png';">
       <div class="detected-meta">
-        <div class="detected-title">${esc(data.video?.title || f.title || 'Video detected')}</div>
+        <div class="detected-title">${esc((data.video && data.video.title) || f.title || 'Video detected')}</div>
         <div class="detected-sub">AI filled the fields below — check them before saving.</div>
       </div>
     `;
@@ -333,7 +333,7 @@ async function handleAddFetch() {
     $("f_episode").value = looksLikeEpisode ? (f.episode_number || "") : "";
     setAddMode(looksLikeEpisode ? "episode" : "single");
 
-    const thumb = f.thumbnail || data.video?.thumbnail;
+    const thumb = f.thumbnail || (data.video && data.video.thumbnail);
     stagedThumbnailUrl = thumb || "";
     if (thumb) {
       $("thumbStaging").style.display = "flex";
@@ -355,7 +355,7 @@ async function handleAddFetch() {
 // details (writer, director, cast, year, Urdu title, category). Runs in
 // the background after the preview so the list shows instantly.
 async function autoFillPlaylistDetails(firstItem) {
-  if (!firstItem?.id) return;
+  if (!firstItem || !firstItem.id) return;
   const status = $("addFetchStatus");
   try {
     if (status) {
@@ -364,7 +364,7 @@ async function autoFillPlaylistDetails(firstItem) {
     }
     const res = await fetch("/api/ai-autofill", {
       method: "POST",
-      headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+      headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
       body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${firstItem.id}` })
     });
     const data = await res.json();
@@ -458,12 +458,14 @@ async function handleSingleAddSubmit(e) {
   }
 
   const dramaId = data.id;
-  const customFile = $("f_customFile")?.files?.[0];
+  const fileInput = $("f_customFile");
+  const customFile = fileInput && fileInput.files ? fileInput.files[0] : null;
 
   try {
     if (customFile) {
       status.textContent = "Uploading artwork…";
-      const ext = (customFile.type || "image/jpeg").split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+      const subtype = (customFile.type || "image/jpeg").split("/")[1];
+      const ext = (subtype ? subtype.replace("jpeg", "jpg") : "") || "jpg";
       const storagePath = `drama/${dramaId}.${ext}`;
       const { error: upErr } = await window.sbClient.storage.from("thumbnails").upload(storagePath, customFile, {
         contentType: customFile.type || "image/jpeg",
@@ -477,7 +479,7 @@ async function handleSingleAddSubmit(e) {
       status.textContent = "Storing artwork…";
       await fetch("/api/store-thumbnail", {
         method: "POST",
-        headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+        headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
         body: JSON.stringify({ dramaId, imageUrl: stagedThumbnailUrl })
       }).catch(() => {});
     }
@@ -529,7 +531,7 @@ async function runPlaylistImport() {
   try {
     const res = await fetch("/api/playlist-import", {
       method: "POST",
-      headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+      headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
       body: JSON.stringify({
         url,
         seriesName,

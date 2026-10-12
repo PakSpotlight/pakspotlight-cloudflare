@@ -45,8 +45,31 @@ Before pushing any change:
 - [ ] Admin login works
 - [ ] AI auto-fill returns valid JSON (test with a YouTube URL)
 - [ ] No console errors in browser or Cloudflare logs
+- [ ] `npm run check:es2019` passes (see Browser Support Floor)
 - [ ] `git status` clean before commit
 - [ ] `git push origin main` succeeds
+
+## Browser Support Floor (Chrome 75 / Android 6)
+
+Real users browse the archive from old Android phones, so **all browser JS must stay within ES2019**.
+Chrome 80 introduced `?.` and `??`, Chrome 85 introduced `||=`, `&&=`, `??=` — a single one of these
+is a parse error, and a parse error kills the **entire script file**, which looks like "JS isn't loading".
+
+- `npm run check:es2019` — parses every `public/**/*.js` file and every inline `<script>` in
+  `public/*.html` with acorn at `ecmaVersion: 2019` and fails if anything newer slipped in.
+  Run it before every push.
+- Instead of `a?.b` use `a && a.b`; instead of `a ?? b` use `a == null ? a : b`
+  (never `a || b` — `0`, `""` and `false` must survive).
+- **Supabase is vendored** at `public/js/supabase.min.js` (the npm UMD build downlevelled to ES2019).
+  Do not point the pages back at the jsDelivr CDN — that bundle is ES2020+ and breaks old Chrome.
+  To bump it:
+  ```bash
+  curl -sL -o supabase-src.js https://cdn.jsdelivr.net/npm/@supabase/supabase-js@<version>/dist/umd/supabase.js
+  node scripts/build-supabase.js supabase-src.js public/js/supabase.min.js
+  npm run check:es2019
+  ```
+- Both scripts (`scripts/check-es2019.js`, `scripts/build-supabase.js`) are dev-only; they are never
+  deployed (only `src/index.js` is the Worker entry).
 
 ## Environment Variables
 

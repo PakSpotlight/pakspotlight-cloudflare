@@ -162,8 +162,8 @@
     </div>
   </div>
 
-  <!-- Supabase CDN + Shared Utilities -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Vendored Supabase (ES2019 build) + Shared Utilities -->
+  <script src="/js/supabase.min.js"></script>
   <script src="/js/shared.js"></script>
 
   <script>
@@ -210,7 +210,7 @@
       // Update titles
       const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim() && ["serial / series", "series", "serial"].includes(String(currentDrama.type || "").toLowerCase().trim());
       if (isSer && currentEp) {
-        const epNum = currentEp.episode ?? currentEpisodes.indexOf(currentEp) + 1;
+        const epNum = currentEp.episode == null ? currentEpisodes.indexOf(currentEp) + 1 : currentEp.episode;
         const epTitle = cleanDramaTitle(currentEp.title);
         const newTitle = epTitle && epTitle !== currentDrama.series ? epTitle : `${currentDrama.series} — Episode ${epNum}`;
         const mobileTitle = $("mobileWatchTitle");
@@ -249,7 +249,7 @@
 
       const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim() && ["serial / series", "series", "serial"].includes(String(currentDrama.type || "").toLowerCase().trim());
       const baseTitle = isSer ? currentDrama.series : currentDrama.title;
-      const epNum = isSer && currentEp ? (currentEp.episode ?? currentEpisodes.indexOf(currentEp) + 1) : null;
+      const epNum = isSer && currentEp ? (currentEp.episode == null ? currentEpisodes.indexOf(currentEp) + 1 : currentEp.episode) : null;
       const epTitle = isSer && currentEp ? cleanDramaTitle(currentEp.title) : "";
       const pageTitle = epNum ? `${baseTitle} — Episode ${epNum}` : baseTitle;
       const displayTitle = epNum ? (epTitle && epTitle !== baseTitle ? epTitle : `${baseTitle} — Episode ${epNum}`) : baseTitle;
@@ -366,7 +366,7 @@
                     </div>
                     <div class="m-ep-details">
                       <div class="m-ep-title-line">
-                        <span class="m-ep-num">Ep ${ep.episode ?? (idx + 1)}</span>
+                        <span class="m-ep-num">Ep ${ep.episode == null ? (idx + 1) : ep.episode}</span>
                         <span class="m-ep-name">${esc(ep.title)}</span>
                       </div>
                       <div class="m-ep-sub">${ep.year ? 'Year: ' + esc(ep.year) : 'PTV Archive'} · ${isPlaying ? '▶ Now Playing' : 'Click to Play'}</div>
@@ -416,7 +416,7 @@
                 const isPlaying = ep.id === currentEp.id;
                 return `
                   <div class="playlist-item ${isPlaying ? 'active' : ''}" data-epid="${ep.id}" onclick="switchEpisode('${epYt}', ${ep.id})">
-                    <span class="playlist-ep-num">${ep.episode ?? (idx + 1)}</span>
+                    <span class="playlist-ep-num">${ep.episode == null ? (idx + 1) : ep.episode}</span>
                     <span class="playlist-ep-title">${esc(ep.title)}</span>
                     <span style="font-size: 12px; color: var(--gold);">${isPlaying ? '▶' : ''}</span>
                   </div>

@@ -114,7 +114,7 @@ function openEditRecordModal(id) {
           </div>
           <div class="field">
             <label for="e_episode">Episode number</label>
-            <input id="e_episode" type="number" min="1" value="${d.episode_number ?? ''}">
+            <input id="e_episode" type="number" min="1" value="${d.episode_number == null ? '' : d.episode_number}">
           </div>
           <div class="field">
             <label for="e_urdu">Urdu title</label>
@@ -375,10 +375,10 @@ function openAddEpisodeModal(seriesName) {
       return;
     }
 
-    if (data?.id && thumb) {
+    if (data && data.id && thumb) {
       fetch("/api/store-thumbnail", {
         method: "POST",
-        headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+        headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
         body: JSON.stringify({ dramaId: data.id, imageUrl: thumb })
       }).catch(() => {});
     }
@@ -399,7 +399,7 @@ async function autoDetectModalEpisode(seriesName) {
   try {
     const res = await fetch("/api/identify", {
       method: "POST",
-      headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+      headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
       body: JSON.stringify({ url })
     });
     const v = await res.json();
@@ -460,7 +460,7 @@ function openSeriesImportModal(seriesName) {
     try {
       const res = await fetch("/api/playlist-import", {
         method: "POST",
-        headers: { "content-type": "application/json", "authorization": "Bearer " + authSession?.access_token },
+        headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
         body: JSON.stringify({ url, seriesName: g.name, category: g.rep.type })
       });
       const data = await res.json();

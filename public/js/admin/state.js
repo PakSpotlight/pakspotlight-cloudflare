@@ -11,7 +11,7 @@ var sbClient = (window.supabase && typeof window.supabase.createClient === "func
 window.sbClient = sbClient;
 
 const $ = id => document.getElementById(id);
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 // Inline icon set — one stroke style for the whole console
 const ICONS = {
@@ -154,7 +154,7 @@ async function openConsole() {
 function updateTopAuthUi() {
   const box = $("topbarAuthActions");
   if (!box) return;
-  if (authSession?.user) {
+  if (authSession && authSession.user) {
     box.innerHTML = `
       <span class="vault-user-email">${esc(authSession.user.email)}</span>
       <a class="btn btn-quiet btn-sm" href="/">Open site</a>
