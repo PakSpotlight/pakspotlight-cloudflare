@@ -24,6 +24,11 @@ function inlineScripts(html) {
   let m;
   while ((m = re.exec(html))) {
     if (/\bsrc\s*=/i.test(m[1])) continue; // external file, checked separately
+    // Only real JS runs in the browser: skip JSON-LD / data blocks.
+    const typeMatch = m[1].match(/\btype\s*=\s*["']?([^"'\s>]+)/i);
+    const blockType = typeMatch ? typeMatch[1].toLowerCase() : "text/javascript";
+    const isJs = blockType === "text/javascript" || blockType === "application/javascript" || blockType === "module" || blockType === "text/ecmascript";
+    if (!isJs) continue;
     if (m[2].trim()) blocks.push({ code: m[2], offsetLine: html.slice(0, m.index).split("\n").length });
   }
   return blocks;

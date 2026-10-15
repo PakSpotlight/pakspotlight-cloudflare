@@ -500,7 +500,7 @@ var index_default = {
         url.hostname = "classictvpakistan.com";
         return redirect(url.toString());
       }
-      const CLEAN_HTML_PATHS = { "/index.html": "/", "/browse.html": "/browse", "/watch.html": "/watch", "/admin.html": "/admin" };
+      const CLEAN_HTML_PATHS = { "/index.html": "/", "/browse.html": "/browse", "/watch.html": "/watch", "/admin.html": "/admin", "/get-app.html": "/get-app" };
       if (CLEAN_HTML_PATHS[url.pathname]) {
         url.pathname = CLEAN_HTML_PATHS[url.pathname];
         return redirect(url.toString());
@@ -514,6 +514,65 @@ var index_default = {
       if (url.pathname === "/index") {
         url.pathname = "/";
         return redirect(url.toString());
+      }
+    }
+
+    // ── Android app: anonymous launch ping ──
+    // The APK is sideloaded, so install numbers only reach us if the app reports
+    // itself. One request per install per 12 h, carrying nothing but a random
+    // install id that is only ever stored next to the build it came from.
+    if (url.pathname === "/api/app/ping" && request.method === "GET") {
+      const versionCode = String(url.searchParams.get("v") || "0").slice(0, 8);
+      const installId = String(url.searchParams.get("i") || "").slice(0, 32);
+      ctx.waitUntil((async () => {
+        try {
+          const statsUrl = `${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/app-stats.json`;
+          let stats = { total: 0, versions: {}, installs: {}, lastPing: null, updatedAt: null };
+          try {
+            const cur = await fetch(`${statsUrl}?t=${Date.now()}`);
+            if (cur.ok) stats = Object.assign(stats, await cur.json());
+          } catch { /* first run — start from the defaults */ }
+          if (!stats.versions || typeof stats.versions !== "object" || Array.isArray(stats.versions)) stats.versions = {};
+          if (!stats.installs || typeof stats.installs !== "object" || Array.isArray(stats.installs)) stats.installs = {};
+
+          stats.total = Number(stats.total || 0) + 1;
+          stats.versions[versionCode] = Number(stats.versions[versionCode] || 0) + 1;
+          if (installId) {
+            // Cap the install map so a popular build cannot grow the file without bound.
+            if (Object.keys(stats.installs).length > 2000) stats.installs = {};
+            stats.installs[installId] = { v: versionCode, at: new Date().toISOString() };
+          }
+          stats.lastPing = new Date().toISOString();
+          stats.updatedAt = stats.lastPing;
+
+          const upRes = await fetch(`${SUPABASE_URL}/storage/v1/object/thumbnails/config/app-stats.json`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_PUBLISHABLE_KEY,
+              authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+              "content-type": "application/json",
+              "x-upsert": "true"
+            },
+            body: JSON.stringify(stats)
+          });
+          console.log("app ping", versionCode, installId || "anon", upRes.status);
+        } catch (e) {
+          console.error("app ping failed:", e.message || e);
+        }
+      })());
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
+    // Android app: install stats (Admin authenticated)
+    if (url.pathname === "/api/app/stats" && request.method === "GET") {
+      const auth = await requireUser(request);
+      if (auth.error) return json({ error: auth.error }, 401);
+      try {
+        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/app-stats.json?t=${Date.now()}`);
+        if (!res.ok) return json({ total: 0, versions: {}, installs: {}, lastPing: null });
+        return json(await res.json());
+      } catch (e) {
+        return json({ error: e.message || String(e) }, 500);
       }
     }
 
@@ -1125,6 +1184,13 @@ var index_default = {
       const browseUrl = new URL(request.url);
       browseUrl.pathname = "/browse.html";
       return env.ASSETS.fetch(browseUrl.toString());
+    }
+
+    // Rewrite /get-app to /get-app.html (Android download page)
+    if (url.pathname === "/get-app") {
+      const appUrl = new URL(request.url);
+      appUrl.pathname = "/get-app.html";
+      return env.ASSETS.fetch(appUrl.toString());
     }
 
     // Static assets fallback

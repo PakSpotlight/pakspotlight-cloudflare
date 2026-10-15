@@ -1,0 +1,140 @@
+name: Android APK
+
+# Builds the sideloaded Android app (minSdk 23 / Android 6.0) and, when the signing secrets are
+# present, publishes it as a GitHub release and refreshes public/app/latest.json so the installed
+# app and /get-app point at the new build.
+#
+# Required repository secrets for a distributable build:
+#   ANDROID_KEYSTORE_BASE64    base64 of the .keystore file (release.keystore)
+#   ANDROID_KEYSTORE_PASSWORD  the keystore password
+#   ANDROID_KEY_ALIAS          the key alias inside the keystore
+#   ANDROID_KEY_PASSWORD       the key password
+#
+# Without those secrets the workflow still runs and uploads an unsigned APK as a build artifact —
+# useful for smoke-testing on a device, never for distribution.
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish a GitHub release and update public/app/latest.json"
+        type: boolean
+        default: true
+      notes:
+        description: "Release notes (one line, shown in the app's update notice)"
+        required: false
+  push:
+    tags:
+      - "app-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build release APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Read version from app.json
+        id: version
+        run: |
+          node -e "const c=require('./app.json').expo;const o=process.env.GITHUB_OUTPUT;require('fs').appendFileSync(o,'name='+c.version+'\n');require('fs').appendFileSync(o,'code='+c.android.versionCode+'\n');"
+
+      - name: Generate the native Android project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Write signing keystore
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$GITHUB_WORKSPACE/mobile/release.keystore"
+          ls -l "$GITHUB_WORKSPACE/mobile/release.keystore"
+
+      - name: Build signed release APK
+        if: env.KEYSTORE_B64 != ''
+        working-directory: mobile/android
+        run: |
+          ./gradlew assembleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/mobile/release.keystore" \
+            -Pandroid.injected.signing.store.password="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.ANDROID_KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.ANDROID_KEY_PASSWORD }}"
+
+      - name: Build unsigned release APK (no signing secrets configured)
+        if: env.KEYSTORE_B64 == ''
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Locate APK
+        id: apk
+        run: |
+          APK=$(ls -t android/app/build/outputs/apk/release/*.apk | head -n 1)
+          echo "file=$APK" >> "$GITHUB_OUTPUT"
+          ls -lh "$APK"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: classic-tv-pakistan-${{ steps.version.outputs.name }}
+          path: mobile/${{ steps.apk.outputs.file }}
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: env.KEYSTORE_B64 != '' && (github.event_name == 'push' || inputs.publish)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          APK="${{ steps.apk.outputs.file }}"
+          TAG="app-v${{ steps.version.outputs.name }}"
+          FILE="classic-tv-pakistan-${{ steps.version.outputs.name }}.apk"
+          cp "$APK" "$FILE"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$FILE" --clobber
+          else
+            gh release create "$TAG" "$FILE" \
+              --title "Android app ${{ steps.version.outputs.name }}" \
+              --notes "Classic TV Pakistan for Android (Android 6.0+). Direct APK — no store, no account."
+          fi
+
+      - name: Refresh public/app/latest.json
+        if: env.KEYSTORE_B64 != '' && (github.event_name == 'push' || inputs.publish)
+        working-directory: .
+        run: |
+          set -euo pipefail
+          node scripts/write-app-manifest.js \
+            "mobile/${{ steps.apk.outputs.file }}" \
+            "${{ github.repository }}" \
+            "${{ inputs.notes }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/app/latest.json
+          git commit -m "chore: Android release ${{ steps.version.outputs.name }} [skip ci]" || echo "manifest unchanged"
+          git push

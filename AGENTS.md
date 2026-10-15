@@ -29,6 +29,47 @@ git commit -m "description"
 git push origin main
 ```
 
+## Android App (`mobile/`)
+
+The archive also ships as a sideloaded Android app: **Expo SDK 51 + React Native 0.74.5**, `minSdk 23`
+(Android 6.0). Expo SDK 52+ dropped Android 6, so the app is deliberately pinned to SDK 51.
+Notes: `mobile/README.md`. Design language: `docs/android-app-plan.md` §7.
+
+### Preview it in a browser
+```bash
+cd mobile
+npm install
+npm run web        # http://localhost:8081
+```
+Expo Router gives every screen a URL (`/`, `/browse`, `/library`, `/drama/26`, `/watch/26`), so the
+browser preview is the fastest way to review design changes. For phone-accurate layout use the
+browser's device toolbar (Chrome: Ctrl+Shift+M → Android, 390×844).
+
+### Ship a build
+Actions → **Android APK** → Run workflow. It runs `expo prebuild` + `gradlew assembleRelease`, uploads
+the APK as a GitHub release, and rewrites `public/app/latest.json` — the file `/get-app` and the
+in-app update check read. Repository secrets required:
+
+| Secret | What it is |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | base64 of the release `.keystore` |
+| `ANDROID_KEYSTORE_PASSWORD` | keystore password |
+| `ANDROID_KEY_ALIAS` | key alias inside the keystore |
+| `ANDROID_KEY_PASSWORD` | key password |
+
+Without them the workflow still builds an unsigned APK for device testing — never distribute that one.
+
+### App rules
+- **The ES2019 browser rule does not apply to `mobile/`** (Hermes is the engine). `npm run check:es2019`
+  covers `public/` only.
+- Bump **both** `mobile/app.json` (`expo.version` + `android.versionCode`) and `mobile/src/lib/update.ts`
+  (`APP_VERSION`, `APP_VERSION_CODE`) on every release.
+- Accent, type scale and layout tokens live in `mobile/src/theme.ts`. Change them there, never inline.
+- After the first signed build, replace the placeholder SHA-256 in `public/.well-known/assetlinks.json`
+  with the release certificate's fingerprint, or shared `/watch?id=` links will keep opening in the browser.
+- Playback needs a real `Referer` for the YouTube embed. `mobile/src/lib/youtube.ts` is the only place
+  that builds player URLs and the only place that opens the YouTube app.
+
 ## Critical Rules
 
 1. **Every change MUST be pushed to GitHub after thorough testing.** No exceptions.
@@ -46,6 +87,7 @@ Before pushing any change:
 - [ ] AI auto-fill returns valid JSON (test with a YouTube URL)
 - [ ] No console errors in browser or Cloudflare logs
 - [ ] `npm run check:es2019` passes (see Browser Support Floor)
+- [ ] App changes only: `cd mobile; npx tsc --noEmit` passes and the browser preview renders the touched screens
 - [ ] `git status` clean before commit
 - [ ] `git push origin main` succeeds
 
@@ -79,6 +121,7 @@ is a parse error, and a parse error kills the **entire script file**, which look
 | `OPENROUTER_DEFAULT_MODEL` | wrangler.jsonc vars | Default AI model |
 | `YOUTUBE_API_KEY` | Cloudflare Secret | YouTube Data API v3 |
 | Supabase URL + Key | Hardcoded in HTML/JS | Database connection |
+| `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` / `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD` | GitHub Actions secrets | Signing the Android APK (`mobile/`) |
 
 ## Architecture Notes
 

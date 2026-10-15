@@ -230,13 +230,12 @@ MY LIBRARY                            "Next episode" bar, and an always
 - The poster grid uses the same `image` field the website uses; `thumbnail_url` values that 404 must fall back to a
   neutral placeholder card, never a broken frame.
 
-### 7.7 Open question
+### 7.7 Accent colour — decided
 
-**Accent colour.** Keep ARY Plus's acid lime (closest to the reference), or use the site's existing gold
-`#F5C542` so the app matches classictvpakistan.com? Recommendation: take the reference's structure *and* its lime
-accent, keeping gold only inside the existing logo artwork — the black canvas, white pills, hairline chips, heavy
-grotesque, Urdu Nastaliq and brush taglines are what carry the resemblance, and a token change flips the accent in
-one line if it reads wrong on a device.
+**Acid lime `#C6F32A`** (the reference's accent), not the site's gold `#F5C542`. The app carries the
+reference's structure *and* its energy; gold stays inside the logo artwork. The token is
+`color.accent` in `mobile/src/theme.ts` and can be flipped in one line if it reads wrong on a
+device. The website keeps its gold identity — the app is allowed to look like its own product.
 
 ## 8. Milestones
 
@@ -366,11 +365,55 @@ prompts correctly in the app.
 **Settled (15 Oct 2026)**
 1. ✔ **Distribution:** signed APK from classictvpakistan.com only; Play Store is a later, separate track (§9).
 2. ✔ **Accounts:** none in v1 — My List and watch history stay on the device (M6 is optional later work).
-3. ✔ **UI/UX reference:** ARY Plus design language, specified in §7. Sub-question still open: accent lime vs gold (§7.7).
+3. ✔ **UI/UX reference:** ARY Plus design language, specified in §7.
+4. ✔ **Accent:** ARY Plus acid lime `#C6F32A`, not the site's gold (§7.7).
+5. ✔ **Package name:** `com.classictvpakistan.app` — permanent, cannot change after the first release.
+6. ✔ **Display name:** "Classic TV Pakistan" (launcher and splash).
+7. ✔ **Signing key:** owned by the site owner; kept as GitHub secrets (`ANDROID_KEYSTORE_BASE64`,
+   `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`) plus one offline backup.
+   Losing it means the app can never be updated under the same package name.
+8. ✔ **Language:** TypeScript — the ES2019 browser rule does not apply inside `mobile/` (Hermes is the engine).
+9. ✔ **Toolchain:** **Expo SDK 51 + React Native 0.74.5 + Expo Router 3.5**, not bare RN 0.75.5. SDK 51 is the
+   last Expo that supports `minSdk 23`, and it brings Metro's web target — the same code runs as an Android app
+   *and* as a browser preview (`npm run web`), which is how the design is reviewed. See §13 for what changed.
+10. ✔ **Build:** CI only (GitHub Actions). No JDK or Android SDK is installed on this machine.
 
-**Needed before M0 starts**
-1. **Package name** — e.g. `com.classictvpakistan.app` (final, cannot change after release).
-2. **Who owns the signing key** and where the offline backup lives.
-3. **App display name** on the launcher — "Classic TV" or "Classic TV Pakistan".
-4. **TypeScript vs plain JS** for the app code (repo is plain JS; TS is the RN default).
-5. **Who builds**: CI only (recommended, nothing to install), or also set up Android Studio locally.
+---
+
+## 13. Implementation log — M0–M5 (15 Oct 2026)
+
+Built in one pass. What exists in the repository now, and what has actually been verified.
+
+| Area | Where | State |
+|---|---|---|
+| App project | `mobile/` (Expo SDK 51, RN 0.74.5, TypeScript) | Runs: `npm run web` |
+| Design system | `mobile/src/theme.ts` + §7 above | Implemented |
+| Screens | Home · Browse · My Library · Drama detail · Player | Implemented, browser-verified |
+| Data | `mobile/src/lib/api.ts` — Supabase REST + AsyncStorage cache | Verified against the live archive |
+| My List / watch history | `mobile/src/lib/storage.ts` — AsyncStorage only | Verified in the browser preview |
+| Player | `src/components/Player.tsx` (WebView) + `Player.web.tsx` (iframe) | **Not verified on a device** |
+| Android config | `mobile/app.json` — `minSdkVersion 23`, App Links, icons, splash | Written, not yet prebuilt |
+| CI | `.github/workflows/android.yml` | Written, **never run** |
+| Distribution | `/get-app` page, `public/app/latest.json`, `GET /api/app/ping` | Written, not yet deployed |
+| App Links | `public/.well-known/assetlinks.json` | **Placeholder fingerprint** — replace after the first signed build |
+
+### Deviations from the plan above
+
+1. **Expo SDK 51 instead of bare RN 0.75.5** (§12.9). Reason: the requirement to preview the UI in a browser.
+   SDK 51 still targets `minSdk 23`, so Android 6 support is unchanged. Cost: Expo's dependency set is larger
+   than the four-native-deps target in §5, and SDK 51 pins RN 0.74.5 rather than 0.75.5.
+2. **`mobile/` instead of `app/`** — Expo Router reserves `app/` for routes, so the project is `mobile/` and its
+   routes live in `mobile/app/`.
+3. **No `@supabase/supabase-js`, as planned** — plain `fetch` against `rest/v1/Drama` and the two config JSONs.
+4. **Layout cap:** screens are capped at 640 dp (`contentMaxWidth`) so tablets and the browser preview keep the
+   phone layout honest. Phones never reach the cap.
+5. **The accent moment moved:** the Roman-Urdu brush line sits under the header on Home (`Tagline`), not under a
+   section title — that is where the reference puts it.
+
+### Still open
+
+1. **Signing keystore** — create it, add the four repository secrets, keep an offline backup (§12.7).
+2. **Run the workflow** — first signed build, then install the APK on a real Android 6 phone.
+3. **Replace the assetlinks fingerprint** with the release certificate's SHA-256 so
+   `classictvpakistan.com/watch?id=…` links open in the app instead of the browser.
+4. **YouTube playback on Android 6** — the one risk in §10 that no browser preview can settle.
