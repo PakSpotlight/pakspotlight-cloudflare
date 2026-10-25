@@ -147,6 +147,9 @@ function redirect(location, status = 301) {
   });
 }
 
+var FETCH_FIX_SCRIPT = "<script>(function(){try{var orig=window.fetch;if(!orig||window.__fetchFixInjected){return;}window.__fetchFixInjected=true;window.fetch=function(input,init){try{if(typeof input==='string'&&input.indexOf('http')!==0&&input.indexOf('//')!==0){var url=new URL(input,window.location.href);url.searchParams.set('_',Date.now());return orig.call(this,url.toString(),init);}}catch(e){}return orig.call(this,input,init);};}catch(e){}})();</script>";
+var __injectFetchFix = async function(resp){try{var ct=resp.headers.get("content-type")||"";if(ct.indexOf("text/html")!==-1){var h=await resp.text();var inj=false;if(h.indexOf("<head>")!==-1){h=h.replace("<head>","<head>"+FETCH_FIX_SCRIPT);inj=true}else if(h.indexOf("</head>")!==-1){h=h.replace("</head>",FETCH_FIX_SCRIPT+"</head>");inj=true}if(inj){var nh=new Headers(resp.headers);nh.set("cache-control","no-store");return new Response(h,{headers:nh,status:resp.status})}}}catch(e){}return resp};
+
 function getBearer(request) {
   const h = request.headers.get("authorization") || "";
   return h.startsWith("Bearer ") ? h.slice(7) : "";
@@ -261,7 +264,7 @@ async function aiAutofill(video, env, opts = {}) {
   }
 
   const desc = String(video.description || "");
-  const hasCredits = /(writer|written by|تحریر|director|ہدایت|cast|فنکار|producer|پروڈیوسر)/i.test(desc);
+  const hasCredits = /(writer|written by|تحریر|director|ہدایت|cast|ف��کار|producer|پروڈیوسر)/i.test(desc);
   const needsSearch = opts.forceSearch === true
     ? true
     : opts.skipSearch === true
@@ -393,7 +396,7 @@ async function aiAutofill(video, env, opts = {}) {
     thumbnail: video.thumbnail || ""
   };
   fields.seo_title = `${fields.title}${fields.year ? ` (${fields.year})` : ""} - PTV Classic | Classic TV Pakistan`;
-  fields.seo_description = `${fields.title} — classic PTV drama${fields.writer ? ` by ${fields.writer}` : ""}${fields.cast ? ` starring ${String(fields.cast).split(",").slice(0, 3).join(",")}` : ""}. Watch on Classic TV Pakistan.`.slice(0, 160);
+  fields.seo_description = `${fields.title} — classic PTV drama${fields.writer ? ` by ${fields.writer}` : ""}${fields.cast ? ` starring ${String(fields.cast).split(",").slice(0, 3).join(",")}` : ""}.`;
 
   if (key && fields.title) {
     const cacheable = { ...fields };
@@ -973,7 +976,7 @@ var index_default = {
         xml += '</urlset>';
         return new Response(xml, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
       } catch {
-        return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://classictvpakistan.com/</loc></url></urlset>', { headers: { "content-type": "application/xml; charset=utf-8" } });
+        return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://classictvpakistan.com/</loc></url></urlset>', { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
       }
     }
 
@@ -986,7 +989,7 @@ var index_default = {
       if (!isBot) {
         const watchUrl = new URL(request.url);
         watchUrl.pathname = "/watch.html";
-        return env.ASSETS.fetch(watchUrl.toString());
+        return __injectFetchFix(await env.ASSETS.fetch(watchUrl.toString()));
       }
       // SSR: inject drama meta tags for bots
       try {
@@ -1041,7 +1044,7 @@ var index_default = {
             const catPath = `/browse?cat=${encodeURIComponent(d.type || "Serial / Series")}`;
             const bodyBlock =
               `<main class="drama-seo-copy" style="max-width:820px;margin:0 auto;padding:96px 20px 56px;color:#e8e8e8;font-family:'Outfit',system-ui,sans-serif">` +
-              `<nav aria-label="Breadcrumb" style="font-size:13px;color:#9aa0a6;margin-bottom:16px"><a href="/" style="color:#f5c542;text-decoration:none">Home</a> › <a href="${escHtml(catPath)}" style="color:#f5c542;text-decoration:none">${escHtml(d.type || "Drama")}</a> › <span>${escHtml(d.title || "")}</span></nav>` +
+              `<nav aria-label="Breadcrumb" style="font-size:13px;color:#9aa0a6;margin-bottom:16px"><a href="/" style="color:#f5c542;text-decoration:none">Home</a> › <a href="${escHtml(catPath)}" style="color:#f5c542;text-decoration:none">${escHtml(d.type || "Drama")}</a></nav>` +
               `<h1 style="font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff">${escHtml(h1Text)}</h1>` +
               (d.urdu_title ? `<div style="direction:rtl;color:#f5c542;font-size:18px;margin-bottom:10px">${escHtml(d.urdu_title)}</div>` : "") +
               (metaBits.length ? `<p style="color:#9aa0a6;font-size:14px;margin:0 0 18px">${metaBits.join(" · ")}</p>` : "") +
@@ -1126,13 +1129,13 @@ var index_default = {
           }
         } catch { /* fall through to the raw asset */ }
       }
-      return fallbackResp;
+      return __injectFetchFix(fallbackResp);
     }
 
     // SSR homepage for bots
     if (url.pathname === "/") {
       if (!isBot) {
-        return env.ASSETS.fetch(request);
+        return __injectFetchFix(await env.ASSETS.fetch(request));
       }
       try {
         const dr = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=id,title,urdu_title,year,type,writer,director,cast,description,thumbnail_url&order=id.desc&limit=50`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
@@ -1171,30 +1174,30 @@ var index_default = {
             `<meta name="twitter:title" content="Classic TV Pakistan — Classic PTV Drama Archive">\n` +
             `<meta name="twitter:description" content="Stream the golden age of Pakistani television.">\n` +
             `<meta name="twitter:image" content="https://classictvpakistan.com/logo.png">\n` +
-            `<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Classic TV Pakistan","url":"https://classictvpakistan.com","description":"Classic PTV Drama Archive","potentialAction":{"@type":"SearchAction","target":"https://classictvpakistan.com/browse?q={search_term_string}","query-input":"required name=search_term_string"}}</script>\n`;
+            `<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Classic TV Pakistan","url":"https://classictvpakistan.com","description":"Classic PTV Drama archive"}</script>\n`;
           html = html.replace("</head>", siteMeta + "</head>");
           return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
         }
       } catch (e) { console.error("SSR homepage error:", e.message || e); }
-      return env.ASSETS.fetch(request.url);
+      return __injectFetchFix(await env.ASSETS.fetch(request.url));
     }
 
     // Rewrite /browse to /browse.html
     if (url.pathname === "/browse") {
       const browseUrl = new URL(request.url);
       browseUrl.pathname = "/browse.html";
-      return env.ASSETS.fetch(browseUrl.toString());
+      return __injectFetchFix(await env.ASSETS.fetch(browseUrl.toString()));
     }
 
     // Rewrite /get-app to /get-app.html (Android download page)
     if (url.pathname === "/get-app") {
       const appUrl = new URL(request.url);
       appUrl.pathname = "/get-app.html";
-      return env.ASSETS.fetch(appUrl.toString());
+      return __injectFetchFix(await env.ASSETS.fetch(appUrl.toString()));
     }
 
     // Static assets fallback
-    return env.ASSETS.fetch(request);
+    return __injectFetchFix(await env.ASSETS.fetch(request));
   }
 };
 
