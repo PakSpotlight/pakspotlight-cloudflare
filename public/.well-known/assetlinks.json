@@ -1,11 +1,13 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.classictvpakistan.app",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_THE_RELEASE_SIGNING_CERT_SHA256"
+        "34:87:90:2B:B5:F8:D6:23:40:A2:2D:6D:8A:E3:A9:ED:A9:DB:B2:32:66:6D:87:FB:3E:A5:0B:34:B7:EC:5B:02"
       ]
     }
   }
