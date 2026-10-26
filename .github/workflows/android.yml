@@ -160,5 +160,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/app/latest.json
-          git commit -m "chore: Android release ${{ steps.version.outputs.name }} [skip ci]" || echo "manifest unchanged"
+          # No [skip ci] here on purpose: the manifest commit must itself deploy to
+          # production, otherwise the app update check and /get-app stay on the old
+          # manifest. It does not loop — only the Android workflow writes this file.
+          git commit -m "chore: Android release ${{ steps.version.outputs.name }}" || echo "manifest unchanged"
           git push origin HEAD:main
