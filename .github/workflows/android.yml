@@ -139,14 +139,26 @@ jobs:
       - name: Refresh public/app/latest.json
         if: env.KEYSTORE_B64 != '' && (github.event_name == 'push' || inputs.publish)
         working-directory: .
+        env:
+          MANIFEST_SOURCE: ${{ github.workspace }}/public/app/latest.json
         run: |
           set -euo pipefail
           node scripts/write-app-manifest.js \
             "mobile/${{ steps.apk.outputs.file }}" \
             "${{ github.repository }}" \
             "${{ inputs.notes }}"
+          # Commit on a throwaway worktree based on origin/main. A tag-triggered run sits on a
+          # detached HEAD, and prebuild has already dirtied tracked files (mobile/package.json),
+          # so committing in place and running a bare `git push` fails and silently leaves the
+          # site serving published:false. Building the commit on top of origin/main always
+          # fast-forwards, whichever event started the run.
+          git fetch origin main
+          rm -rf /tmp/manifest-wt
+          git worktree add /tmp/manifest-wt origin/main
+          cp "$MANIFEST_SOURCE" /tmp/manifest-wt/public/app/latest.json
+          cd /tmp/manifest-wt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/app/latest.json
           git commit -m "chore: Android release ${{ steps.version.outputs.name }} [skip ci]" || echo "manifest unchanged"
-          git push
+          git push origin HEAD:main
