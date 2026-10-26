@@ -75,16 +75,46 @@ let activeTab = "catalog";
 // ----------------------------------------------------
 // DATA
 // ----------------------------------------------------
+const ADMIN_PAGE_SIZE = 1000; // Supabase's server-side max-rows per response
+const ADMIN_MAX_PAGES = 50;   // runaway guard: up to 50k titles
+
 async function fetchArchiveData() {
   if (!window.sbClient) return;
-  const [dramaRes, catRes, featRes] = await Promise.all([
-    window.sbClient.from("Drama").select("*").order("id", { ascending: false }),
+  const [catRes, featRes] = await Promise.all([
     fetch("/api/categories").catch(() => null),
     fetch("/api/featured").catch(() => null)
   ]);
 
-  if (dramaRes.data) {
-    allDramas = dramaRes.data.map(r => {
+  // Page the Drama query explicitly: a single `.select("*")` is silently capped at 1000 rows
+  // and the archive is larger, so the admin catalog only ever saw the newest 1000 entries.
+  const dramaRows = [];
+  let dramaError = null;
+  for (let page = 0; page < ADMIN_MAX_PAGES; page += 1) {
+    const from = page * ADMIN_PAGE_SIZE;
+    const to = from + ADMIN_PAGE_SIZE - 1;
+    const { data, error } = await window.sbClient
+      .from("Drama")
+      .select("*")
+      .order("id", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      dramaError = error;
+      break;
+    }
+    if (Array.isArray(data) && data.length > 0) {
+      for (let i = 0; i < data.length; i += 1) dramaRows.push(data[i]);
+      if (data.length < ADMIN_PAGE_SIZE) break;
+    } else {
+      break;
+    }
+  }
+
+  if (dramaError) {
+    console.error("Drama query failed:", dramaError);
+  }
+  if (dramaRows.length > 0) {
+    allDramas = dramaRows.map(r => {
       const parsedEp = r.episode_number != null ? Number(r.episode_number) : parseEpisodeNumber(r.title);
       const rawSeries = (r.series_name || "").trim();
       const cleanedTitle = cleanDramaTitle(r.title);
