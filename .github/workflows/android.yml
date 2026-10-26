@@ -57,12 +57,20 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      # Pin the SDK packages instead of letting Gradle auto-provision them mid-build.
-      - name: Install Android SDK packages
-        run: sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+      # ubuntu-latest already ships the Android SDK (platform 34 + build-tools 34.0.0) and exports
+      # ANDROID_HOME. android-actions/setup-android@v3 fails on the current runner image before the
+      # build even starts (run 40333417613 died there after 12s), so locate what is already there.
+      - name: Locate the Android SDK
+        run: |
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          if [ ! -d "$SDK" ]; then
+            echo "::error::No Android SDK found at $SDK"
+            exit 1
+          fi
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "Using $SDK"
+          ls "$SDK/platforms" "$SDK/build-tools"
 
       - name: Install dependencies
         run: npm ci
