@@ -1,11 +1,11 @@
 {
-  "published": false,
-  "versionCode": 0,
-  "versionName": "1.0.0",
-  "apkUrl": null,
+  "published": true,
+  "versionCode": 2,
+  "versionName": "1.0.1",
+  "apkUrl": "https://github.com/PakSpotlight/pakspotlight-cloudflare/releases/download/app-v1.0.1/classic-tv-pakistan-1.0.1.apk",
   "notes": "",
-  "sizeMB": null,
-  "sha256": null,
+  "sizeMB": 66.2,
+  "sha256": "ee298ab659d45fa01d3ef32c19127883e16b087f9cab4239c0c737520fa41c60",
   "minAndroid": "6.0",
-  "releasedAt": null
+  "releasedAt": "2026-10-26T16:27:48.476Z"
 }
