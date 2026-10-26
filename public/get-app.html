@@ -68,6 +68,12 @@
   }
   .app-download:hover { background: var(--gold-hover); transform: translateY(-1px); }
   .app-download svg { flex: none; }
+  .app-download.is-disabled {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    cursor: default;
+    pointer-events: none;
+  }
   .app-download .dl-size { font-weight: 600; opacity: .75; }
   .app-secondary {
     display: inline-flex;
@@ -190,7 +196,7 @@
   </header>
 
   <main class="app-page">
-    <span class="app-kicker">Android app · v<span id="appVersion">1.0.0</span></span>
+    <span class="app-kicker">Android app · <span id="appVersion">coming soon</span></span>
     <h1>Classic TV Pakistan, on the phone you already have</h1>
     <p class="app-lede">
       The whole archive — drama serials, long plays, comedy — in an app built for older Android
@@ -198,7 +204,7 @@
     </p>
 
     <div class="app-actions">
-      <a class="app-download" id="downloadBtn" href="#download" rel="nofollow">
+      <a class="app-download is-disabled" id="downloadBtn" aria-disabled="true">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 3v12"></path><path d="M7 12l5 5 5-5"></path><path d="M5 21h14"></path>
         </svg>
@@ -304,9 +310,24 @@
     var sizeEl = document.getElementById("downloadSize");
     var note = document.getElementById("appNote");
     var meta = document.getElementById("appMeta");
+    var versionEl = document.getElementById("appVersion");
     if (!btn || !label) return;
 
     function setText(el, text) { if (el) el.textContent = text; }
+
+    // No release yet (or a manifest with no file behind it): say so instead of offering a
+    // button that lands on a 404. This is the state the page is in until the release workflow
+    // publishes its first signed build.
+    function showUnpublished(version) {
+      setText(label, "Android build not published yet");
+      setText(sizeEl, "");
+      setText(versionEl, "coming soon");
+      btn.className = "app-download is-disabled";
+      btn.setAttribute("aria-disabled", "true");
+      btn.removeAttribute("href");
+      if (meta) meta.textContent = "Planned version " + (version || "1.0.0") + " · Android " + "6.0 and newer · Free cultural archive";
+      if (note) note.textContent = "The Android build has not been published yet, so there is no file to download right now. Everything on the site works in your browser in the meantime.";
+    }
 
     function fmtSize(mb) {
       if (typeof mb !== "number" || !isFinite(mb) || mb <= 0) return "";
@@ -323,14 +344,17 @@
     fetch("/app/latest.json", { cache: "no-store" })
       .then(function (res) { if (!res.ok) throw new Error("manifest " + res.status); return res.json(); })
       .then(function (data) {
-        if (!data || !data.apkUrl) throw new Error("manifest incomplete");
-        var version = data.versionName || String(data.versionCode || "");
+        if (!data) throw new Error("manifest missing");
+        var version = data.versionName || String(data.versionCode || "1.0.0");
+        if (data.published === false || !data.apkUrl) { showUnpublished(version); return; }
+
+        btn.className = "app-download";
+        btn.removeAttribute("aria-disabled");
         btn.setAttribute("href", data.apkUrl);
         btn.setAttribute("rel", "noopener");
         setText(label, "Download the APK · v" + version);
         setText(sizeEl, fmtSize(data.sizeMB));
-        setText(document.getElementById("appVersion"), version);
-        setText(document.getElementById("appVersionMeta"), version);
+        setText(versionEl, "v" + version);
         if (meta) {
           meta.innerHTML = "Version " + version + " (" + (data.versionCode || 1) + ")" + fmtDate(data.releasedAt) + " · Android " + (data.minAndroid || "6.0") + " and newer · Free cultural archive";
         }
@@ -338,6 +362,7 @@
       })
       .catch(function () {
         setText(label, "Download link unavailable");
+        btn.className = "app-download is-disabled";
         btn.removeAttribute("href");
         if (note) note.textContent = "We could not fetch the current build information. Please try again in a moment.";
       });

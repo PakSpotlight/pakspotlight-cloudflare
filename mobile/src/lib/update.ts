@@ -29,8 +29,9 @@ export async function fetchLatestManifest(): Promise<UpdateInfo | null> {
   try {
     const res = await fetch(`${SITE_ORIGIN}/app/latest.json?t=${Date.now()}`);
     if (!res.ok) return null;
-    const data = (await res.json()) as Partial<UpdateInfo>;
-    if (!data || typeof data.versionCode !== "number" || !data.apkUrl) return null;
+    const data = (await res.json()) as Partial<UpdateInfo> & { published?: boolean };
+    // `published` is false only in the placeholder manifest that ships before the first release.
+    if (!data || data.published === false || typeof data.versionCode !== "number" || !data.apkUrl) return null;
     return {
       versionCode: data.versionCode,
       versionName: String(data.versionName || data.versionCode),

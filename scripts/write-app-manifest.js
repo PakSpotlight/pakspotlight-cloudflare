@@ -44,6 +44,7 @@ const file = "classic-tv-pakistan-" + versionName + ".apk";
 const apkUrl = "https://github.com/" + repo + "/releases/download/" + tag + "/" + file;
 
 const manifest = {
+  published: true,
   versionCode: versionCode,
   versionName: versionName,
   apkUrl: apkUrl,

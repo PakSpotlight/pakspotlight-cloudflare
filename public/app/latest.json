@@ -1,10 +1,11 @@
 {
-  "versionCode": 1,
+  "published": false,
+  "versionCode": 0,
   "versionName": "1.0.0",
-  "apkUrl": "https://github.com/PakSpotlight/pakspotlight-cloudflare/releases/download/app-v1.0.0/classic-tv-pakistan-1.0.0.apk",
-  "notes": "First public build — Home, Browse, My Library, the player, and Android 6.0 support.",
+  "apkUrl": null,
+  "notes": "",
   "sizeMB": null,
-  "minAndroid": "6.0",
   "sha256": null,
-  "releasedAt": "2026-10-15T00:00:00Z"
+  "minAndroid": "6.0",
+  "releasedAt": null
 }
