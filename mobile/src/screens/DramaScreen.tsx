@@ -2,10 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  FlatList,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -20,6 +18,7 @@ import { StateView } from "../components/StateView";
 import { TopBar } from "../components/TopBar";
 import { useCatalog } from "../lib/catalog";
 import {
+  displayTitle,
   Drama,
   episodesLabel,
   extractYouTubeId,
@@ -31,6 +30,7 @@ import {
   titleKey,
 } from "../lib/dramas";
 import { getHistory } from "../lib/storage";
+import { shareTitle } from "../lib/share";
 import { openInYouTube, shareUrl } from "../lib/youtube";
 import { color, contentMaxWidth, font, GRID_COLUMNS, gutter, space, type } from "../theme";
 
@@ -65,7 +65,10 @@ export function DramaScreen() {
     loadHistory();
   }, [loadHistory]);
 
-  const cardWidth = Math.floor((width - gutter * 2 - space.md * (GRID_COLUMNS - 1)) / GRID_COLUMNS);
+  // Grid math has to respect the same content column the rest of the screen uses, or the third
+  // card spills past the right edge on tablets and desktop web.
+  const usable = Math.min(width, contentMaxWidth) - gutter * 2 - space.md * (GRID_COLUMNS - 1);
+  const cardWidth = Math.floor(usable / GRID_COLUMNS);
 
   if (loading && !drama) return <StateView mode="loading" />;
   if (!drama) {
@@ -92,12 +95,7 @@ export function DramaScreen() {
     : "Play";
 
   const onShare = () => {
-    const url = shareUrl(drama.id);
-    if (typeof navigator !== "undefined" && (navigator as any).share) {
-      void (navigator as any).share({ title: drama.title, url }).catch(() => undefined);
-      return;
-    }
-    void Share.share({ message: `${drama.title} — ${url}`, url });
+    void shareTitle(displayTitle(drama), shareUrl(drama.id));
   };
 
   return (
@@ -179,7 +177,7 @@ export function DramaScreen() {
 
       {tab === "info" ? (
         <View style={styles.tabBody}>
-          <InfoRow label="Title" value={drama.title} />
+          <InfoRow label="Title" value={displayTitle(drama)} />
           {drama.urdu ? <InfoRow label="Urdu" value={drama.urdu} urdu /> : null}
           <InfoRow label="Type" value={prettyType(drama.type)} />
           {drama.year ? <InfoRow label="Year" value={drama.year} /> : null}

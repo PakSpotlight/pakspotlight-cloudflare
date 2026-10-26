@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { Drama, prettyType } from "../lib/dramas";
+import { Drama, displayTitle, prettyType } from "../lib/dramas";
 import { color, font, POSTER_RATIO, radius, space, type } from "../theme";
 import { ProgressLine } from "./Skeleton";
 
@@ -12,20 +12,24 @@ type Props = {
   /** 0–1. When present a thin accent line sits across the poster's bottom edge. */
   progress?: number;
   onPress: () => void;
+  /** Optional long-press (My Library uses it to offer removal). */
+  onLongPress?: () => void;
 };
 
 /** 2:3 archive poster with an episode badge. Every grid and row in the app uses this card. */
-export function PosterCard({ drama, width, episodeCount = 1, progress, onPress }: Props) {
+export function PosterCard({ drama, width, episodeCount = 1, progress, onPress, onLongPress }: Props) {
   const [failed, setFailed] = useState(false);
   const height = Math.round(width * POSTER_RATIO);
   const showImage = !!drama.image && !failed;
   const meta = drama.year ? `${drama.year}` : prettyType(drama.type);
+  const title = displayTitle(drama);
 
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
       accessibilityRole="button"
-      accessibilityLabel={`${drama.title}${episodeCount > 1 ? `, ${episodeCount} episodes` : ""}`}
+      accessibilityLabel={`${title}${episodeCount > 1 ? `, ${episodeCount} episodes` : ""}`}
       style={({ pressed }) => [{ width }, pressed && styles.pressed]}
     >
       <View style={[styles.frame, { height }]}>
@@ -40,7 +44,7 @@ export function PosterCard({ drama, width, episodeCount = 1, progress, onPress }
           <View style={styles.placeholder}>
             <Ionicons name="film-outline" size={22} color={color.dim} />
             <Text style={styles.placeholderText} numberOfLines={2}>
-              {drama.title}
+              {title}
             </Text>
           </View>
         )}
@@ -55,7 +59,7 @@ export function PosterCard({ drama, width, episodeCount = 1, progress, onPress }
       </View>
 
       <Text style={styles.title} numberOfLines={2}>
-        {drama.title}
+        {title}
       </Text>
       {meta ? <Text style={styles.meta}>{meta}</Text> : null}
     </Pressable>

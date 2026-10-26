@@ -15,7 +15,7 @@ import { PosterCard } from "../components/PosterCard";
 import { StateView } from "../components/StateView";
 import { TopBar } from "../components/TopBar";
 import { useCatalog } from "../lib/catalog";
-import { Drama, normalize } from "../lib/dramas";
+import { Drama, displayTitle, normalize } from "../lib/dramas";
 import { color, contentMaxWidth, font, GRID_COLUMNS, gutter, radius, space, type } from "../theme";
 
 /** Browse: search field, category chips, three-column poster grid — the whole archive. */
@@ -28,21 +28,34 @@ export function BrowseScreen() {
   const [query, setQuery] = useState(typeof params.q === "string" ? params.q : "");
   const [category, setCategory] = useState<string | null>(typeof params.category === "string" ? params.category : null);
 
-  const cardWidth = Math.floor((width - gutter * 2 - space.md * (GRID_COLUMNS - 1)) / GRID_COLUMNS);
+  const usable = Math.min(width, contentMaxWidth) - gutter * 2 - space.md * (GRID_COLUMNS - 1);
+  const cardWidth = Math.floor(usable / GRID_COLUMNS);
 
-  const titles = useMemo(() => series.map((g) => g[0]).filter(Boolean), [series]);
+  // One entry per card, but the search index covers every episode in the group: typing a sketch
+  // or episode name should find the series even though the card itself shows the series poster.
+  const indexed = useMemo(
+    () =>
+      series
+        .filter((g) => g.length > 0)
+        .map((g) => ({
+          drama: g[0],
+          haystack: g
+            .flatMap((d) => [displayTitle(d), d.title, d.urdu, d.series, d.cast, d.year, d.writer, d.director])
+            .map((v) => normalize(v))
+            .join(" "),
+        })),
+    [series]
+  );
 
   const results = useMemo(() => {
     const q = normalize(query);
-    return titles.filter((d) => {
-      if (category && d.type !== category) return false;
-      if (!q) return true;
-      const haystack = [d.title, d.urdu, d.series, d.cast, d.year, d.writer, d.director]
-        .map((v) => normalize(v))
-        .join(" ");
-      return haystack.includes(q);
-    });
-  }, [titles, query, category]);
+    return indexed
+      .filter(({ drama, haystack }) => {
+        if (category && drama.type !== category) return false;
+        return !q || haystack.includes(q);
+      })
+      .map(({ drama }) => drama);
+  }, [indexed, query, category]);
 
   const clearAll = () => {
     setQuery("");
@@ -99,9 +112,9 @@ export function BrowseScreen() {
         {category ? <Text style={styles.countFilter}>{category}</Text> : null}
       </View>
 
-      {loading && titles.length === 0 ? (
+      {loading && indexed.length === 0 ? (
         <StateView mode="loading" />
-      ) : error && titles.length === 0 ? (
+      ) : error && indexed.length === 0 ? (
         <StateView mode="error" body={error} actionLabel="Try again" onAction={refresh} />
       ) : results.length === 0 ? (
         <StateView

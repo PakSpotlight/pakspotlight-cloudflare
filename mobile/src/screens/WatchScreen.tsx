@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useKeepAwake } from "expo-keep-awake";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Chip } from "../components/Chip";
 import { EpisodeRow } from "../components/EpisodeRow";
 import { PillButton } from "../components/PillButton";
@@ -10,7 +10,8 @@ import { Player } from "../components/Player";
 import { StateView } from "../components/StateView";
 import { TopBar } from "../components/TopBar";
 import { useCatalog } from "../lib/catalog";
-import { episodesLabel, extractYouTubeId, prettyType, seriesEpisodes } from "../lib/dramas";
+import { displayTitle, episodesLabel, extractYouTubeId, prettyType, seriesEpisodes } from "../lib/dramas";
+import { shareTitle } from "../lib/share";
 import { recordWatch } from "../lib/storage";
 import { openInYouTube, shareUrl } from "../lib/youtube";
 import { color, contentMaxWidth, font, gutter, radius, space, type } from "../theme";
@@ -22,7 +23,16 @@ import { color, contentMaxWidth, font, gutter, radius, space, type } from "../th
  * cause) the screen swaps to a "Watch on YouTube" action rather than showing a dead black box.
  */
 export function WatchScreen() {
-  useKeepAwake();
+  // Keeping the screen on while an episode plays is a nicety, never a reason to crash: some
+  // OEM Android builds refuse the wake lock even when the permission is declared. The call is
+  // deliberately fire-and-forget and the tag is released on unmount.
+  const keepAwakeTag = "watch-screen";
+  useEffect(() => {
+    void activateKeepAwakeAsync(keepAwakeTag).catch(() => {});
+    return () => {
+      void deactivateKeepAwake(keepAwakeTag).catch(() => {});
+    };
+  }, []);
 
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; ep?: string }>();
@@ -58,8 +68,7 @@ export function WatchScreen() {
   const heading = episodeNumber ? `Episode ${episodeNumber}` : episode.title;
 
   const onShare = () => {
-    const url = shareUrl(episode.id);
-    void Share.share({ message: `${episode.title} — ${url}`, url });
+    void shareTitle(displayTitle(episode), shareUrl(episode.id));
   };
 
   return (

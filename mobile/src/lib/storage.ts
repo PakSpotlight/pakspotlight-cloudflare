@@ -6,7 +6,7 @@
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Drama, titleKey } from "./dramas";
+import { displayTitle, Drama, titleKey } from "./dramas";
 
 const MY_LIST_KEY = "ctv.mylist";
 const HISTORY_KEY = "ctv.history";
@@ -106,7 +106,7 @@ export async function recordWatch(drama: Drama, episodeCount: number): Promise<v
   const entry: HistoryEntry = {
     id: drama.id,
     key: titleKey(drama),
-    title: drama.title,
+    title: displayTitle(drama),
     image: drama.image,
     episode: drama.episode,
     episodeCount,

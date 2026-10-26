@@ -72,8 +72,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const series = groupDramas(rows);
     const episodeCounts: Record<number, number> = {};
     for (const group of series) {
-      const head = group[0];
-      if (head) episodeCounts[head.id] = group.length;
+      // Key every episode, not just the group head: curated rows deep-link to arbitrary episode
+      // ids, and a card for episode 7 should still say how many episodes the series has.
+      for (const episode of group) episodeCounts[episode.id] = group.length;
     }
     const byId = (id: number | string | undefined): Drama | null => {
       if (id === undefined || id === null || id === "") return null;

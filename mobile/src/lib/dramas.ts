@@ -64,6 +64,25 @@ export function cleanDramaTitle(title: unknown): string {
     .trim();
 }
 
+/** "Zaib-Un-Nisa.." → "Zaib-Un-Nisa": trims the punctuation upload titles trail off with. */
+export function tidyTitle(value: unknown): string {
+  return str(value)
+    .replace(/\s+/g, " ")
+    .replace(/[\s.,;:|/\\–—-]+$/, "")
+    .trim();
+}
+
+/**
+ * The name to print on a card or heading. Serials use the series name because individual rows
+ * carry the raw YouTube upload title ("Zaib-Un-Nisa..", "Ep 12 | PTV"), exactly as the site does.
+ */
+export function displayTitle(d: Drama | null | undefined): string {
+  if (!d) return "";
+  const series = tidyTitle(d.series);
+  if (isSeriesRecord(d) && series) return series;
+  return tidyTitle(d.title) || series || "Untitled Drama";
+}
+
 export function parseEpisodeNumber(title: unknown, description?: unknown): number | null {
   const text = `${str(title)} ${str(description)}`;
   const m =
@@ -113,6 +132,23 @@ export function mapRow(r: RawRow): Drama {
   };
 }
 
+/**
+ * The same video is occasionally uploaded twice under different row ids. One copy is enough;
+ * rows without a YouTube link are keyed by id so nothing else is dropped.
+ */
+function uniqueEpisodes(list: Drama[]): Drama[] {
+  const seen = new Set<string>();
+  const out: Drama[] = [];
+  for (const ep of list) {
+    const yt = extractYouTubeId(ep.youtube);
+    const key = yt ? `yt:${yt}` : `id:${ep.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(ep);
+  }
+  return out;
+}
+
 export function isSeriesRecord(d: Drama | null | undefined): boolean {
   if (!d) return false;
   return (
@@ -137,11 +173,12 @@ export function groupDramas(list: Drama[]): Drama[][] {
   }
   return Array.from(groups.values()).map((arr) => {
     arr.sort((a, b) => (a.episode == null ? 9999 : a.episode) - (b.episode == null ? 9999 : b.episode));
-    const rep = arr.find((x) => !!x.image) || arr[0];
-    if (rep && !arr[0].image && rep.image) {
-      arr[0] = { ...arr[0], image: rep.image };
+    const unique = uniqueEpisodes(arr);
+    const rep = unique.find((x) => !!x.image) || unique[0];
+    if (rep && !unique[0].image && rep.image) {
+      unique[0] = { ...unique[0], image: rep.image };
     }
-    return arr;
+    return unique;
   });
 }
 
@@ -155,9 +192,11 @@ export function seriesEpisodes(rows: Drama[], drama: Drama | null): Drama[] {
   if (!drama) return [];
   const isSer = isSeriesRecord(drama) && !!str(drama.series).trim();
   if (!isSer) return [drama];
-  return rows
-    .filter((x) => normalize(x.series) === normalize(drama.series))
-    .sort((a, b) => (a.episode == null ? 9999 : a.episode) - (b.episode == null ? 9999 : b.episode));
+  return uniqueEpisodes(
+    rows
+      .filter((x) => normalize(x.series) === normalize(drama.series))
+      .sort((a, b) => (a.episode == null ? 9999 : a.episode) - (b.episode == null ? 9999 : b.episode))
+  );
 }
 
 /** Where a "play this title" tap should land: the first playable episode of a serial. */

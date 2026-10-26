@@ -1,7 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { Drama, prettyType } from "../lib/dramas";
+import { Drama, displayTitle, prettyType } from "../lib/dramas";
 import { color, font, gutter, heroScrim, POSTER_RATIO, radius, space, type } from "../theme";
 import { Chip } from "./Chip";
 import { PillButton } from "./PillButton";
@@ -82,7 +82,7 @@ export function Hero({ drama, meta, ctaLabel, onPlay, secondary }: Props) {
             </Text>
           ) : null}
           <Text style={styles.fullTitle} numberOfLines={2}>
-            {drama.title}
+            {displayTitle(drama)}
           </Text>
           {meta ? <Text style={styles.meta}>{meta}</Text> : null}
           <PillButton label={ctaLabel} icon="play" onPress={onPlay} style={styles.cta} />
@@ -108,7 +108,7 @@ export function Hero({ drama, meta, ctaLabel, onPlay, secondary }: Props) {
           </Text>
         ) : null}
         <Text style={styles.splitTitle} numberOfLines={3}>
-          {drama.title}
+          {displayTitle(drama)}
         </Text>
         {meta ? (
           <Text style={styles.meta} numberOfLines={2}>

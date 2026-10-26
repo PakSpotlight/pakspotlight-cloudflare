@@ -417,3 +417,34 @@ Built in one pass. What exists in the repository now, and what has actually been
 3. **Replace the assetlinks fingerprint** with the release certificate's SHA-256 so
    `classictvpakistan.com/watch?id=…` links open in the app instead of the browser.
 4. **YouTube playback on Android 6** — the one risk in §10 that no browser preview can settle.
+
+### 2026-10-26 — production audit (web export, all screens)
+
+Fixed after a full functional pass on the static web export (`expo export --platform web`,
+served with SPA fallback):
+
+1. **Wake-lock crash** (the one users hit): `WAKE_LOCK` now declared in `app.json`, and the
+   player screen activates/deactivates the keep-awake tag inline, catching failures instead of
+   letting `useKeepAwake` throw on OEM builds that refuse the permission. Version → 1.0.1 (code 2).
+2. **Archive truncation:** Supabase caps one REST response at 1000 rows and the table has 1774,
+   so 774 dramas were invisible (45 of 192 real titles on Browse). `fetchRows()` now pages with
+   limit/offset until the short final page; the cached catalog key is versioned so upgrades
+   re-fetch the full archive; `episodeCounts` is keyed for every episode of a group, not just
+   the group head. The website had the identical bug and was fixed in the same commit (`public/js/shared.js`).
+3. **Titles:** `displayTitle()` — serials print the series name (as the site does), single
+   uploads have trailing `..`/punctuation trimmed. Applied in Hero, PosterCard, share text,
+   More-info page, history rows, and search.
+4. **Search now covers every episode's title in a series** (previously only the poster row),
+   so typing a sketch name still finds the series.
+5. **Grid overflow:** Browse, Library and the Related tab compute card width from the 640
+   content column, not the raw viewport.
+6. **Dedup:** the same video uploaded under two row ids no longer appears twice, in groups and
+   episode lists alike (`uniqueEpisodes`, keyed by YouTube id, id fallback).
+7. **Fixed/verified flows:** save + toggle from the list (hold-to-remove is real now —
+   `onLongPress` on PosterCard), history/Continue-watching with watched state and
+   "Continue episode N" CTA, next/previous, deep links `/watch?id=…` → detail and `/drama?id=…`,
+   missing-title and unknown-route states, zero-result search, category chips (all 7 categories
+   resolve with the full archive loaded), tab-bar height includes the gesture-nav inset,
+   web `Share` throw guarded by `lib/share.ts`.
+
+Still blocked on hardware: YouTube embed playback on a real Android 6 device (requires APK + phone).

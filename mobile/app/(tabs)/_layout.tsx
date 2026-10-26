@@ -1,10 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { color, contentMaxWidth, font } from "../../src/theme";
 
 /** Three destinations. The active item is the accent — the only coloured thing in the chrome. */
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const barHeight = 56 + insets.bottom;
   return (
     <Tabs
       screenOptions={{
@@ -15,8 +18,11 @@ export default function TabsLayout() {
           backgroundColor: "#000000",
           borderTopColor: color.line,
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: 58,
+          // Height has to carry the gesture/navigation-bar inset itself: setting a fixed height
+          // overrides React Navigation's automatic safe-area padding.
+          height: barHeight,
           paddingTop: 6,
+          paddingBottom: Math.max(insets.bottom, 6),
           width: "100%",
           maxWidth: contentMaxWidth,
           alignSelf: "center",

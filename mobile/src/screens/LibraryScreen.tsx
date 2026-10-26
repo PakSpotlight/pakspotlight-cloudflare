@@ -8,7 +8,7 @@ import { StateView } from "../components/StateView";
 import { TopBar } from "../components/TopBar";
 import { useCatalog } from "../lib/catalog";
 import { confirmAction } from "../lib/confirm";
-import { Drama, titleKey } from "../lib/dramas";
+import { Drama, displayTitle, titleKey } from "../lib/dramas";
 import { clearHistory, getHistory, HistoryEntry } from "../lib/storage";
 import { color, contentMaxWidth, font, GRID_COLUMNS, gutter, radius, space, type } from "../theme";
 
@@ -28,7 +28,8 @@ export function LibraryScreen() {
     }, [])
   );
 
-  const cardWidth = Math.floor((width - gutter * 2 - space.md * (GRID_COLUMNS - 1)) / GRID_COLUMNS);
+  const usable = Math.min(width, contentMaxWidth) - gutter * 2 - space.md * (GRID_COLUMNS - 1);
+  const cardWidth = Math.floor(usable / GRID_COLUMNS);
 
   const savedTitles = useMemo(
     () => myList.map((key) => series.find((g) => titleKey(g[0]) === key)?.[0]).filter((d): d is Drama => !!d),
@@ -38,7 +39,7 @@ export function LibraryScreen() {
   const historyTitles = history.map((h) => byId(h.id)).filter((d): d is Drama => !!d);
 
   const remove = (drama: Drama) => {
-    confirmAction("Remove from My list?", drama.title, "Remove", () => {
+    confirmAction("Remove from My list?", displayTitle(drama), "Remove", () => {
       void toggleSaved(drama);
     });
   };
@@ -87,6 +88,7 @@ export function LibraryScreen() {
                   width={cardWidth}
                   episodeCount={episodeCounts[item.id] ?? 1}
                   onPress={() => router.push(`/drama/${item.id}`)}
+                  onLongPress={() => remove(item)}
                 />
               )}
             />
@@ -107,6 +109,10 @@ export function LibraryScreen() {
             keyExtractor={(item) => item.key}
             contentContainerStyle={styles.historyList}
             renderItem={({ item }) => {
+              // History stores a snapshot of the title, but the catalog is the source of truth:
+              // use its series-aware name so old entries lose the raw ".." too.
+              const known = byId(item.id);
+              const title = known ? displayTitle(known) : item.title;
               const sub = [
                 item.episode ? `Episode ${item.episode}` : null,
                 item.episodeCount > 1 ? `${item.episodeCount} episodes` : null,
@@ -117,11 +123,11 @@ export function LibraryScreen() {
                 <Pressable
                   onPress={() => router.push(`/watch/${item.id}`)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Continue ${item.title}`}
+                  accessibilityLabel={`Continue ${title}`}
                   style={({ pressed }) => [styles.historyRow, pressed && styles.pressed]}
                 >
                   <Text style={styles.historyTitle} numberOfLines={1}>
-                    {item.title}
+                    {title}
                   </Text>
                   <Text style={styles.historySub} numberOfLines={1}>
                     {sub}

@@ -17,7 +17,9 @@ const SUPABASE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
 /** Public site origin — used for deep links, share URLs and the update manifest. */
 export const SITE_ORIGIN = "https://classictvpakistan.com";
 
-const CACHE_KEY = "ctv.catalog";
+// v2: the first release fetched a single unpaginated page (1000 rows), so any cache written by
+// it is incomplete. A new key makes the upgrade fetch the full archive instead of serving 1000.
+const CACHE_KEY = "ctv.catalog.v2";
 const CACHE_TIME_KEY = "ctv.catalog.time";
 const CACHE_TTL_MS = 3 * 60 * 1000;
 
@@ -40,13 +42,29 @@ function authHeaders(): Record<string, string> {
   };
 }
 
+/**
+ * Supabase caps a single REST response at 1000 rows (server `max-rows`), and the archive is
+ * larger than that, so an unpaginated `select=*` silently hides the oldest titles. Page with
+ * limit/offset until a page comes back short. The cap is a runaway guard, not a real limit:
+ * at 1000 rows per page it allows 50k titles.
+ */
+const PAGE_SIZE = 1000;
+const MAX_PAGES = 50;
+
 async function fetchRows(): Promise<Drama[]> {
-  const url = `${SUPABASE_URL}/rest/v1/Drama?select=*&order=id.desc`;
-  const res = await fetch(url, { headers: authHeaders() });
-  if (!res.ok) throw new Error(`Could not reach the archive (${res.status}).`);
-  const data = (await res.json()) as RawRow[];
-  if (!Array.isArray(data)) throw new Error("The archive returned an unexpected response.");
-  return data.map(mapRow);
+  const rows: RawRow[] = [];
+  for (let page = 0; page < MAX_PAGES; page += 1) {
+    const offset = page * PAGE_SIZE;
+    const url = `${SUPABASE_URL}/rest/v1/Drama?select=*&order=id.desc&limit=${PAGE_SIZE}&offset=${offset}`;
+    const res = await fetch(url, { headers: authHeaders() });
+    if (!res.ok) throw new Error(`Could not reach the archive (${res.status}).`);
+    const data = (await res.json()) as RawRow[];
+    if (!Array.isArray(data)) throw new Error("The archive returned an unexpected response.");
+    rows.push(...data);
+    if (data.length < PAGE_SIZE) break;
+  }
+  if (rows.length === 0) throw new Error("The archive returned an unexpected response.");
+  return rows.map(mapRow);
 }
 
 async function fetchCategories(): Promise<string[]> {
