@@ -60,6 +60,10 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      # Pin the SDK packages instead of letting Gradle auto-provision them mid-build.
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+
       - name: Install dependencies
         run: npm ci
 
