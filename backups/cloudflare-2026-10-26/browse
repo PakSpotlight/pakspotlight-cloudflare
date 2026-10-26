@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head><script>(function(){try{var orig=window.fetch;if(!orig||window.__fetchFixInjected){return;}window.__fetchFixInjected=true;window.fetch=function(input,init){try{if(typeof input==='string'&&input.indexOf('http')!==0&&input.indexOf('//')!==0){var url=new URL(input,window.location.href);url.searchParams.set('_',Date.now());return orig.call(this,url.toString(),init);}}catch(e){}return orig.call(this,input,init);};}catch(e){}})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browse &amp; Search — Classic TV Pakistan</title>
+<meta name="description" content="Browse and search the complete Classic TV Pakistan classic PTV drama archive by category, title, writer, or cast.">
+<link rel="canonical" href="https://classictvpakistan.com/browse">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet">
+<!-- Modular CSS -->
+<link rel="stylesheet" href="/css/variables.css">
+<link rel="stylesheet" href="/css/navbar.css">
+<link rel="stylesheet" href="/css/cards.css">
+<link rel="stylesheet" href="/css/bottom-nav.css">
+<link rel="stylesheet" href="/css/modals.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       TOPBAR (Desktop & Mobile)
+       ============================================================ -->
+  <header class="topbar" id="topbar">
+    <button class="mobile-hamburger-btn" onclick="toggleMobileDrawer(true)" aria-label="Open Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="brand-group">
+      <a href="/" class="brand">
+        <img src="/logo.png" alt="Classic TV Pakistan Logo" class="brand-logo">
+        <div class="brand-titles">
+          <span class="brand-name">CLASSIC TV PAKISTAN</span>
+          <span class="brand-sub">Classic PTV Archive</span>
+        </div>
+      </a>
+      <nav class="nav-links desktop-only" id="desktopCategoryLinks">
+        <a href="/" class="nav-link">Home</a>
+      </nav>
+    </div>
+    <div class="topbar-right">
+      <div id="topbarAuthArea"></div>
+    </div>
+  </header>
+
+  <!-- Dynamic Mobile Sub-navigation Category Strip -->
+  <nav class="mobile-nav-strip" id="mobileNavStrip">
+    <button class="m-pill" id="subnav-all" onclick="selectCategory('all')">All</button>
+  </nav>
+
+  <!-- ============================================================
+       BROWSE & SEARCH CONTAINER
+       ============================================================ -->
+  <main class="browse-view" id="browseContainer">
+    <!-- Polished Search Bar Section -->
+    <div class="browse-search-container">
+      <div class="browse-search-box">
+        <svg class="browse-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="browseSearchInput" class="browse-search-input" placeholder="Search classics, writers, cast, Urdu..." autocomplete="off">
+        <button id="browseSearchClear" class="browse-search-clear" onclick="clearSearch()">✕</button>
+      </div>
+      <div class="search-suggestion-row">
+        <span>Popular:</span>
+        <button class="search-suggestion-chip" onclick="applySearchQuery('Waris')">Waris</button>
+        <button class="search-suggestion-chip" onclick="applySearchQuery('Dhoop Kinare')">Dhoop Kinare</button>
+        <button class="search-suggestion-chip" onclick="applySearchQuery('Ankahi')">Ankahi</button>
+        <button class="search-suggestion-chip" onclick="applySearchQuery('Alpha Bravo Charlie')">Alpha Bravo Charlie</button>
+        <button class="search-suggestion-chip" onclick="applySearchQuery('Comedy')">Comedy</button>
+        <button class="search-suggestion-chip" onclick="applySearchQuery('Aangan Terha')">Aangan Terha</button>
+      </div>
+    </div>
+
+    <!-- Category Filter Pills -->
+    <div class="browse-filter-pills" id="categoryPillsBox"></div>
+
+    <!-- Results Header -->
+    <div class="search-stats-row">
+      <h1 class="browse-title" id="resultsTitle" style="font-size: 20px;">Archive</h1>
+      <span id="resultsCount" style="color: var(--gold); font-weight: 600;"></span>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="browse-grid" id="browseGrid">
+      <div style="grid-column: 1/-1; padding: 40px 20px; text-align: center; color: var(--text-muted);">
+        Loading archive…
+      </div>
+    </div>
+  </main>
+
+  <!-- ============================================================
+       MOBILE BOTTOM NAV
+       ============================================================ -->
+  <nav class="mobile-bottom-nav">
+    <button class="m-bottom-nav-item" onclick="window.location.href='/'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </button>
+    <button class="m-bottom-nav-item active" onclick="focusSearch()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <span>Search</span>
+    </button>
+    <button class="m-bottom-nav-item" id="bottomNav-mylist" onclick="selectCategory('mylist')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span>My List</span>
+    </button>
+    <button class="m-bottom-nav-item" onclick="selectCategory('all')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      <span>Categories</span>
+    </button>
+  </nav>
+
+  <!-- Mobile Drawer -->
+  <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop" onclick="toggleMobileDrawer(false)"></div>
+  <div class="mobile-drawer" id="mobileDrawer">
+    <div class="drawer-header">
+      <a href="/" class="brand" style="gap:8px">
+        <img src="/logo.png" alt="" style="width:28px;height:28px">
+        <span style="font-family:var(--font-serif);font-size:14px;font-weight:900;letter-spacing:1.5px;color:#fff">CLASSIC TV PAKISTAN</span>
+      </a>
+      <button class="drawer-close-btn" onclick="toggleMobileDrawer(false)">✕</button>
+    </div>
+    <div class="drawer-content" id="drawerLinksBox">
+      <div class="drawer-section-title">Browse Archive</div>
+      <a href="/" class="drawer-link">🏠 Home</a>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="auth-modal-card">
+      <button class="modal-close-btn" onclick="closeAuthModal()">✕</button>
+      <div class="auth-modal-header">
+        <img src="/logo.png" alt="Classic TV Pakistan">
+        <h2>Admin Studio</h2>
+        <p>Sign in with your authorized admin credentials</p>
+      </div>
+      <form id="authModalForm">
+        <div class="auth-form-group">
+          <label for="authEmail">Email Address</label>
+          <input type="email" id="authEmail" required autocomplete="username" placeholder="admin@classictvpakistan.com">
+        </div>
+        <div class="auth-form-group">
+          <label for="authPassword">Password</label>
+          <input type="password" id="authPassword" required autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <button type="submit" class="auth-submit-btn">Authorize &amp; Sign In</button>
+        <div class="auth-status-msg" id="authStatusMsg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Vendored Supabase (ES2019 build) + Shared Utilities -->
+  <script src="/js/supabase.min.js"></script>
+  <script src="/js/shared.js"></script>
+
+  <script>
+    let activeCat = "all";
+    let currentSearchTerm = "";
+
+    function focusSearch() {
+      const input = $("browseSearchInput");
+      if (input) {
+        input.focus();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+
+    function clearSearch() {
+      const input = $("browseSearchInput");
+      if (input) {
+        input.value = "";
+        currentSearchTerm = "";
+        $("browseSearchClear").classList.remove("visible");
+        renderResults();
+      }
+    }
+
+    function applySearchQuery(query) {
+      const input = $("browseSearchInput");
+      if (input) input.value = query;
+      currentSearchTerm = query.trim();
+      $("browseSearchClear").classList.add("visible");
+      renderResults();
+    }
+
+    function selectCategory(cat) {
+      activeCat = cat;
+      renderNavigation();
+      renderResults();
+      try {
+        const u = new URL(window.location.href);
+        if (cat === "all") u.searchParams.delete("cat");
+        else if (cat === "mylist") { u.searchParams.set("view", "mylist"); u.searchParams.delete("cat"); }
+        else { u.searchParams.set("cat", cat); u.searchParams.delete("view"); }
+        history.replaceState(null, "", u.toString());
+      } catch {}
+    }
+
+    function renderNavigation() {
+      // 1. Desktop Nav Links
+      const deskNav = $("desktopCategoryLinks");
+      if (deskNav) {
+        deskNav.innerHTML = `
+          <a href="/" class="nav-link">Home</a>
+          ${categories.map(c => `
+            <a href="javascript:void(0)" onclick="selectCategory('${esc(c)}')" class="nav-link ${activeCat === c ? 'active' : ''}">${esc(c)}</a>
+          `).join("")}
+          <a href="javascript:void(0)" onclick="selectCategory('mylist')" class="nav-link ${activeCat === 'mylist' ? 'active' : ''}">My List</a>
+        `;
+      }
+
+      // 2. Mobile Nav Strip
+      const mobileNav = $("mobileNavStrip");
+      if (mobileNav) {
+        mobileNav.innerHTML = `
+          <button class="m-pill ${activeCat === 'all' ? 'active' : ''}" onclick="selectCategory('all')">All</button>
+          ${categories.map(c => `
+            <button class="m-pill ${activeCat === c ? 'active' : ''}" onclick="selectCategory('${esc(c)}')">${esc(c)}</button>
+          `).join("")}
+          <button class="m-pill ${activeCat === 'mylist' ? 'active' : ''}" onclick="selectCategory('mylist')">My List</button>
+        `;
+      }
+
+      // 3. Category Filter Pills
+      const pillsBox = $("categoryPillsBox");
+      if (pillsBox) {
+        pillsBox.innerHTML = `
+          <button class="filter-pill ${activeCat === 'all' ? 'active' : ''}" onclick="selectCategory('all')">All Categories</button>
+          ${categories.map(c => `
+            <button class="filter-pill ${activeCat === c ? 'active' : ''}" onclick="selectCategory('${esc(c)}')">${esc(c)}</button>
+          `).join("")}
+          <button class="filter-pill ${activeCat === 'mylist' ? 'active' : ''}" onclick="selectCategory('mylist')">★ My List</button>
+        `;
+      }
+
+      // 4. Mobile Drawer Links
+      const drawerBox = $("drawerLinksBox");
+      if (drawerBox) {
+        drawerBox.innerHTML = `
+          <div class="drawer-section-title">Browse Archive</div>
+          <a href="/" class="drawer-link">🏠 Home</a>
+          ${categories.map(c => `
+            <a href="javascript:void(0)" onclick="selectCategory('${esc(c)}'); toggleMobileDrawer(false);" class="drawer-link ${activeCat === c ? 'active' : ''}">📁 ${esc(c)}</a>
+          `).join("")}
+          <div class="drawer-divider"></div>
+          <a href="javascript:void(0)" onclick="selectCategory('mylist'); toggleMobileDrawer(false);" class="drawer-link gold ${activeCat === 'mylist' ? 'active' : ''}">★ My List</a>
+          <div class="drawer-divider"></div>
+          <button class="drawer-link" onclick="openAuthModal(); toggleMobileDrawer(false);">🔐 Admin Studio</button>
+        `;
+      }
+    }
+
+    function renderResults() {
+      const grid = $("browseGrid");
+      const titleEl = $("resultsTitle");
+      const countEl = $("resultsCount");
+      let filtered = rows;
+
+      // 1. Filter by category
+      if (activeCat === "mylist") {
+        const list = getMyList();
+        filtered = list.map(id => rows.find(r => r.id === id)).filter(Boolean);
+        titleEl.textContent = "My List";
+      } else if (activeCat !== "all") {
+        filtered = rows.filter(r => normalize(r.type) === normalize(activeCat));
+        titleEl.textContent = activeCat;
+      } else {
+        titleEl.textContent = currentSearchTerm ? `Search: "${currentSearchTerm}"` : "All Classics";
+      }
+
+      // 2. Filter by search term
+      if (currentSearchTerm) {
+        const q = currentSearchTerm.toLowerCase();
+        filtered = filtered.filter(d =>
+          normalize(d.title).includes(q) ||
+          normalize(d.urdu).includes(q) ||
+          normalize(d.series).includes(q) ||
+          normalize(d.writer).includes(q) ||
+          normalize(d.director).includes(q) ||
+          normalize(d.cast).includes(q) ||
+          normalize(d.year).includes(q) ||
+          normalize(d.type).includes(q)
+        );
+      }
+
+      const groups = groupDramas(filtered);
+      countEl.textContent = `${groups.length} title${groups.length !== 1 ? 's' : ''}`;
+
+      if (groups.length === 0) {
+        grid.innerHTML = `
+          <div class="search-empty-state">
+            <div class="search-empty-icon">${activeCat === 'mylist' ? '📋' : '🔍'}</div>
+            <h3 style="color:#fff;font-size:18px">${activeCat === 'mylist' ? 'Your list is empty' : 'No classic titles found'}</h3>
+            <p style="font-size:13px;max-width:380px">
+              ${activeCat === 'mylist'
+                ? 'Save your favorite classic serials and telefilms to access them quickly here.'
+                : `We couldn't find any titles matching "${esc(currentSearchTerm)}". Try checking the spelling or searching by actor, writer, or category.`}
+            </p>
+            ${currentSearchTerm ? `
+              <button class="filter-pill active" onclick="clearSearch()" style="margin-top:8px">Clear Search</button>
+            ` : `
+              <button class="filter-pill active" onclick="selectCategory('all')" style="margin-top:8px">Explore All Titles</button>
+            `}
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = groups.map(g => renderPosterCard(g[0], g.length)).join("");
+    }
+
+    // Initialize from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const catParam = urlParams.get("cat");
+    const viewParam = urlParams.get("view");
+    const qParam = urlParams.get("q");
+
+    if (viewParam === "mylist") activeCat = "mylist";
+    else if (catParam) activeCat = catParam;
+
+    if (qParam) {
+      currentSearchTerm = qParam.trim();
+      const input = $("browseSearchInput");
+      if (input) input.value = currentSearchTerm;
+      $("browseSearchClear").classList.add("visible");
+    }
+
+    // Search input typing listener (live search)
+    let searchDebounce = null;
+    const searchInput = $("browseSearchInput");
+    if (searchInput) {
+      searchInput.addEventListener("input", e => {
+        const val = e.target.value.trim();
+        $("browseSearchClear").classList.toggle("visible", !!val);
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+          currentSearchTerm = val;
+          renderResults();
+        }, 180);
+      });
+    }
+
+    Promise.all([loadData(), loadCategories()]).then(() => {
+      renderNavigation();
+      renderResults();
+      initAuth();
+      if (urlParams.get("search") === "1") {
+        focusSearch();
+      }
+    }).catch(err => {
+      console.error(err);
+      renderResults();
+    });
+
+    window.addEventListener("scroll", () => {
+      const tb = $("topbar");
+      if (tb) tb.classList.toggle("scrolled", window.scrollY > 30);
+    });
+  </script>
+</body>
+</html>

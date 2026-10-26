@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head><script>(function(){try{var orig=window.fetch;if(!orig||window.__fetchFixInjected){return;}window.__fetchFixInjected=true;window.fetch=function(input,init){try{if(typeof input==='string'&&input.indexOf('http')!==0&&input.indexOf('//')!==0){var url=new URL(input,window.location.href);url.searchParams.set('_',Date.now());return orig.call(this,url.toString(),init);}}catch(e){}return orig.call(this,input,init);};}catch(e){}})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classic TV Pakistan — Classic PTV Drama Stream & Archive</title>
+<meta name="description" content="Stream the golden age of Pakistani television (PTV). Classic drama serials, legendary long plays, telefilms, and comedy masterpieces in a Netflix-style theater experience.">
+<link rel="canonical" href="https://classictvpakistan.com/">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet">
+<!-- Modular Stylesheets -->
+<link rel="stylesheet" href="/css/variables.css">
+<link rel="stylesheet" href="/css/navbar.css">
+<link rel="stylesheet" href="/css/hero.css">
+<link rel="stylesheet" href="/css/cards.css">
+<link rel="stylesheet" href="/css/bottom-nav.css">
+<link rel="stylesheet" href="/css/modals.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       TOPBAR NAVIGATION
+       ============================================================ -->
+  <header class="topbar" id="topbar">
+    <button class="mobile-hamburger-btn" onclick="toggleMobileDrawer(true)" aria-label="Open Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="brand-group">
+      <a href="/" class="brand">
+        <img src="/logo.png" alt="Classic TV Pakistan Logo" class="brand-logo">
+        <div class="brand-titles">
+          <span class="brand-name">CLASSIC TV PAKISTAN</span>
+          <span class="brand-sub">Classic PTV Archive</span>
+        </div>
+      </a>
+      <nav class="nav-links desktop-only" id="desktopNavLinks">
+        <a href="/" class="nav-link active">Home</a>
+        <a href="/get-app" class="nav-link">Android app</a>
+      </nav>
+    </div>
+    <div class="topbar-right">
+      <div class="search-wrapper desktop-only">
+        <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" class="search-input" id="desktopSearchInput" placeholder="Search archive..." onkeydown="if(event.key==='Enter') window.location.href='/browse?q='+encodeURIComponent(this.value)">
+      </div>
+      <div id="topbarAuthArea"></div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       DYNAMIC MOBILE CATEGORY SUB-NAV STRIP
+       ============================================================ -->
+  <nav class="mobile-nav-strip mobile-only" id="mobileNavStrip">
+    <button class="m-pill active" onclick="window.location.href='/'">All</button>
+  </nav>
+
+  <!-- ============================================================
+       MAIN APP CONTAINER (HERO + CAROUSEL ROWS)
+       ============================================================ -->
+  <main id="app">
+    <div style="padding: 120px 20px; text-align: center; color: var(--text-muted);">
+      <div style="font-size: 40px; margin-bottom: 12px;">📽</div>
+      <p>Loading golden era archive…</p>
+    </div>
+  </main>
+
+  <!-- ============================================================
+       MOBILE BOTTOM NAVIGATION BAR (GOLD ACCENTS)
+       ============================================================ -->
+  <nav class="mobile-bottom-nav">
+    <button class="m-bottom-nav-item active" onclick="window.location.href='/'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </button>
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse?search=1'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <span>Search</span>
+    </button>
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse?view=mylist'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span>My List</span>
+    </button>
+    <button class="m-bottom-nav-item" onclick="window.location.href='/browse'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      <span>Categories</span>
+    </button>
+  </nav>
+
+  <!-- Mobile Drawer Sidebar -->
+  <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop" onclick="toggleMobileDrawer(false)"></div>
+  <div class="mobile-drawer" id="mobileDrawer">
+    <div class="drawer-header">
+      <a href="/" class="brand" style="gap:8px">
+        <img src="/logo.png" alt="" style="width:28px;height:28px">
+        <span style="font-family:var(--font-serif);font-size:14px;font-weight:900;letter-spacing:1.5px;color:#fff">CLASSIC TV PAKISTAN</span>
+      </a>
+      <button class="drawer-close-btn" onclick="toggleMobileDrawer(false)">✕</button>
+    </div>
+    <div class="drawer-content" id="drawerLinksBox">
+      <div class="drawer-section-title">Browse Archive</div>
+      <a href="/" class="drawer-link active">🏠 Home</a>
+    </div>
+    <div class="drawer-footer">
+      <span>Preserving the Golden Age of Pakistani Television · Free Cultural Archive</span>
+    </div>
+  </div>
+
+  <!-- Mobile Fullscreen Search Modal -->
+  <div class="mobile-search-modal" id="mobileSearchModal">
+    <div class="m-search-header">
+      <div class="m-search-input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="mobileSearchInput" placeholder="Search classics, writers, cast..." autocomplete="off">
+        <button class="m-search-clear" id="mSearchClear" onclick="clearMobileSearch()" style="display:none">✕</button>
+      </div>
+      <button class="m-search-cancel" onclick="closeMobileSearch()">Done</button>
+    </div>
+    <div class="m-search-results" id="mSearchResults">
+      <div class="m-search-prompt">
+        <span>🔍</span>
+        <p>Search classics by title, Urdu name, writer, or star cast.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sign In / Auth Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="auth-modal-card">
+      <button class="modal-close-btn" onclick="closeAuthModal()">✕</button>
+      <div class="auth-modal-header">
+        <img src="/logo.png" alt="Classic TV Pakistan">
+        <h2>Admin Studio</h2>
+        <p>Sign in with your authorized admin credentials</p>
+      </div>
+      <form id="authModalForm">
+        <div class="auth-form-group">
+          <label for="authEmail">Email Address</label>
+          <input type="email" id="authEmail" required autocomplete="username" placeholder="admin@classictvpakistan.com">
+        </div>
+        <div class="auth-form-group">
+          <label for="authPassword">Password</label>
+          <input type="password" id="authPassword" required autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <button type="submit" class="auth-submit-btn">Authorize &amp; Sign In</button>
+        <div class="auth-status-msg" id="authStatusMsg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Vendored Supabase (ES2019 build) + Shared Utilities -->
+  <script src="/js/supabase.min.js"></script>
+  <script src="/js/shared.js"></script>
+
+  <script>
+    function renderCategoryNavigation() {
+      // 1. Desktop Nav Links
+      const deskNav = $("desktopNavLinks");
+      if (deskNav) {
+        deskNav.innerHTML = `
+          <a href="/" class="nav-link active">Home</a>
+          ${categories.map(c => `
+            <a href="/browse?cat=${encodeURIComponent(c)}" class="nav-link">${esc(c)}</a>
+          `).join("")}
+          <a href="/browse?view=mylist" class="nav-link">My List</a>
+        `;
+      }
+
+      // 2. Mobile Sub-nav Strip
+      const mobileNav = $("mobileNavStrip");
+      if (mobileNav) {
+        mobileNav.innerHTML = `
+          <button class="m-pill active" onclick="window.location.href='/'">All</button>
+          ${categories.map(c => `
+            <button class="m-pill" onclick="window.location.href='/browse?cat=${encodeURIComponent(c)}'">${esc(c)}</button>
+          `).join("")}
+          <button class="m-pill" onclick="window.location.href='/browse?view=mylist'">My List</button>
+        `;
+      }
+
+      // 3. Mobile Drawer
+      const drawer = $("drawerLinksBox");
+      if (drawer) {
+        drawer.innerHTML = `
+          <div class="drawer-section-title">Browse Archive</div>
+          <a href="/" class="drawer-link active">🏠 Home</a>
+          ${categories.map(c => `
+            <a href="/browse?cat=${encodeURIComponent(c)}" class="drawer-link">📁 ${esc(c)}</a>
+          `).join("")}
+          <div class="drawer-divider"></div>
+          <a href="/browse?view=mylist" class="drawer-link gold">★ My List</a>
+          <div class="drawer-divider"></div>
+          <a href="/get-app" class="drawer-link">📱 Android app</a>
+          <button class="drawer-link" onclick="openAuthModal(); toggleMobileDrawer(false);">🔐 Admin Studio</button>
+        `;
+      }
+    }
+
+    function renderCarouselRow(title, rowId, groupList, seeAllUrl) {
+      const seeAll = seeAllUrl || `/browse?cat=${encodeURIComponent(title)}`;
+      return `
+        <section class="carousel-row">
+          <div class="row-header">
+            <div class="row-title-wrap">
+              <h2 class="row-title">${esc(title)}</h2>
+              <span class="row-count-badge">${groupList.length}</span>
+            </div>
+            <a class="row-see-all" href="${esc(seeAll)}">See all &gt;</a>
+          </div>
+          <div class="carousel-wrap">
+            <button class="carousel-btn left desktop-only" onclick="scrollCarousel('${rowId}', -1)" aria-label="Scroll left">‹</button>
+            <div class="carousel-track" id="track-${rowId}">
+              ${groupList.map(g => renderPosterCard(g[0], g.length)).join("")}
+            </div>
+            <button class="carousel-btn right desktop-only" onclick="scrollCarousel('${rowId}', 1)" aria-label="Scroll right">›</button>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderHome() {
+      const app = $("app");
+      if (!rows.length) {
+        app.innerHTML = `
+          <div style="padding: 120px 5% 60px; text-align: center; color: var(--text-muted);">
+            Nothing here yet. New classic dramas are being digitized and added.
+          </div>
+        `;
+        return;
+      }
+
+      const heroItems = heroPick();
+      const allGroups = groupDramas(rows);
+
+      // Newest titles first
+      const recentGroups = [...allGroups].sort((a, b) => b[0].id - a[0].id);
+      const recentTop = recentGroups.slice(0, 20);
+
+      // Build rows based on categories
+      const categoryRowsHtml = categories.map(cat => {
+        const catGroups = allGroups.filter(g => {
+          const dramaType = String(g[0].type || "").toLowerCase().trim();
+          const target = cat.toLowerCase().trim();
+          if (target === "serial / series" || target === "series" || target === "serial") {
+            return ["serial / series", "series", "serial"].includes(dramaType);
+          }
+          return dramaType === target;
+        });
+        if (!catGroups.length) return "";
+        const rowId = "cat-" + sanitizeId(cat);
+        return renderCarouselRow(cat, rowId, catGroups);
+      }).join("");
+
+      const goldenAge = allGroups.filter(g => {
+        const y = parseInt(g[0].year) || 0;
+        return y >= 1970 && y <= 1999;
+      });
+
+      // Build hero slides HTML
+      const heroSlidesHtml = heroItems.map((item, i) => {
+        const isSer = isSeries(item) && !!item.series;
+        const fTitle = isSer ? item.series : item.title;
+        const heroWatchId = seriesStartId(item) || item.id;
+        return `
+          <div class="hero-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
+            <div class="hero-backdrop" style="background-image: url('${esc(item.image || '/logo.png')}')"></div>
+            <div class="hero-vignette"></div>
+            <div class="hero-foreground">
+                <h1 class="hero-title">${esc(fTitle)}</h1>
+                ${item.urdu ? `<div class="hero-urdu">${esc(item.urdu)}</div>` : ''}
+                <div class="hero-actions">
+                  <a href="/watch?id=${heroWatchId}" class="hero-btn-play">▶ Play</a>
+                  <button class="hero-btn-mylist" onclick="const added=toggleMyList(${item.id}); this.querySelector('span').textContent=added?'✓ In List':'＋ My List';">
+                    <span>${isInMyList(item.id) ? '✓ In List' : '＋ My List'}</span>
+                  </button>
+                </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // Build dots
+      const heroDotsHtml = heroItems.length > 1
+        ? `<div class="hero-dots">${heroItems.map((_, i) => `<button class="hero-dot ${i === 0 ? 'active' : ''}" onclick="goToHeroSlide(${i})" aria-label="Slide ${i + 1}"></button>`).join("")}</div>`
+        : "";
+
+      const heroArrowsHtml = heroItems.length > 1
+        ? `<button class="hero-arrow left" onclick="heroSlideDir(-1)">‹</button><button class="hero-arrow right" onclick="heroSlideDir(1)">›</button>`
+        : "";
+
+      app.innerHTML = `
+        <section class="hero-billboard" id="heroBillboard">
+          <div class="hero-slides" id="heroSlides">${heroSlidesHtml}</div>
+          ${heroDotsHtml}
+          ${heroArrowsHtml}
+        </section>
+
+        <div class="rows-container">
+          ${recentTop.length > 5 ? renderCarouselRow("Recently Added", "recent", recentTop, "/browse") : ''}
+          ${categoryRowsHtml}
+          ${goldenAge.length ? renderCarouselRow("Golden Age: 70s, 80s & 90s Classics", "vintage", goldenAge, "/browse") : ''}
+          ${renderCarouselRow("Complete Masterpiece Collection", "all", allGroups, "/browse")}
+        </div>
+      `;
+
+      // Auto-rotate hero slides
+      if (heroItems.length > 1) {
+        startHeroSlider();
+      }
+    }
+
+    // Hero Slider Controls
+    let heroIndex = 0;
+    let heroTimer = null;
+    let heroTotal = 0;
+    let heroPaused = false;
+
+    function startHeroSlider() {
+      const slides = document.querySelectorAll(".hero-slide");
+      heroTotal = slides.length;
+      heroIndex = 0;
+      clearInterval(heroTimer);
+      heroTimer = setInterval(() => {
+        if (!heroPaused) heroSlideDir(1);
+      }, 5000);
+
+      // Pause on hover (desktop)
+      const bb = $("heroBillboard");
+      if (bb) {
+        bb.addEventListener("mouseenter", () => { heroPaused = true; });
+        bb.addEventListener("mouseleave", () => { heroPaused = false; });
+      }
+
+      // Touch swipe
+      if (bb) {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        bb.addEventListener("touchstart", e => {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        bb.addEventListener("touchend", e => {
+          const dx = e.changedTouches[0].clientX - touchStartX;
+          const dy = e.changedTouches[0].clientY - touchStartY;
+          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+            heroSlideDir(dx < 0 ? 1 : -1);
+          }
+        }, { passive: true });
+      }
+    }
+
+    function goToHeroSlide(idx) {
+      heroIndex = idx;
+      updateHeroSlide();
+      clearInterval(heroTimer);
+      heroTimer = setInterval(() => {
+        if (!heroPaused) heroSlideDir(1);
+      }, 5000);
+    }
+
+    function heroSlideDir(dir) {
+      if (heroTotal <= 1) return;
+      heroIndex = (heroIndex + dir + heroTotal) % heroTotal;
+      updateHeroSlide();
+    }
+
+    function updateHeroSlide() {
+      document.querySelectorAll(".hero-slide").forEach((s, i) => {
+        s.classList.toggle("active", i === heroIndex);
+      });
+      document.querySelectorAll(".hero-dot").forEach((d, i) => {
+        d.classList.toggle("active", i === heroIndex);
+      });
+    }
+
+    // Initialize Home Page
+    Promise.all([loadData(), loadCategories()]).then(() => {
+      renderCategoryNavigation();
+      renderHome();
+      initAuth();
+    }).catch(err => {
+      console.error(err);
+      renderHome();
+    });
+
+    const mInput = $("mobileSearchInput");
+    if (mInput) mInput.addEventListener("input", handleMobileSearchInput);
+
+    window.addEventListener("scroll", () => {
+      const tb = $("topbar");
+      if (tb) tb.classList.toggle("scrolled", window.scrollY > 30);
+    });
+  </script>
+</body>
+</html>

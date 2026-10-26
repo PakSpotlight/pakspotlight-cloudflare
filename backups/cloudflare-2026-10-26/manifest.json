@@ -1,0 +1,313 @@
+{
+  "origin": "https://classictvpakistan.com",
+  "label": "cloudflare-2026-10-26",
+  "capturedAt": "2026-10-26T13:52:17.416Z",
+  "files": [
+    {
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 18029,
+      "sha256": "28a3863454f8d6927eee424b9c7963473e6fc979d718f574f95c75cccda203c5"
+    },
+    {
+      "path": "/browse",
+      "status": 200,
+      "contentType": "text/html",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 16558,
+      "sha256": "9f647879352496801c30a11c5dd1bb3476574097c8e1d0d5ffc2322eb6d52a5f"
+    },
+    {
+      "path": "/watch",
+      "status": 200,
+      "contentType": "text/html",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 24385,
+      "sha256": "9e83641a5d30f92727d9e9aeb4fc8c788e49424ea272e7325953f2a77950db3c"
+    },
+    {
+      "path": "/admin",
+      "status": 200,
+      "contentType": "text/html",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 3926,
+      "sha256": "3bd67869af6cc157f454a493d65bdc29969aa937f03bdd4caa72a3298e52801c"
+    },
+    {
+      "path": "/get-app",
+      "status": 200,
+      "contentType": "text/html",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 14508,
+      "sha256": "3e2ec463ef0c72a0a9051d17e12cbeba39c78c7dbc6e9ac7a57ac0e92852059f"
+    },
+    {
+      "path": "/index.html",
+      "status": 200,
+      "contentType": "text/html",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 18029,
+      "sha256": "28a3863454f8d6927eee424b9c7963473e6fc979d718f574f95c75cccda203c5"
+    },
+    {
+      "path": "/browse.html",
+      "status": 200,
+      "contentType": "text/html",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 16558,
+      "sha256": "9f647879352496801c30a11c5dd1bb3476574097c8e1d0d5ffc2322eb6d52a5f"
+    },
+    {
+      "path": "/watch.html",
+      "status": 200,
+      "contentType": "text/html",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 24385,
+      "sha256": "9e83641a5d30f92727d9e9aeb4fc8c788e49424ea272e7325953f2a77950db3c"
+    },
+    {
+      "path": "/admin.html",
+      "status": 200,
+      "contentType": "text/html",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 3926,
+      "sha256": "3bd67869af6cc157f454a493d65bdc29969aa937f03bdd4caa72a3298e52801c"
+    },
+    {
+      "path": "/get-app.html",
+      "status": 200,
+      "contentType": "text/html",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 14508,
+      "sha256": "3e2ec463ef0c72a0a9051d17e12cbeba39c78c7dbc6e9ac7a57ac0e92852059f"
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200,
+      "contentType": "application/xml; charset=utf-8",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 153334,
+      "sha256": "9bd2f5cc0357d0603ae09dc6a37a49a42f24bc7c1b6a2e67931bcac8fc1d1a29"
+    },
+    {
+      "path": "/robots.txt",
+      "status": 200,
+      "contentType": "text/plain",
+      "etag": "W/\"1e7d7345dfb43fd8e48f639ab1368de4\"",
+      "lastModified": "",
+      "bytes": 92,
+      "sha256": "092dfa6e26f44337412424d5b972ce53e6923d29d427ad1e1c5c9f685adb7fca"
+    },
+    {
+      "path": "/app/latest.json",
+      "status": 200,
+      "contentType": "application/json",
+      "etag": "W/\"b6cd3b622dd59b302baa80880972f4d4\"",
+      "lastModified": "",
+      "bytes": 185,
+      "sha256": "6aa2554fbffd23aeecd8b92d20f52d71f03b99087c544b7c13a69996decbbc20"
+    },
+    {
+      "path": "/.well-known/assetlinks.json",
+      "status": 200,
+      "contentType": "application/json",
+      "etag": "W/\"2d670bcd0c467e8c4709db039eb88e84\"",
+      "lastModified": "",
+      "bytes": 282,
+      "sha256": "74ea9c445e61dc612eee1715794e12069e3f406cf4023dcdde1d05fe0d722918"
+    },
+    {
+      "path": "/google03be8bc9e7d47207.html",
+      "status": 500,
+      "contentType": "text/html; charset=UTF-8",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 4639,
+      "sha256": "49aa4d409014b01485a590a66eb9212ee01d9bcdd6a4a0fa4cb23b7010bcf40c"
+    },
+    {
+      "path": "/googleb57603fb2d740b66.html",
+      "status": 500,
+      "contentType": "text/html; charset=UTF-8",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 4639,
+      "sha256": "69c810522e24936c8de4003f7a48e175fa758b9d831e652c403dc9fd07a8c733"
+    },
+    {
+      "path": "/api/categories",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 142,
+      "sha256": "9f56c9ad4395d27674dd0d5306b3aeb47fe22300e78e76df14f9cd808703280d"
+    },
+    {
+      "path": "/api/featured",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 54,
+      "sha256": "5ee46f70da9f8989c7075801bf964b897d3478b2ea0dd021adcde349e833600c"
+    },
+    {
+      "path": "/api/app/ping",
+      "status": 204,
+      "contentType": "",
+      "etag": "",
+      "lastModified": "",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/css/variables.css",
+      "status": 200,
+      "contentType": "text/css",
+      "etag": "W/\"973f19a2af705fc526559ca64f998b26\"",
+      "lastModified": "",
+      "bytes": 2446,
+      "sha256": "bc7e80239442c2dae8e123b09b9e5264d389027c3b8dd6334a3b93d91748a591"
+    },
+    {
+      "path": "/css/navbar.css",
+      "status": 200,
+      "contentType": "text/css",
+      "etag": "W/\"15df88a3c4ad22ac5c68d70b5de051bd\"",
+      "lastModified": "",
+      "bytes": 9847,
+      "sha256": "09a2c8486ed324b6ca64ed3abc6971cdefe21f076fbc9ab6f80c3f53ec0ca0f2"
+    },
+    {
+      "path": "/css/hero.css",
+      "status": 200,
+      "contentType": "text/css",
+      "etag": "W/\"a08545cdf12ac55b2ca5da52c5f9383c\"",
+      "lastModified": "",
+      "bytes": 5408,
+      "sha256": "3575db48fbea19ad45b39fe5d957832dd13cd0d5b9c8244f5738c8550d50062e"
+    },
+    {
+      "path": "/css/cards.css",
+      "status": 200,
+      "contentType": "text/css",
+      "etag": "W/\"60b56d8424ec8482d01196c1ef9b7212\"",
+      "lastModified": "",
+      "bytes": 11071,
+      "sha256": "e68071d0725fc27ea93bb84ad5fabecefc314ecd77dc7210591d4a7fa854d16a"
+    },
+    {
+      "path": "/css/bottom-nav.css",
+      "status": 200,
+      "contentType": "text/css",
+      "etag": "W/\"c2f016e455987fa6081b38819ef801c6\"",
+      "lastModified": "",
+      "bytes": 1276,
+      "sha256": "2e7a815e589519fc276f4b19529b945e8336cf46d6535e2aaa0a63296be0c148"
+    },
+    {
+      "path": "/css/modals.css",
+      "status": 200,
+      "contentType": "text/css",
+      "etag": "W/\"f5a7bad15becd231d7dd4fc8b961c327\"",
+      "lastModified": "",
+      "bytes": 6717,
+      "sha256": "03f8b4878988bd54e609a97d91026223a240aa35dff6eea4beb53e7a77311c70"
+    },
+    {
+      "path": "/js/supabase.min.js",
+      "status": 200,
+      "contentType": "text/javascript",
+      "etag": "W/\"0818d9282022d557a2cf50c1dac8c20a\"",
+      "lastModified": "",
+      "bytes": 225763,
+      "sha256": "1d21ac17c74cce2284d5e1e6f23039996decbbd0d0d471479423dc6e1637c8cc"
+    },
+    {
+      "path": "/js/shared.js",
+      "status": 200,
+      "contentType": "text/javascript",
+      "etag": "W/\"62347c5a84cadce870b25c56abd70332\"",
+      "lastModified": "",
+      "bytes": 18006,
+      "sha256": "0d34df301d5feadb146cd7a351ed1ef3cffe3ded5ffb06de553df6c67b0d2f62"
+    },
+    {
+      "path": "/css/watch.css",
+      "status": 200,
+      "contentType": "text/css",
+      "etag": "W/\"d56cfa293494f000e11eee47f1f8ec76\"",
+      "lastModified": "",
+      "bytes": 11502,
+      "sha256": "5887d1ef77b58c4ee5113152a92503612ccb158d2e0c4b17039839daf2d4f7c4"
+    },
+    {
+      "path": "/css/admin.css",
+      "status": 200,
+      "contentType": "text/css",
+      "etag": "W/\"6357f279a256f1fbea3ce588ea2b668b\"",
+      "lastModified": "",
+      "bytes": 21483,
+      "sha256": "ff3ebe7becb9fa8f728471aabaf1951aefddfcf50d3595cc587fa9fc672a072c"
+    },
+    {
+      "path": "/js/admin/state.js",
+      "status": 200,
+      "contentType": "text/javascript",
+      "etag": "W/\"8a7748808004d2730e72c484b491ec8b\"",
+      "lastModified": "",
+      "bytes": 11032,
+      "sha256": "c7d293c9f8aee3b74a363a705209097ce9ea7568bded13f7d5e39c74dbfc8da7"
+    },
+    {
+      "path": "/js/admin/catalog.js",
+      "status": 200,
+      "contentType": "text/javascript",
+      "etag": "W/\"158f846bd747dc30087efb4b942ce99b\"",
+      "lastModified": "",
+      "bytes": 11718,
+      "sha256": "5772eea290d2842cebad19cfb4256176da094efd22ceb1f27f04678dc4665b12"
+    },
+    {
+      "path": "/js/admin/add.js",
+      "status": 200,
+      "contentType": "text/javascript",
+      "etag": "W/\"2ed0ced88217c081f65c1fd4576208bc\"",
+      "lastModified": "",
+      "bytes": 22526,
+      "sha256": "9cf7286c3e6b736402c504f0ee5a833a74a62cb1078b02b7ea26a0e4b4a11419"
+    },
+    {
+      "path": "/js/admin/curation.js",
+      "status": 200,
+      "contentType": "text/javascript",
+      "etag": "W/\"d6a3d4555ebe3d513d494d1b48d22fba\"",
+      "lastModified": "",
+      "bytes": 11628,
+      "sha256": "bd64e846c901a0aa5ce1a9f0e5fcfb744bfa1c4f74af134151a1b8eb99c76c16"
+    },
+    {
+      "path": "/js/admin/modals.js",
+      "status": 200,
+      "contentType": "text/javascript",
+      "etag": "W/\"036b3b37ab0e35f4b9e221854f88a153\"",
+      "lastModified": "",
+      "bytes": 19251,
+      "sha256": "07e79d1aaf8b29c188d407e75406af13dfdea4c1f9ab83a5e453ac609ee9fd3d"
+    }
+  ]
+}
