@@ -11,11 +11,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet">
 <!-- Modular CSS -->
-<link rel="stylesheet" href="/css/variables.css">
-<link rel="stylesheet" href="/css/navbar.css">
-<link rel="stylesheet" href="/css/cards.css">
-<link rel="stylesheet" href="/css/bottom-nav.css">
-<link rel="stylesheet" href="/css/modals.css">
+<link rel="stylesheet" href="/css/variables.css?v=2">
+<link rel="stylesheet" href="/css/navbar.css?v=2">
+<link rel="stylesheet" href="/css/cards.css?v=2">
+<link rel="stylesheet" href="/css/bottom-nav.css?v=2">
+<link rel="stylesheet" href="/css/modals.css?v=2">
 </head>
 <body>
 
@@ -42,11 +42,6 @@
       <div id="topbarAuthArea"></div>
     </div>
   </header>
-
-  <!-- Dynamic Mobile Sub-navigation Category Strip -->
-  <nav class="mobile-nav-strip" id="mobileNavStrip">
-    <button class="m-pill" id="subnav-all" onclick="selectCategory('all')">All</button>
-  </nav>
 
   <!-- ============================================================
        BROWSE & SEARCH CONTAINER
@@ -215,31 +210,17 @@
     }
 
     function renderNavigation() {
-      // 1. Desktop Nav Links
+      // 1. Desktop Nav Links — minimal topbar; categories live in the pills row below the search bar
       const deskNav = $("desktopCategoryLinks");
       if (deskNav) {
         deskNav.innerHTML = `
           <a href="/" class="nav-link">Home</a>
-          ${categories.map(c => `
-            <a href="javascript:void(0)" onclick="selectCategory('${esc(c)}')" class="nav-link ${activeCat === c ? 'active' : ''}">${esc(c)}</a>
-          `).join("")}
           <a href="javascript:void(0)" onclick="selectCategory('mylist')" class="nav-link ${activeCat === 'mylist' ? 'active' : ''}">My List</a>
+          <a href="/get-app" class="nav-link">Android app</a>
         `;
       }
 
-      // 2. Mobile Nav Strip
-      const mobileNav = $("mobileNavStrip");
-      if (mobileNav) {
-        mobileNav.innerHTML = `
-          <button class="m-pill ${activeCat === 'all' ? 'active' : ''}" onclick="selectCategory('all')">All</button>
-          ${categories.map(c => `
-            <button class="m-pill ${activeCat === c ? 'active' : ''}" onclick="selectCategory('${esc(c)}')">${esc(c)}</button>
-          `).join("")}
-          <button class="m-pill ${activeCat === 'mylist' ? 'active' : ''}" onclick="selectCategory('mylist')">My List</button>
-        `;
-      }
-
-      // 3. Category Filter Pills
+      // 2. Category Filter Pills
       const pillsBox = $("categoryPillsBox");
       if (pillsBox) {
         pillsBox.innerHTML = `
@@ -263,6 +244,7 @@
           <div class="drawer-divider"></div>
           <a href="javascript:void(0)" onclick="selectCategory('mylist'); toggleMobileDrawer(false);" class="drawer-link gold ${activeCat === 'mylist' ? 'active' : ''}">★ My List</a>
           <div class="drawer-divider"></div>
+          <a href="/get-app" class="drawer-link">📱 Android app</a>
           <button class="drawer-link" onclick="openAuthModal(); toggleMobileDrawer(false);">🔐 Admin Studio</button>
         `;
       }

@@ -10,12 +10,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet">
 <!-- Modular CSS -->
-<link rel="stylesheet" href="/css/variables.css">
-<link rel="stylesheet" href="/css/navbar.css">
-<link rel="stylesheet" href="/css/watch.css">
-<link rel="stylesheet" href="/css/cards.css">
-<link rel="stylesheet" href="/css/bottom-nav.css">
-<link rel="stylesheet" href="/css/modals.css">
+<link rel="stylesheet" href="/css/variables.css?v=2">
+<link rel="stylesheet" href="/css/navbar.css?v=2">
+<link rel="stylesheet" href="/css/watch.css?v=2">
+<link rel="stylesheet" href="/css/cards.css?v=2">
+<link rel="stylesheet" href="/css/bottom-nav.css?v=2">
+<link rel="stylesheet" href="/css/modals.css?v=2">
 </head>
 <body>
 
@@ -176,10 +176,9 @@
       if (deskNav) {
         deskNav.innerHTML = `
           <a href="/" class="nav-link">Home</a>
-          ${categories.map(c => `
-            <a href="/browse?cat=${encodeURIComponent(c)}" class="nav-link">${esc(c)}</a>
-          `).join("")}
+          <a href="/browse" class="nav-link">Browse</a>
           <a href="/browse?view=mylist" class="nav-link">My List</a>
+          <a href="/get-app" class="nav-link">Android app</a>
         `;
       }
     }

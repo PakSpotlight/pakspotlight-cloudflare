@@ -141,6 +141,9 @@ jobs:
         working-directory: .
         env:
           MANIFEST_SOURCE: ${{ github.workspace }}/public/app/latest.json
+          R2_PUBLIC_BASE: "https://pub-94b93a0e41ce44d1ab2beb9ab3bdad4f.r2.dev"
+          # Every release APK must be uploaded to <R2_PUBLIC_BASE>/android/<apk> (bucket "pakifun")
+          # so the manifest's R2 download URL resolves. TODO: automate this with an R2 API token secret.
         run: |
           set -euo pipefail
           node scripts/write-app-manifest.js \

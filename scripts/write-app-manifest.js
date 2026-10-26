@@ -41,7 +41,14 @@ const sizeMB = Math.round((bytes / (1024 * 1024)) * 10) / 10;
 const sha256 = crypto.createHash("sha256").update(fs.readFileSync(apkPath)).digest("hex");
 const tag = "app-v" + versionName;
 const file = "classic-tv-pakistan-" + versionName + ".apk";
-const apkUrl = "https://github.com/" + repo + "/releases/download/" + tag + "/" + file;
+
+// Downloads are served from Cloudflare R2 when R2_PUBLIC_BASE is set (fast edge route for
+// Pakistan; egress is free). The APK for EVERY release must be uploaded to
+// <R2_PUBLIC_BASE>/android/<file> before the manifest ships — the manifest manager's job.
+// Without the variable we fall back to the GitHub release asset (slow but always exists).
+const apkUrl = process.env.R2_PUBLIC_BASE
+  ? process.env.R2_PUBLIC_BASE.replace(/\/+$/, "") + "/android/" + file
+  : "https://github.com/" + repo + "/releases/download/" + tag + "/" + file;
 
 const manifest = {
   published: true,
