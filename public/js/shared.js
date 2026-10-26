@@ -154,9 +154,13 @@ async function loadCategories() {
 }
 
 async function loadData() {
-  const CACHE_KEY = "pak_spotlight_dramas_cache";
-  const CACHE_TIME_KEY = "pak_spotlight_dramas_cache_time";
+  // v2: the first cache keyed a single unpaginated query, which Supabase silently caps at 1000
+  // rows. A new key retires those incomplete copies instead of serving them for another 3 minutes.
+  const CACHE_KEY = "pak_spotlight_dramas_cache_v2";
+  const CACHE_TIME_KEY = "pak_spotlight_dramas_cache_time_v2";
   const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+  const PAGE_SIZE = 1000; // Supabase's server-side max-rows
+  const MAX_PAGES = 50; // runaway guard: 50k titles
 
   console.log("🎬 loadData() starting...");
   console.log("sbClient available:", !!sbClient);
@@ -183,24 +187,41 @@ async function loadData() {
 
   try {
     console.log("📡 Fetching Drama table from Supabase...");
-    
-    const { data, error } = await sbClient
-      .from('Drama')
-      .select('*')
-      .order('id', { ascending: false });
 
-    if (error) {
-      console.error("❌ Supabase error:", error);
-      return [];
+    // `.select('*')` alone returns at most 1000 rows — the archive is larger than that, so the
+    // oldest titles never reached the site. Page explicitly and stop on the short final page.
+    const data = [];
+    for (let page = 0; page < MAX_PAGES; page += 1) {
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      const result = await sbClient
+        .from('Drama')
+        .select('*')
+        .order('id', { ascending: false })
+        .range(from, to);
+
+      if (result.error) {
+        console.error("❌ Supabase error:", result.error);
+        if (data.length === 0) return [];
+        break;
+      }
+
+      const chunk = Array.isArray(result.data) ? result.data : [];
+      for (let i = 0; i < chunk.length; i += 1) data.push(chunk[i]);
+      if (chunk.length < PAGE_SIZE) break;
     }
 
-    console.log("✅ Successfully loaded Drama data, count:", data.length);
-    rows = (data || []).map(mapRow);
+    if (data.length === 0) return [];
 
-    // Cache it
+    console.log("✅ Successfully loaded Drama data, count:", data.length);
+    rows = data.map(mapRow);
+
+    // Cache it. The old keys are removed so an oversized stale copy cannot eat the quota.
     try {
       localStorage.setItem(CACHE_KEY, JSON.stringify(data));
       localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+      localStorage.removeItem("pak_spotlight_dramas_cache");
+      localStorage.removeItem("pak_spotlight_dramas_cache_time");
     } catch {}
 
     // Load featured IDs
