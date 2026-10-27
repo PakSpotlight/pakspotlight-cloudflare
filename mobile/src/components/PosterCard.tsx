@@ -19,6 +19,7 @@ type Props = {
 /** 2:3 archive poster with an episode badge. Every grid and row in the app uses this card. */
 export function PosterCard({ drama, width, episodeCount = 1, progress, onPress, onLongPress }: Props) {
   const [failed, setFailed] = useState(false);
+  const [focused, setFocused] = useState(false);
   const height = Math.round(width * POSTER_RATIO);
   const showImage = !!drama.image && !failed;
   const meta = drama.year ? `${drama.year}` : prettyType(drama.type);
@@ -28,9 +29,16 @@ export function PosterCard({ drama, width, episodeCount = 1, progress, onPress, 
     <Pressable
       onPress={onPress}
       onLongPress={onLongPress}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      focusable
       accessibilityRole="button"
       accessibilityLabel={`${title}${episodeCount > 1 ? `, ${episodeCount} episodes` : ""}`}
-      style={({ pressed }) => [{ width }, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        { width },
+        focused && styles.focused,
+        pressed && styles.pressed,
+      ]}
     >
       <View style={[styles.frame, { height }]}>
         {showImage ? (
@@ -67,7 +75,13 @@ export function PosterCard({ drama, width, episodeCount = 1, progress, onPress, 
 }
 
 const styles = StyleSheet.create({
-  pressed: { opacity: 0.75 },
+  pressed: { opacity: 0.78 },
+  focused: {
+    borderWidth: 2,
+    borderColor: color.accent,
+    borderRadius: radius.poster,
+    padding: 3,
+  },
   frame: {
     width: "100%",
     borderRadius: radius.poster,

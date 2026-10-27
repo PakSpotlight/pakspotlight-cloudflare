@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { color, space, type } from "../theme";
 import { font } from "../theme";
@@ -17,14 +18,18 @@ export function GhostAction({
   active?: boolean;
   accessibilityLabel?: string;
 }) {
+  const [focused, setFocused] = useState(false);
   return (
     <Pressable
       onPress={onPress}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      focusable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
-      style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.wrap, focused && styles.focused, pressed && styles.pressed]}
     >
-      <View style={[styles.circle, active && styles.circleActive]}>
+      <View style={[styles.circle, active && styles.circleActive, focused && styles.circleFocused]}>
         <Ionicons name={icon} size={20} color={active ? color.accent : color.text} />
       </View>
       <Text style={[styles.label, active && styles.labelActive]} numberOfLines={1}>
@@ -35,8 +40,9 @@ export function GhostAction({
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: "center", width: 84 },
-  pressed: { opacity: 0.6 },
+  wrap: { alignItems: "center", width: 84, paddingVertical: 3, borderRadius: 12 },
+  pressed: { opacity: 0.7 },
+  focused: { backgroundColor: "rgba(198,243,42,0.10)" },
   circle: {
     width: 46,
     height: 46,
@@ -48,6 +54,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   circleActive: { borderColor: color.accent, backgroundColor: color.accentSoft },
+  circleFocused: { borderWidth: 3, borderColor: color.accent },
   label: {
     marginTop: space.sm,
     color: color.muted,
