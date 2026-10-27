@@ -291,7 +291,12 @@
           ${heroArrowsHtml}
         </section>
 
-        <nav class="category-strip" aria-label="Browse by category">
+        <div class="app-promo-banner" role="region" aria-label="Get the Android app">
+            <div class="app-promo-copy"><span class="app-promo-kicker">TAKE THE CLASSICS WITH YOU</span><strong>Classic TV Pakistan for Android</strong><span>Enjoy the golden age of Pakistani television on your phone.</span></div>
+            <a class="app-promo-cta" href="/get-app"><span aria-hidden="true">↓</span> Get Android App</a>
+          </div>
+
+          <nav class="category-strip" aria-label="Browse by category">
           ${categories.map(c => `<a class="cat-pill" href="/browse?cat=${encodeURIComponent(c)}">${esc(c)}</a>`).join("")}
           <a class="cat-pill gold" href="/browse?view=mylist">★ My List</a>
         </nav>
