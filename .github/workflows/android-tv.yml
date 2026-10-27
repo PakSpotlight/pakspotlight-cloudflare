@@ -1,9 +1,12 @@
 name: Android TV APK
 
-# Manual-only build for the separate TV package. This workflow never publishes a release,
+# Manual build plus automatic validation on the TV fix branch. This workflow never publishes a release,
 # never updates public/app/latest.json, and never deploys the website.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - fix/android-tv-package-id
 
 permissions:
   contents: read
