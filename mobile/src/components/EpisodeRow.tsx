@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Drama, cleanDramaTitle } from "../lib/dramas";
 import { color, font, radius, space, type } from "../theme";
@@ -17,6 +18,7 @@ export function EpisodeRow({
   watched?: boolean;
   onPress: () => void;
 }) {
+  const [focused, setFocused] = useState(false);
   const number = episode.episode ?? fallbackIndex + 1;
   const cleaned = cleanDramaTitle(episode.title);
   const showSecondary = !!cleaned && cleaned.toLowerCase() !== `episode ${number}`;
@@ -24,9 +26,12 @@ export function EpisodeRow({
   return (
     <Pressable
       onPress={onPress}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      focusable
       accessibilityRole="button"
       accessibilityLabel={`Episode ${number}${active ? ", currently playing" : ""}`}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.row, focused && styles.focused, pressed && styles.pressed]}
     >
       <View style={styles.numberWrap}>
         <Text style={[styles.number, active && styles.numberActive]}>{number}</Text>
@@ -58,11 +63,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: space.md,
+    paddingHorizontal: space.sm,
+    borderRadius: radius.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: color.line,
     gap: space.md,
   },
-  pressed: { opacity: 0.6 },
+  focused: { borderWidth: 2, borderColor: color.accent, backgroundColor: "rgba(198,243,42,0.08)" },
+  pressed: { opacity: 0.7 },
   numberWrap: { width: 30, alignItems: "flex-start" },
   number: { color: color.dim, fontFamily: font.bold, fontSize: type.body },
   numberActive: { color: color.accent },
