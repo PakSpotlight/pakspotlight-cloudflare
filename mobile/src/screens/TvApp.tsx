@@ -23,8 +23,8 @@ import {
 import { openInYouTube } from "../lib/youtube";
 import { color, font } from "../theme";
 
-type TvPage = "home" | "browse" | "library" | "details" | "player";
-type NavItem = "home" | "browse" | "library";
+type TvPage = "home" | "browse" | "library" | "info" | "details" | "player";
+type NavItem = "home" | "browse" | "library" | "info";
 
 const TV_SAFE = 34;
 
@@ -124,6 +124,8 @@ export function TvApp() {
           <NavButton label="Home" icon="home-outline" active={nav === "home" && page !== "details" && page !== "player"} onPress={() => openNav("home")} />
           <NavButton label="Browse" icon="grid-outline" active={nav === "browse" || page === "details"} onPress={() => openNav("browse")} />
           <NavButton label="My List" icon="bookmark-outline" active={nav === "library"} onPress={() => openNav("library")} />
+          <NavButton label="Info" icon="information-circle-outline" active={page === "info"} onPress={() => openNav("info")} />
+          <NavButton label="Update" icon="refresh-outline" active={false} onPress={() => { void refresh(); setNav("home"); setPage("home"); }} />
         </View>
         <View style={styles.sidebarFooter}>
           <Text style={styles.sidebarCaption}>THE ARCHIVE</Text>
@@ -134,7 +136,7 @@ export function TvApp() {
 
       <View style={styles.main}>
         <View style={styles.topline}>
-          <Text style={styles.pageLabel}>{page === "player" ? "NOW PLAYING" : page === "details" ? "TITLE DETAILS" : page === "browse" ? "EXPLORE THE ARCHIVE" : page === "library" ? "YOUR SAVED TITLES" : "WELCOME BACK"}</Text>
+          <Text style={styles.pageLabel}>{page === "player" ? "NOW PLAYING" : page === "details" ? "TITLE DETAILS" : page === "browse" ? "EXPLORE THE ARCHIVE" : page === "library" ? "YOUR SAVED TITLES" : page === "info" ? "ABOUT CLASSIC TV PAKISTAN" : "CLASSIC TV PAKISTAN"}</Text>
           <View style={styles.topRight}>
             <Text style={styles.countText}>{rows.length.toLocaleString()} archive entries</Text>
             <View style={styles.statusDot} />
@@ -186,6 +188,24 @@ export function TvApp() {
               {filtered.map((drama) => <PosterTile key={drama.id} drama={drama} width={cardWidth} episodeCount={episodeCounts[drama.id] ?? 1} onPress={() => openDetails(drama)} onPlay={() => playDrama(drama)} />)}
               {!filtered.length ? <Text style={styles.bodyText}>{loading ? "Loading titles…" : "No titles match this search."}</Text> : null}
             </ScrollView>
+          </View>
+        ) : null}
+
+        {page === "info" ? (
+          <View style={styles.infoPage}>
+            <View style={styles.infoMark}><Ionicons name="play" size={30} color="#000" /></View>
+            <Text style={styles.infoTitle}>Classic TV Pakistan</Text>
+            <Text style={styles.infoSubtitle}>Your archive of classic Pakistani television</Text>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoCardTitle}>About this app</Text>
+              <Text style={styles.bodyText}>Browse classic dramas, explore programme details, save titles to My List, and watch episodes through their available YouTube playback links.</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoCardTitle}>Archive status</Text>
+              <Text style={styles.bodyText}>{loading ? "Checking catalogue…" : error ? `Catalogue message: ${error}` : `${rows.length.toLocaleString()} archive entries available`}</Text>
+              {catalog?.stale ? <Text style={styles.offline}>Showing saved catalogue data while offline.</Text> : null}
+            </View>
+            <ActionButton label={loading ? "Updating…" : "Update catalogue"} icon="refresh" primary onPress={() => { void refresh(); }} />
           </View>
         ) : null}
 
@@ -339,6 +359,12 @@ const styles = StyleSheet.create({
   filterTextActive: { color: "#000", fontFamily: font.bold },
   grid: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", gap: 14, paddingBottom: 40 },
   emptyState: { width: "100%", minHeight: 280, alignItems: "center", justifyContent: "center", gap: 12 },
+  infoPage: { flex: 1, alignItems: "flex-start", justifyContent: "center", gap: 16, paddingHorizontal: 28, paddingBottom: 28, maxWidth: 760 },
+  infoMark: { width: 52, height: 52, borderRadius: 14, backgroundColor: color.accent, alignItems: "center", justifyContent: "center" },
+  infoTitle: { color: "#fff", fontFamily: font.black, fontSize: 30 },
+  infoSubtitle: { color: color.muted, fontFamily: font.medium, fontSize: 16 },
+  infoCard: { width: "100%", gap: 8, padding: 18, borderRadius: 12, borderWidth: 1, borderColor: color.line, backgroundColor: "#101311" },
+  infoCardTitle: { color: color.text, fontFamily: font.bold, fontSize: 18 },
   detailContent: { paddingBottom: 32, gap: 22 },
   detailHero: { flexDirection: "row", gap: 28, minHeight: 280, alignItems: "center" },
   detailImage: { width: 210, height: 290, borderRadius: 12, backgroundColor: color.surfaceAlt },
