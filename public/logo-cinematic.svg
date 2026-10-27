@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Classic TV Pakistan</title><desc id="desc">Golden vintage television emblem on a deep black background.</desc>
+<defs>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0b8"/><stop offset=".28" stop-color="#e9c66d"/><stop offset=".65" stop-color="#bd8a2e"/><stop offset="1" stop-color="#ffe6a0"/></linearGradient>
+ <radialGradient id="screen" cx=".5" cy=".35" r=".85"><stop offset="0" stop-color="#292116"/><stop offset="1" stop-color="#080807"/></radialGradient>
+ <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="512" height="512" rx="92" fill="#070706"/>
+<rect x="17" y="17" width="478" height="478" rx="78" fill="none" stroke="url(#gold)" stroke-opacity=".55" stroke-width="3"/>
+<circle cx="256" cy="210" r="166" fill="#d8ae51" opacity=".06"/>
+<g stroke="url(#gold)" stroke-width="12" stroke-linecap="round" fill="none" filter="url(#glow)">
+ <path d="M205 92 L155 45"/><path d="M307 92 L357 45"/><circle cx="155" cy="45" r="7" fill="#f6d889"/><circle cx="357" cy="45" r="7" fill="#f6d889"/>
+ <rect x="79" y="102" width="354" height="240" rx="32" fill="#15120b"/>
+ <rect x="101" y="123" width="310" height="198" rx="19" fill="url(#screen)" stroke-width="5"/>
+ <path d="M122 275 Q180 180 238 231 T389 166" stroke="#f0d27c" stroke-opacity=".22" stroke-width="3"/>
+ <path d="M125 284 Q195 224 245 253 T389 206" stroke="#e8c36a" stroke-opacity=".16" stroke-width="2"/>
+ <circle cx="378" cy="152" r="8" fill="#f5d888" stroke="none"/>
+ <circle cx="378" cy="180" r="5" fill="#c79839" stroke="none"/>
+ <path d="M171 359 L157 379 M341 359 L355 379" stroke-width="9"/>
+ <path d="M185 383 H327" stroke-width="8"/>
+</g>
+<text x="256" y="423" text-anchor="middle" fill="url(#gold)" font-family="Georgia,serif" font-size="42" font-weight="bold" letter-spacing="2">CLASSIC TV</text>
+<text x="256" y="457" text-anchor="middle" fill="#f6e6bb" font-family="Arial,sans-serif" font-size="19" font-weight="700" letter-spacing="7">PAKISTAN</text>
+</svg>
