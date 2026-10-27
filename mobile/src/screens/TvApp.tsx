@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import Constants from "expo-constants";
 import { useMemo, useState } from "react";
 import {
   Image,
@@ -18,8 +17,8 @@ import {
   Drama,
   extractYouTubeId,
   normalize,
-  seriesEpisodes,
   seriesStartId,
+  titleKey,
 } from "../lib/dramas";
 import { color, font, space } from "../theme";
 
@@ -61,7 +60,7 @@ export function TvApp() {
   }, [catalog?.featuredIds, rows, series]);
 
   const library = useMemo(
-    () => series.filter((group) => myList.includes(group[0] ? requireTitleKey(group[0]) : "" )).map((group) => group[0]),
+    () => series.filter((group) => group[0] && myList.includes(titleKey(group[0]))).map((group) => group[0]),
     [series, myList]
   );
 
@@ -110,7 +109,6 @@ export function TvApp() {
   const currentGroup = selected ? groupFor(selected) : [];
   const videoId = episode ? extractYouTubeId(episode.youtube) : null;
   const cardWidth = Math.max(142, Math.min(194, Math.round((width - 300) / 6)));
-  const isTv = Constants.expoConfig?.extra?.classicTvAndroidTv === true;
 
   return (
     <View style={styles.screen}>
@@ -240,10 +238,6 @@ export function TvApp() {
   }
 }
 
-function requireTitleKey(drama: Drama): string {
-  const seriesName = (drama.series || "").trim().toLowerCase();
-  return seriesName ? `series::${seriesName}` : `single::${drama.id}`;
-}
 
 function NavButton({ label, icon, active, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; active: boolean; onPress: () => void }) {
   return <Pressable focusable onPress={onPress} style={({ focused }) => [styles.navButton, active && styles.navActive, focused && styles.focused]}><Ionicons name={icon} size={22} color={active ? color.accent : color.muted} /><Text style={[styles.navText, active && styles.navTextActive]}>{label}</Text></Pressable>;
@@ -341,7 +335,6 @@ const styles = StyleSheet.create({
   description: { color: color.muted, fontSize: 15, lineHeight: 23, maxWidth: 650 },
   playerPage: { flex: 1, gap: 12 },
   playerTop: { flexDirection: "row", alignItems: "center", gap: 16, minHeight: 42 },
-  backButton: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
   playerHeading: { color: color.text, fontFamily: font.bold, fontSize: 17, flex: 1 },
   playerHint: { color: color.dim, fontSize: 11 },
   playerFrame: { flex: 1, minHeight: 180, backgroundColor: "#000", borderRadius: 12, overflow: "hidden" },
