@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { color, font, radius, space, type } from "../theme";
 
@@ -28,16 +29,21 @@ export function PillButton({
   style,
 }: Props) {
   const primary = variant === "primary";
+  const [focused, setFocused] = useState(false);
   const height = size === "lg" ? 50 : 42;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      focusable={!disabled && !loading}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       onPress={disabled || loading ? undefined : onPress}
       style={({ pressed }) => [
         styles.base,
         { height },
         primary ? styles.primary : styles.ghost,
+        focused && styles.focused,
         (pressed || disabled) && styles.dim,
         style,
       ]}
@@ -73,6 +79,7 @@ const styles = StyleSheet.create({
   },
   primary: { backgroundColor: color.ctaBg },
   ghost: { borderWidth: 1, borderColor: color.lineStrong, backgroundColor: "transparent" },
+  focused: { borderWidth: 3, borderColor: color.accent },
   inner: { flexDirection: "row", alignItems: "center" },
   icon: { marginRight: space.sm },
   label: { fontFamily: font.bold, fontSize: type.body, letterSpacing: 0.2 },
