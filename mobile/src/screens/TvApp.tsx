@@ -114,10 +114,10 @@ export function TvApp() {
   const cardWidth = Math.max(142, Math.min(194, Math.round((width - 300) / 6)));
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.sidebar}>
+    <View style={[styles.screen, page === "player" && styles.fullscreenScreen]}>
+      {page !== "player" ? <View style={styles.sidebar}>
         <View style={styles.brandMark}>
-          <View style={styles.brandGlyph}><Ionicons name="play" size={24} color="#000" /></View>
+          <View style={styles.brandGlyph}><Ionicons name="tv-outline" size={20} color="#000" /><View style={styles.brandPlay}><Ionicons name="play" size={9} color="#000" /></View></View>
           <Text style={styles.brandText}>CLASSIC TV<Text style={styles.brandPakistan}> PAKISTAN</Text></Text>
         </View>
         <View style={styles.navItems}>
@@ -132,16 +132,16 @@ export function TvApp() {
           <Text style={styles.sidebarSmall}>Classic Pakistani television, all in one place.</Text>
           {catalog?.stale ? <Text style={styles.offline}>Offline catalogue</Text> : null}
         </View>
-      </View>
+      </View> : null}
 
-      <View style={styles.main}>
-        <View style={styles.topline}>
+      <View style={[styles.main, page === "player" && styles.fullscreenMain]}>
+        {page !== "player" ? <View style={styles.topline}>
           <Text style={styles.pageLabel}>{page === "player" ? "NOW PLAYING" : page === "details" ? "TITLE DETAILS" : page === "browse" ? "EXPLORE THE ARCHIVE" : page === "library" ? "YOUR SAVED TITLES" : page === "info" ? "ABOUT CLASSIC TV PAKISTAN" : "CLASSIC TV PAKISTAN"}</Text>
           <View style={styles.topRight}>
             <Text style={styles.countText}>{rows.length.toLocaleString()} archive entries</Text>
             <View style={styles.statusDot} />
           </View>
-        </View>
+        </View> : null}
 
         {page === "home" ? (
           <ScrollView style={styles.pageScroll} contentContainerStyle={styles.homeContent} showsVerticalScrollIndicator={false}>
@@ -240,9 +240,8 @@ export function TvApp() {
         {page === "player" && selected && episode ? (
           <View style={styles.playerPage}>
             <View style={styles.playerTop}>
-              <Pressable focusable onPress={() => setPage("details")} onFocus={() => setPlayerBackFocused(true)} onBlur={() => setPlayerBackFocused(false)} style={[styles.backButton, playerBackFocused && styles.focused]}><Ionicons name="arrow-back" size={20} color={color.text} /><Text style={styles.actionText}>Back to title</Text></Pressable>
+              <Pressable focusable onPress={() => setPage("details")} onFocus={() => setPlayerBackFocused(true)} onBlur={() => setPlayerBackFocused(false)} style={[styles.backButton, playerBackFocused && styles.focused]}><Ionicons name="arrow-back" size={20} color={color.text} /><Text style={styles.actionText}>Back</Text></Pressable>
               <Text style={styles.playerHeading} numberOfLines={1}>{displayTitle(selected)}{episode.episode ? ` · Episode ${episode.episode}` : ""}</Text>
-              <Text style={styles.playerHint}>Use your remote to navigate</Text>
             </View>
             <View style={styles.playerFrame}>
               {videoId && !playerFailed ? <Player key={videoId} videoId={videoId} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={44} color="#FF5252" /><Text style={styles.sectionTitle}>Playback unavailable here</Text><Text style={styles.bodyText}>Try another episode or check the YouTube link.</Text><ActionButton label="Back to episodes" icon="arrow-back" onPress={() => setPage("details")} />{videoId ? <ActionButton label="Watch on YouTube" icon="logo-youtube" onPress={() => void openInYouTube(videoId)} /> : null}</View>}
@@ -294,9 +293,11 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
 
 const styles = StyleSheet.create({
   screen: { flex: 1, flexDirection: "row", backgroundColor: "#050606" },
+  fullscreenScreen: { flexDirection: "column", padding: 0 },
   sidebar: { width: 148, paddingTop: 22, paddingHorizontal: 10, paddingBottom: 16, borderRightWidth: 1, borderRightColor: color.line, backgroundColor: "#080A09" },
   brandMark: { flexDirection: "row", alignItems: "center", gap: 7, paddingBottom: 24, paddingHorizontal: 2 },
-  brandGlyph: { width: 28, height: 28, borderRadius: 8, backgroundColor: color.accent, alignItems: "center", justifyContent: "center" },
+  brandGlyph: { width: 30, height: 30, borderRadius: 8, backgroundColor: color.accent, alignItems: "center", justifyContent: "center" },
+  brandPlay: { position: "absolute", right: 2, bottom: 2, width: 12, height: 12, borderRadius: 6, backgroundColor: "#fff", alignItems: "center", justifyContent: "center" },
   brandText: { color: color.text, fontFamily: font.black, fontSize: 9, letterSpacing: 0.1 },
   brandPakistan: { color: color.muted, fontFamily: font.medium },
   navItems: { gap: 5 },
@@ -309,6 +310,7 @@ const styles = StyleSheet.create({
   sidebarSmall: { color: color.dim, fontFamily: font.body, fontSize: 10, lineHeight: 14 },
   offline: { color: color.muted, fontSize: 11 },
   main: { flex: 1, minWidth: 0, paddingTop: 22, paddingLeft: 22, paddingRight: TV_SAFE, paddingBottom: 14 },
+  fullscreenMain: { flex: 1, minWidth: 0, padding: 0, margin: 0 },
   topline: { height: 34, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
   pageLabel: { color: color.muted, fontFamily: font.bold, fontSize: 12, letterSpacing: 1.5 },
   topRight: { flexDirection: "row", alignItems: "center", gap: 9 },
@@ -371,11 +373,11 @@ const styles = StyleSheet.create({
   detailCopy: { flex: 1, gap: 12, maxWidth: 720 },
   detailTitle: { color: "#fff", fontFamily: font.black, fontSize: 34, lineHeight: 40 },
   description: { color: color.muted, fontSize: 15, lineHeight: 23, maxWidth: 650 },
-  playerPage: { flex: 1, gap: 12 },
+  playerPage: { flex: 1, gap: 0, backgroundColor: "#000" },
   playerTop: { flexDirection: "row", alignItems: "center", gap: 16, minHeight: 42 },
   playerHeading: { color: color.text, fontFamily: font.bold, fontSize: 17, flex: 1 },
   playerHint: { color: color.dim, fontSize: 11 },
-  playerFrame: { flex: 1, minHeight: 180, backgroundColor: "#000", borderRadius: 12, overflow: "hidden" },
+  playerFrame: { flex: 1, minHeight: 0, backgroundColor: "#000", borderRadius: 0, overflow: "hidden" },
   playerError: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   episodeRail: { gap: 10, paddingVertical: 4 },
   episodeChip: { width: 170, minHeight: 52, borderRadius: 9, padding: 9, backgroundColor: "#171B18", borderWidth: 1, borderColor: color.line },
