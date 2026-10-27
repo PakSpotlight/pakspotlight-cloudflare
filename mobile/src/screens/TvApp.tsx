@@ -121,7 +121,7 @@ export function TvApp() {
           <Text style={styles.brandText}>CLASSIC TV<Text style={styles.brandPakistan}> PAKISTAN</Text></Text>
         </View>
         <View style={styles.navItems}>
-          <NavButton label="Home" icon="home-outline" active={nav === "home" && page !== "details" && page !== "player"} onPress={() => openNav("home")} />
+          <NavButton label="Home" icon="home-outline" active={nav === "home" && page !== "details"} onPress={() => openNav("home")} />
           <NavButton label="Browse" icon="grid-outline" active={nav === "browse" || page === "details"} onPress={() => openNav("browse")} />
           <NavButton label="My List" icon="bookmark-outline" active={nav === "library"} onPress={() => openNav("library")} />
           <NavButton label="Info" icon="information-circle-outline" active={page === "info"} onPress={() => openNav("info")} />
@@ -136,7 +136,7 @@ export function TvApp() {
 
       <View style={[styles.main, page === "player" && styles.fullscreenMain]}>
         {page !== "player" ? <View style={styles.topline}>
-          <Text style={styles.pageLabel}>{page === "player" ? "NOW PLAYING" : page === "details" ? "TITLE DETAILS" : page === "browse" ? "EXPLORE THE ARCHIVE" : page === "library" ? "YOUR SAVED TITLES" : page === "info" ? "ABOUT CLASSIC TV PAKISTAN" : "CLASSIC TV PAKISTAN"}</Text>
+          <Text style={styles.pageLabel}>{page === "details" ? "TITLE DETAILS" : page === "browse" ? "EXPLORE THE ARCHIVE" : page === "library" ? "YOUR SAVED TITLES" : page === "info" ? "ABOUT CLASSIC TV PAKISTAN" : "CLASSIC TV PAKISTAN"}</Text>
           <View style={styles.topRight}>
             <Text style={styles.countText}>{rows.length.toLocaleString()} archive entries</Text>
             <View style={styles.statusDot} />
