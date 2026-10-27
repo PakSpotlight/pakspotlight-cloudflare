@@ -7,11 +7,12 @@ const isAndroidTV = process.env.CLASSIC_TV_ANDROID_TV === "1";
 module.exports = ({ config }) => ({
   ...config,
   name: isAndroidTV ? "Classic TV Pakistan TV" : config.name,
+  version: isAndroidTV ? "1.0.2" : config.version,
   orientation: isAndroidTV ? "landscape" : config.orientation,
   android: {
     ...config.android,
     package: isAndroidTV ? "com.classictvpakistan.tv" : config.android.package,
-    versionCode: isAndroidTV ? 1 : config.android.versionCode,
+    versionCode: isAndroidTV ? 3 : config.android.versionCode,
   },
   plugins: [
     ...(config.plugins || []),
