@@ -20,7 +20,8 @@ import {
   seriesStartId,
   titleKey,
 } from "../lib/dramas";
-import { color, font, space } from "../theme";
+import { openInYouTube } from "../lib/youtube";
+import { color, font } from "../theme";
 
 type TvPage = "home" | "browse" | "library" | "details" | "player";
 type NavItem = "home" | "browse" | "library";
@@ -45,6 +46,7 @@ export function TvApp() {
     myList,
   } = useCatalog();
   const [page, setPage] = useState<TvPage>("home");
+  const [detailsFrom, setDetailsFrom] = useState<NavItem>("home");
   const [nav, setNav] = useState<NavItem>("home");
   const [selected, setSelected] = useState<Drama | null>(null);
   const [episode, setEpisode] = useState<Drama | null>(null);
@@ -78,6 +80,7 @@ export function TvApp() {
   }, [series, query, category]);
 
   const openDetails = (drama: Drama) => {
+    setDetailsFrom(page === "browse" || page === "library" ? page : "home");
     setSelected(drama);
     setEpisode(null);
     setPage("details");
@@ -99,11 +102,9 @@ export function TvApp() {
     setEpisode(null);
   };
 
-  const returnHome = () => {
-    setPage("home");
-    setNav("home");
-    setSelected(null);
-    setEpisode(null);
+  const backFromDetails = () => {
+    setPage(detailsFrom);
+    setNav(detailsFrom);
   };
 
   const currentGroup = selected ? groupFor(selected) : [];
@@ -206,7 +207,7 @@ export function TvApp() {
                 <View style={styles.actions}>
                   <ActionButton label="Play" icon="play" primary onPress={() => playDrama(selected)} />
                   <ActionButton label={isSaved(selected) ? "In My List" : "My List"} icon={isSaved(selected) ? "bookmark" : "bookmark-outline"} onPress={() => void toggleSaved(selected)} />
-                  <ActionButton label="Back" icon="arrow-back" onPress={() => setPage(nav === "library" ? "library" : "browse")} />
+                  <ActionButton label="Back" icon="arrow-back" onPress={backFromDetails} />
                 </View>
               </View>
             </View>
@@ -222,7 +223,7 @@ export function TvApp() {
               <Text style={styles.playerHint}>Use your remote to navigate</Text>
             </View>
             <View style={styles.playerFrame}>
-              {videoId && !playerFailed ? <Player key={videoId} videoId={videoId} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={44} color="#FF5252" /><Text style={styles.sectionTitle}>Playback unavailable here</Text><Text style={styles.bodyText}>Try another episode or check the YouTube link.</Text><ActionButton label="Back to episodes" icon="arrow-back" onPress={() => setPage("details")} /></View>}
+              {videoId && !playerFailed ? <Player key={videoId} videoId={videoId} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={44} color="#FF5252" /><Text style={styles.sectionTitle}>Playback unavailable here</Text><Text style={styles.bodyText}>Try another episode or check the YouTube link.</Text><ActionButton label="Back to episodes" icon="arrow-back" onPress={() => setPage("details")} />{videoId ? <ActionButton label="Watch on YouTube" icon="logo-youtube" onPress={() => void openInYouTube(videoId)} /> : null}</View>}
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.episodeRail}>
               {currentGroup.map((ep, i) => <Pressable key={ep.id} focusable onPress={() => { setEpisode(ep); setPlayerFailed(false); }} style={({ focused }) => [styles.episodeChip, episode.id === ep.id && styles.episodeSelected, focused && styles.focused]}><Text style={styles.episodeNumber}>{ep.episode ?? i + 1}</Text><Text style={styles.episodeTitle} numberOfLines={1}>{ep.title}</Text></Pressable>)}
