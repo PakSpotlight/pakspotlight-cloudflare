@@ -1,0 +1,72 @@
+/* Brand and poster polish — presentation only; catalogue data and playback untouched. */
+.brand-logo {
+  width: clamp(42px, 4.2vw, 56px) !important;
+  height: clamp(42px, 4.2vw, 56px) !important;
+  object-fit: contain;
+  border-radius: 12px;
+  filter: drop-shadow(0 0 9px rgba(216,179,90,.18));
+}
+.brand-name {
+  color: #f5df9c;
+  text-shadow: 0 0 18px rgba(216,179,90,.12);
+}
+.brand-sub {
+  letter-spacing: .08em;
+}
+.netflix-card {
+  position: relative;
+  transform: translateZ(0);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+.netflix-card .card-media {
+  aspect-ratio: 2 / 3;
+  height: auto;
+  position: relative;
+}
+.netflix-card .card-media::after {
+  content: "";
+  position: absolute;
+  inset: 45% 0 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,.22));
+}
+.netflix-card .card-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+  object-position: center;
+  transition: transform .35s ease, filter .35s ease;
+}
+.netflix-card:hover .card-media img {
+  transform: scale(1.035);
+  filter: saturate(1.06) contrast(1.03);
+}
+.card-info {
+  background: linear-gradient(180deg, rgba(19,17,13,.96), #0b0b0a);
+  border-top: 1px solid rgba(216,179,90,.10);
+}
+.browse-grid .netflix-card .card-media {
+  aspect-ratio: 2 / 3;
+}
+@media (max-width: 600px) {
+  .brand-logo {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 9px;
+  }
+  .brand-name { font-size: clamp(11px, 3vw, 14px); }
+  .brand-sub { font-size: 10px; }
+  .netflix-card {
+    flex-basis: clamp(138px, 43vw, 176px);
+    width: clamp(138px, 43vw, 176px);
+    min-width: clamp(138px, 43vw, 176px);
+    max-width: clamp(138px, 43vw, 176px);
+  }
+  .browse-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .netflix-card, .netflix-card .card-media img { transition: none; }
+}
