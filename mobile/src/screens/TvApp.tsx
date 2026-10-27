@@ -53,6 +53,8 @@ export function TvApp() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [playerFailed, setPlayerFailed] = useState(false);
+  const [clearFocused, setClearFocused] = useState(false);
+  const [playerBackFocused, setPlayerBackFocused] = useState(false);
 
   const hero = heroCandidates[0] ?? series[0]?.[0] ?? null;
   const featured = useMemo(() => {
@@ -174,7 +176,7 @@ export function TvApp() {
             <View style={styles.searchBox}>
               <Ionicons name="search" size={22} color={color.muted} />
               <TextInput value={query} onChangeText={setQuery} placeholder="Search dramas, actors, years…" placeholderTextColor={color.dim} style={styles.searchInput} returnKeyType="search" />
-              {query ? <Pressable focusable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQuery("")} style={({ focused }) => [styles.clearButton, focused && styles.focused]}><Ionicons name="close" size={20} color={color.text} /></Pressable> : null}
+              {query ? <Pressable focusable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQuery("")} onFocus={() => setClearFocused(true)} onBlur={() => setClearFocused(false)} style={[styles.clearButton, clearFocused && styles.focused]}><Ionicons name="close" size={20} color={color.text} /></Pressable> : null}
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
               <FilterButton label="All" active={!category} onPress={() => setCategory(null)} />
@@ -218,7 +220,7 @@ export function TvApp() {
         {page === "player" && selected && episode ? (
           <View style={styles.playerPage}>
             <View style={styles.playerTop}>
-              <Pressable focusable onPress={() => setPage("details")} style={({ focused }) => [styles.backButton, focused && styles.focused]}><Ionicons name="arrow-back" size={20} color={color.text} /><Text style={styles.actionText}>Back to title</Text></Pressable>
+              <Pressable focusable onPress={() => setPage("details")} onFocus={() => setPlayerBackFocused(true)} onBlur={() => setPlayerBackFocused(false)} style={[styles.backButton, playerBackFocused && styles.focused]}><Ionicons name="arrow-back" size={20} color={color.text} /><Text style={styles.actionText}>Back to title</Text></Pressable>
               <Text style={styles.playerHeading} numberOfLines={1}>{displayTitle(selected)}{episode.episode ? ` · Episode ${episode.episode}` : ""}</Text>
               <Text style={styles.playerHint}>Use your remote to navigate</Text>
             </View>
@@ -226,7 +228,7 @@ export function TvApp() {
               {videoId && !playerFailed ? <Player key={videoId} videoId={videoId} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={44} color="#FF5252" /><Text style={styles.sectionTitle}>Playback unavailable here</Text><Text style={styles.bodyText}>Try another episode or check the YouTube link.</Text><ActionButton label="Back to episodes" icon="arrow-back" onPress={() => setPage("details")} />{videoId ? <ActionButton label="Watch on YouTube" icon="logo-youtube" onPress={() => void openInYouTube(videoId)} /> : null}</View>}
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.episodeRail}>
-              {currentGroup.map((ep, i) => <Pressable key={ep.id} focusable onPress={() => { setEpisode(ep); setPlayerFailed(false); }} style={({ focused }) => [styles.episodeChip, episode.id === ep.id && styles.episodeSelected, focused && styles.focused]}><Text style={styles.episodeNumber}>{ep.episode ?? i + 1}</Text><Text style={styles.episodeTitle} numberOfLines={1}>{ep.title}</Text></Pressable>)}
+              {currentGroup.map((ep, i) => <EpisodeButton key={ep.id} episode={ep} number={i + 1} selected={episode.id === ep.id} onPress={() => { setEpisode(ep); setPlayerFailed(false); }} />)}
             </ScrollView>
           </View>
         ) : null}
@@ -241,15 +243,23 @@ export function TvApp() {
 
 
 function NavButton({ label, icon, active, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; active: boolean; onPress: () => void }) {
-  return <Pressable focusable onPress={onPress} style={({ focused }) => [styles.navButton, active && styles.navActive, focused && styles.focused]}><Ionicons name={icon} size={22} color={active ? color.accent : color.muted} /><Text style={[styles.navText, active && styles.navTextActive]}>{label}</Text></Pressable>;
+  const [focused, setFocused] = useState(false);
+  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} style={[styles.navButton, active && styles.navActive, focused && styles.focused]}><Ionicons name={icon} size={22} color={active ? color.accent : color.muted} /><Text style={[styles.navText, active && styles.navTextActive]}>{label}</Text></Pressable>;
 }
 
 function ActionButton({ label, icon, primary = false, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; primary?: boolean; onPress: () => void }) {
-  return <Pressable focusable onPress={onPress} style={({ focused, pressed }) => [styles.actionButton, primary && styles.actionPrimary, focused && styles.focused, pressed && styles.pressed]}><Ionicons name={icon} size={18} color={primary ? "#000" : color.text} /><Text style={[styles.actionText, primary && styles.actionTextPrimary]}>{label}</Text></Pressable>;
+  const [focused, setFocused] = useState(false);
+  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} style={({ pressed }) => [styles.actionButton, primary && styles.actionPrimary, focused && styles.focused, pressed && styles.pressed]}><Ionicons name={icon} size={18} color={primary ? "#000" : color.text} /><Text style={[styles.actionText, primary && styles.actionTextPrimary]}>{label}</Text></Pressable>;
 }
 
 function FilterButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  return <Pressable focusable onPress={onPress} style={({ focused }) => [styles.filter, active && styles.filterActive, focused && styles.focused]}><Text style={[styles.filterText, active && styles.filterTextActive]}>{label}</Text></Pressable>;
+  const [focused, setFocused] = useState(false);
+  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} style={[styles.filter, active && styles.filterActive, focused && styles.focused]}><Text style={[styles.filterText, active && styles.filterTextActive]}>{label}</Text></Pressable>;
+}
+
+function EpisodeButton({ episode, number, selected, onPress }: { episode: Drama; number: number; selected: boolean; onPress: () => void }) {
+  const [focused, setFocused] = useState(false);
+  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} style={[styles.episodeChip, selected && styles.episodeSelected, focused && styles.focused]}><Text style={styles.episodeNumber}>{episode.episode ?? number}</Text><Text style={styles.episodeTitle} numberOfLines={1}>{episode.title}</Text></Pressable>;
 }
 
 function Shelf({ title, subtitle, items, cardWidth, episodeCounts, onSelect, onPlay, compact = false }: { title: string; subtitle?: string; items: Drama[]; cardWidth: number; episodeCounts: Record<number, number>; onSelect: (drama: Drama) => void; onPlay: (drama: Drama) => void; compact?: boolean }) {
@@ -258,7 +268,8 @@ function Shelf({ title, subtitle, items, cardWidth, episodeCounts, onSelect, onP
 }
 
 function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = false }: { drama: Drama; width: number; episodeCount: number; onPress: () => void; onPlay: () => void; compact?: boolean }) {
-  return <Pressable focusable onPress={onPress} onLongPress={onPlay} accessibilityRole="button" accessibilityLabel={displayTitle(drama)} style={({ focused, pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}><View style={[styles.posterFrame, { height: Math.round(width * 1.36) }]}>{drama.image ? <Image source={{ uri: drama.image }} style={styles.poster} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={30} color={color.dim} /></View>}{episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}</View><Text style={styles.posterTitle} numberOfLines={2}>{displayTitle(drama)}</Text>{!compact && drama.year ? <Text style={styles.posterYear}>{drama.year}</Text> : null}</Pressable>;
+  const [focused, setFocused] = useState(false);
+  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} onLongPress={onPlay} accessibilityRole="button" accessibilityLabel={displayTitle(drama)} style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}><View style={[styles.posterFrame, { height: Math.round(width * 1.36) }]}>{drama.image ? <Image source={{ uri: drama.image }} style={styles.poster} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={30} color={color.dim} /></View>}{episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}</View><Text style={styles.posterTitle} numberOfLines={2}>{displayTitle(drama)}</Text>{!compact && drama.year ? <Text style={styles.posterYear}>{drama.year}</Text> : null}</Pressable>;
 }
 
 const styles = StyleSheet.create({
