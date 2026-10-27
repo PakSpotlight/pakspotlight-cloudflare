@@ -52,6 +52,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Type-check the app
+        run: npm run typecheck
+
       - name: Read TV app version
         id: version
         run: |
