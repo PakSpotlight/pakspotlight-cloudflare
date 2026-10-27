@@ -60,7 +60,7 @@ export function TvApp() {
   }, [catalog?.featuredIds, rows, series]);
 
   const library = useMemo(
-    () => series.filter((group) => group[0] && myList.includes(titleKey(group[0]))).map((group) => group[0]),
+    () => series.map((group) => group[0]).filter((drama): drama is Drama => !!drama && myList.includes(titleKey(drama))),
     [series, myList]
   );
 
