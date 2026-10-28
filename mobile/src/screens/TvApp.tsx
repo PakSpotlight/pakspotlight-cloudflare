@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  BackHandler,
   Image,
   Pressable,
   ScrollView,
@@ -55,6 +56,26 @@ export function TvApp() {
   const [playerFailed, setPlayerFailed] = useState(false);
   const [clearFocused, setClearFocused] = useState(false);
   const [playerBackFocused, setPlayerBackFocused] = useState(false);
+
+  // Android TV's hardware Back key must follow the same screen stack as the on-screen Back button.
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (page === "player") {
+        setPage("details");
+        return true;
+      }
+      if (page === "details") {
+        backFromDetails();
+        return true;
+      }
+      if (page !== "home") {
+        openNav("home");
+        return true;
+      }
+      return false;
+    });
+    return () => subscription.remove();
+  }, [page, detailsFrom, nav]);
 
   const hero = heroCandidates[0] ?? series[0]?.[0] ?? null;
   const featured = useMemo(() => {
@@ -233,7 +254,7 @@ export function TvApp() {
                 </View>
               </View>
             </View>
-            {currentGroup.length > 1 ? <Shelf title="Episodes" items={currentGroup} cardWidth={cardWidth} episodeCounts={episodeCounts} onSelect={setEpisodeAndDetails} onPlay={(ep) => { setEpisode(ep); setPlayerFailed(false); setPage("player"); }} compact /> : null}
+            {currentGroup.length > 1 ? <Shelf title="Episodes" items={currentGroup} cardWidth={cardWidth} episodeCounts={episodeCounts} onSelect={(ep) => { setEpisode(ep); setPlayerFailed(false); setPage("player"); }} onPlay={(ep) => { setEpisode(ep); setPlayerFailed(false); setPage("player"); }} compact /> : null}
           </ScrollView>
         ) : null}
 
@@ -255,9 +276,6 @@ export function TvApp() {
     </View>
   );
 
-  function setEpisodeAndDetails(drama: Drama) {
-    setEpisode(drama);
-  }
 }
 
 
