@@ -209,7 +209,7 @@ export function TvApp() {
             </ScrollView>
             <FlatList
               style={styles.pageScroll}
-              contentContainerStyle={styles.grid}
+              contentContainerStyle={styles.browseGridContent}
               data={filtered}
               keyExtractor={(drama) => String(drama.id)}
               numColumns={Math.max(1, Math.floor((width - 210) / (cardWidth + 14)))}
@@ -401,6 +401,7 @@ const styles = StyleSheet.create({
   filterText: { color: color.text, fontFamily: font.medium, fontSize: 14 },
   filterTextActive: { color: "#000", fontFamily: font.bold },
   grid: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", gap: 14, paddingBottom: 40 },
+  browseGridContent: { paddingBottom: 40, gap: 14 },
   emptyState: { width: "100%", minHeight: 280, alignItems: "center", justifyContent: "center", gap: 12 },
   infoPage: { flex: 1, alignItems: "flex-start", justifyContent: "center", gap: 16, paddingHorizontal: 28, paddingBottom: 28, maxWidth: 760 },
   infoMark: { width: 52, height: 52, borderRadius: 14, backgroundColor: TV_GOLD, alignItems: "center", justifyContent: "center" },
