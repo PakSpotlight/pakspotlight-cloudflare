@@ -19,8 +19,10 @@ export function TopBar({
   onBack?: () => void;
   actions?: Array<{ icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }>;
 }) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.bar}>
+    <View style={[styles.bar, { paddingTop: Math.max(insets.top, space.md) }]}>
       <View style={styles.left}>
         {onBack ? (
           <Pressable
@@ -74,7 +76,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: gutter,
     paddingBottom: space.md,
-    paddingTop: Math.max(insets.top, space.md),
+    paddingTop: space.md,
     minHeight: 64,
   },
   left: { flexDirection: "row", alignItems: "center", flex: 1 },
