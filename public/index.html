@@ -6,7 +6,7 @@
 <title>Classic TV Pakistan — Classic PTV Drama Stream & Archive</title>
 <meta name="description" content="Stream the golden age of Pakistani television (PTV). Classic drama serials, legendary long plays, telefilms, and comedy masterpieces in a Netflix-style theater experience.">
 <link rel="canonical" href="https://classictvpakistan.com/">
-<link rel="icon" type="image/png" href="/logo.png">
+<link rel="icon" type="image/svg+xml" href="/logo-cinematic.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet">
@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="/css/cards.css?v=2">
 <link rel="stylesheet" href="/css/bottom-nav.css?v=2">
 <link rel="stylesheet" href="/css/modals.css?v=2">
+<link rel="stylesheet" href="/css/responsive-cinematic.css?v=1">\n<link rel="stylesheet" href="/css/brand-polish.css?v=1">
 </head>
 <body>
 
@@ -29,7 +30,7 @@
     </button>
     <div class="brand-group">
       <a href="/" class="brand">
-        <img src="/logo.png" alt="Classic TV Pakistan Logo" class="brand-logo">
+        <img src="/logo-cinematic.svg" alt="Classic TV Pakistan Logo" class="brand-logo">
         <div class="brand-titles">
           <span class="brand-name">CLASSIC TV PAKISTAN</span>
           <span class="brand-sub">Classic PTV Archive</span>
@@ -290,7 +291,12 @@
           ${heroArrowsHtml}
         </section>
 
-        <nav class="category-strip" aria-label="Browse by category">
+        <div class="app-promo-banner" role="region" aria-label="Get the Android app">
+            <div class="app-promo-copy"><span class="app-promo-kicker">TAKE THE CLASSICS WITH YOU</span><strong>Classic TV Pakistan for Android</strong><span>Enjoy the golden age of Pakistani television on your phone.</span></div>
+            <a class="app-promo-cta" href="/get-app"><span aria-hidden="true">↓</span> Get Android App</a>
+          </div>
+
+          <nav class="category-strip" aria-label="Browse by category">
           ${categories.map(c => `<a class="cat-pill" href="/browse?cat=${encodeURIComponent(c)}">${esc(c)}</a>`).join("")}
           <a class="cat-pill gold" href="/browse?view=mylist">★ My List</a>
         </nav>
