@@ -5,7 +5,6 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "r
 import { Hero } from "../components/Hero";
 import { SectionRow } from "../components/SectionRow";
 import { HomeSkeleton, StateView } from "../components/StateView";
-import { Tagline } from "../components/Tagline";
 import { TopBar } from "../components/TopBar";
 import { useCatalog } from "../lib/catalog";
 import { Drama, episodesLabel, metaLine, seriesStartId } from "../lib/dramas";
@@ -164,8 +163,6 @@ export function HomeScreen() {
           <Text style={styles.offlineText}>Showing the copy saved on this phone</Text>
         </View>
       ) : null}
-
-      <Tagline text="Purani yaadein, nayi nazar" />
 
       {hero ? (
         <Hero
