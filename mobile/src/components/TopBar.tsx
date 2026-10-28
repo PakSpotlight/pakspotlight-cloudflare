@@ -3,8 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { color, font, gutter, space, type } from "../theme";
 
 /**
- * Screen chrome. The wordmark is plain white — the accent is never spent on the header,
- * only on the five things listed in docs/android-app-plan.md §7.
+ * Shared premium header: visible gold TV mark and brand, with consistent spacing below Android status bar.
  */
 export function TopBar({
   brand = false,
@@ -34,7 +33,12 @@ export function TopBar({
           </Pressable>
         ) : null}
         <View>
-          {brand ? <Text style={styles.brand}>Classic TV Pakistan</Text> : null}
+          {brand ? (
+            <View style={styles.brandRow}>
+              <View style={styles.logoMark}><Ionicons name="tv-outline" size={19} color={color.ctaText} /></View>
+              <Text style={styles.brand}>Classic TV Pakistan</Text>
+            </View>
+          ) : null}
           {title ? (
             <Text style={styles.title} numberOfLines={1}>
               {title}
@@ -69,11 +73,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: gutter,
     paddingBottom: space.md,
-    paddingTop: space.sm,
+    paddingTop: space.md,
+    minHeight: 64,
   },
   left: { flexDirection: "row", alignItems: "center", flex: 1 },
   back: { marginRight: space.md, padding: 2 },
-  brand: { color: color.text, fontFamily: font.extra, fontSize: type.title + 1, letterSpacing: -0.3 },
+  brandRow: { flexDirection: "row", alignItems: "center", gap: space.sm },
+  logoMark: { width: 34, height: 34, borderRadius: 10, backgroundColor: color.accent, alignItems: "center", justifyContent: "center" },
+  brand: { color: color.accent, fontFamily: font.extra, fontSize: type.title + 1, letterSpacing: -0.3 },
   title: { color: color.text, fontFamily: font.extra, fontSize: type.h3, letterSpacing: -0.2 },
   subtitle: { color: color.muted, fontFamily: font.body, fontSize: type.meta, marginTop: 1 },
   right: { flexDirection: "row", alignItems: "center", gap: space.sm },
