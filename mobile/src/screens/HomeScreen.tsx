@@ -40,6 +40,7 @@ export function HomeScreen() {
     byId,
   } = useCatalog();
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [heroIndex, setHeroIndex] = useState(0);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
 
   useFocusEffect(
@@ -66,7 +67,15 @@ export function HomeScreen() {
     if (target) router.push(`/watch/${target}`);
   };
 
-  const hero = heroCandidates[0];
+  useEffect(() => {
+    if (heroCandidates.length < 2) return;
+    const timer = setInterval(() => {
+      setHeroIndex((current) => (current + 1) % heroCandidates.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [heroCandidates.length]);
+
+  const hero = heroCandidates.length ? heroCandidates[heroIndex % heroCandidates.length] : undefined;
   const heroGroup = hero ? series.find((g) => g.some((e) => e.id === hero.id)) : undefined;
   const heroCount = heroGroup ? heroGroup.length : 1;
 
