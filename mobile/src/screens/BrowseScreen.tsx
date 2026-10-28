@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
+  Alert,
   FlatList,
   Pressable,
   ScrollView,
@@ -58,6 +59,13 @@ export function BrowseScreen() {
       .map(({ drama }) => drama);
   }, [indexed, query, category]);
 
+  const openMenu = () => Alert.alert("Classic TV Pakistan", "Choose an option", [
+    { text: "Home", onPress: () => router.push("/") },
+    { text: "My Library", onPress: () => router.push("/library") },
+    { text: "Download Android APK", onPress: openDownloadPage },
+    { text: "Cancel", style: "cancel" },
+  ]);
+
   const clearAll = () => {
     setQuery("");
     setCategory(null);
@@ -65,7 +73,7 @@ export function BrowseScreen() {
 
   return (
     <View style={styles.screen}>
-      <TopBar brand actions={[{ icon: "bookmark-outline", label: "My library", onPress: () => router.push("/library") }]} />
+      <TopBar brand actions={[{ icon: "bookmark-outline", label: "My library", onPress: () => router.push("/library") }, { icon: "ellipsis-vertical", label: "More options", onPress: openMenu }]} />
 
       <Pressable
         onPress={openDownloadPage}
