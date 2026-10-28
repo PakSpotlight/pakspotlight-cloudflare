@@ -59,10 +59,10 @@ module.exports = function withAndroidTv(config) {
     android:viewportWidth="320"
     android:viewportHeight="180">
     <path android:fillColor="#080A09" android:pathData="M0,0h320v180h-320z" />
-    <path android:fillColor="#C6F32A" android:pathData="M24,26h5v128h-5z" />
+    <path android:fillColor="#D8B15A" android:pathData="M24,26h5v128h-5z" />
     <path android:fillColor="#FFFFFF" android:pathData="M48,58h94v6h-94z M48,73h72v4h-72z M48,86h86v4h-86z" />
     <path android:fillColor="#5F6569" android:pathData="M48,106h90v3h-90z M48,117h76v3h-76z" />
-    <path android:fillColor="#C6F32A" android:pathData="M183,51 L183,129 L246,90 Z" />
+    <path android:fillColor="#D8B15A" android:pathData="M183,51 L183,129 L246,90 Z" />
     <path android:fillColor="#151917" android:pathData="M264,25h30v130h-30z" />
     <path android:fillColor="#202522" android:pathData="M273,37h12v106h-12z" />
 </vector>
