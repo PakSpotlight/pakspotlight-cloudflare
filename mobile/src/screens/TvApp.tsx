@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
 import {
   BackHandler,
+  FlatList,
   Image,
   Pressable,
   ScrollView,
@@ -206,10 +207,30 @@ export function TvApp() {
               <FilterButton label="All" active={!category} onPress={() => setCategory(null)} />
               {categories.map((cat) => <FilterButton key={cat} label={cat} active={category === cat} onPress={() => setCategory(category === cat ? null : cat)} />)}
             </ScrollView>
-            <ScrollView style={styles.pageScroll} contentContainerStyle={styles.grid}>
-              {filtered.map((drama) => <PosterTile key={drama.id} drama={drama} width={cardWidth} episodeCount={episodeCounts[drama.id] ?? 1} onPress={() => openDetails(drama)} onPlay={() => playDrama(drama)} />)}
-              {!filtered.length ? <Text style={styles.bodyText}>{loading ? "Loading titles…" : "No titles match this search."}</Text> : null}
-            </ScrollView>
+            <FlatList
+              style={styles.pageScroll}
+              contentContainerStyle={styles.grid}
+              data={filtered}
+              keyExtractor={(drama) => String(drama.id)}
+              numColumns={Math.max(1, Math.floor((width - 210) / (cardWidth + 14)))}
+              key={Math.max(1, Math.floor((width - 210) / (cardWidth + 14)))}
+              renderItem={({ item: drama }) => (
+                <PosterTile
+                  drama={drama}
+                  width={cardWidth}
+                  episodeCount={episodeCounts[drama.id] ?? 1}
+                  onPress={() => openDetails(drama)}
+                  onPlay={() => playDrama(drama)}
+                />
+              )}
+              removeClippedSubviews
+              initialNumToRender={12}
+              maxToRenderPerBatch={8}
+              windowSize={5}
+              updateCellsBatchingPeriod={50}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={<Text style={styles.bodyText}>{loading ? "Loading titles…" : "No titles match this search."}</Text>}
+            />
           </View>
         ) : null}
 
@@ -322,6 +343,7 @@ const styles = StyleSheet.create({
   navItems: { gap: 5 },
   navButton: { minHeight: 44, borderRadius: 9, flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 10, borderWidth: 1, borderColor: "transparent" },
   navActive: { backgroundColor: "rgba(216,177,90,0.12)", borderColor: "rgba(216,177,90,0.35)" },
+  navFocused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.24)", elevation: 7, transform: [{ scale: 1.04 }] },
   navText: { color: color.muted, fontFamily: font.medium, fontSize: 13 },
   navTextActive: { color: color.text, fontFamily: font.bold },
   sidebarFooter: { marginTop: "auto", paddingHorizontal: 2, gap: 5 },
@@ -351,7 +373,7 @@ const styles = StyleSheet.create({
   actionText: { color: color.text, fontFamily: font.bold, fontSize: 15 },
   actionTextPrimary: { color: "#000" },
   focused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.18)" },
-  posterFocused: { transform: [{ scale: 1.055 }], borderColor: TV_GOLD, borderWidth: 3, borderRadius: 14, backgroundColor: "#211B10", shadowColor: TV_GOLD, shadowOpacity: 0.45, shadowRadius: 9, elevation: 8 },
+  posterFocused: { transform: [{ scale: 1.045 }], borderColor: TV_GOLD, borderWidth: 4, borderRadius: 14, backgroundColor: "#211B10", shadowColor: TV_GOLD, shadowOpacity: 0.65, shadowRadius: 12, elevation: 12, zIndex: 10 },
   pressed: { opacity: 0.78 },
   shelf: { gap: 12 },
   shelfHeading: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", paddingRight: 4 },
