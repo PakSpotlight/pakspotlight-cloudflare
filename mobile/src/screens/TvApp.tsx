@@ -28,6 +28,7 @@ type TvPage = "home" | "browse" | "library" | "info" | "details" | "player";
 type NavItem = "home" | "browse" | "library" | "info";
 
 const TV_SAFE = 34;
+const TV_GOLD = "#D8B15A";
 
 export function TvApp() {
   const { width, height } = useWindowDimensions();
@@ -281,7 +282,7 @@ export function TvApp() {
 
 function NavButton({ label, icon, active, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; active: boolean; onPress: () => void }) {
   const [focused, setFocused] = useState(false);
-  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} style={[styles.navButton, active && styles.navActive, focused && styles.focused]}><Ionicons name={icon} size={22} color={active ? color.accent : color.muted} /><Text style={[styles.navText, active && styles.navTextActive]}>{label}</Text></Pressable>;
+  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} style={[styles.navButton, active && styles.navActive, focused && styles.focused]}><Ionicons name={icon} size={22} color={active ? TV_GOLD : color.muted} /><Text style={[styles.navText, active && styles.navTextActive]}>{label}</Text></Pressable>;
 }
 
 function ActionButton({ label, icon, primary = false, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; primary?: boolean; onPress: () => void }) {
@@ -314,17 +315,17 @@ const styles = StyleSheet.create({
   fullscreenScreen: { flexDirection: "column", padding: 0 },
   sidebar: { width: 148, paddingTop: 22, paddingHorizontal: 10, paddingBottom: 16, borderRightWidth: 1, borderRightColor: color.line, backgroundColor: "#080A09" },
   brandMark: { flexDirection: "row", alignItems: "center", gap: 7, paddingBottom: 24, paddingHorizontal: 2 },
-  brandGlyph: { width: 30, height: 30, borderRadius: 8, backgroundColor: color.accent, alignItems: "center", justifyContent: "center" },
+  brandGlyph: { width: 30, height: 30, borderRadius: 8, backgroundColor: TV_GOLD, alignItems: "center", justifyContent: "center" },
   brandPlay: { position: "absolute", right: 2, bottom: 2, width: 12, height: 12, borderRadius: 6, backgroundColor: "#fff", alignItems: "center", justifyContent: "center" },
   brandText: { color: color.text, fontFamily: font.black, fontSize: 9, letterSpacing: 0.1 },
   brandPakistan: { color: color.muted, fontFamily: font.medium },
   navItems: { gap: 5 },
   navButton: { minHeight: 44, borderRadius: 9, flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 10, borderWidth: 1, borderColor: "transparent" },
-  navActive: { backgroundColor: "rgba(198,243,42,0.10)", borderColor: "rgba(198,243,42,0.22)" },
+  navActive: { backgroundColor: "rgba(216,177,90,0.12)", borderColor: "rgba(216,177,90,0.35)" },
   navText: { color: color.muted, fontFamily: font.medium, fontSize: 13 },
   navTextActive: { color: color.text, fontFamily: font.bold },
   sidebarFooter: { marginTop: "auto", paddingHorizontal: 2, gap: 5 },
-  sidebarCaption: { color: color.accent, fontFamily: font.bold, fontSize: 9, letterSpacing: 1.1 },
+  sidebarCaption: { color: TV_GOLD, fontFamily: font.bold, fontSize: 9, letterSpacing: 1.1 },
   sidebarSmall: { color: color.dim, fontFamily: font.body, fontSize: 10, lineHeight: 14 },
   offline: { color: color.muted, fontSize: 11 },
   main: { flex: 1, minWidth: 0, paddingTop: 22, paddingLeft: 22, paddingRight: TV_SAFE, paddingBottom: 14 },
@@ -333,14 +334,14 @@ const styles = StyleSheet.create({
   pageLabel: { color: color.muted, fontFamily: font.bold, fontSize: 12, letterSpacing: 1.5 },
   topRight: { flexDirection: "row", alignItems: "center", gap: 9 },
   countText: { color: color.dim, fontSize: 12 },
-  statusDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: color.accent },
+  statusDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: TV_GOLD },
   pageScroll: { flex: 1 },
   homeContent: { paddingBottom: 40, gap: 22 },
   hero: { overflow: "hidden", borderRadius: 18, backgroundColor: "#141816", justifyContent: "flex-end" },
   heroImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%", opacity: 0.64 },
   heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.34)" },
   heroCopy: { padding: 28, maxWidth: 650, gap: 9 },
-  eyebrow: { color: color.accent, fontFamily: font.bold, fontSize: 11, letterSpacing: 1.7 },
+  eyebrow: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11, letterSpacing: 1.7 },
   urduTitle: { color: "#fff", fontSize: 22, lineHeight: 42 },
   heroTitle: { color: "#fff", fontFamily: font.black, fontSize: 36, lineHeight: 42 },
   heroMeta: { color: "#D3D8D4", fontFamily: font.medium, fontSize: 14, marginTop: 2 },
@@ -349,8 +350,8 @@ const styles = StyleSheet.create({
   actionPrimary: { backgroundColor: "#fff", borderColor: "#fff" },
   actionText: { color: color.text, fontFamily: font.bold, fontSize: 15 },
   actionTextPrimary: { color: "#000" },
-  focused: { borderColor: color.accent, borderWidth: 3, backgroundColor: "rgba(198,243,42,0.14)" },
-  posterFocused: { transform: [{ scale: 1.045 }], borderColor: color.accent, borderWidth: 2, borderRadius: 14, backgroundColor: "#182014" },
+  focused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.18)" },
+  posterFocused: { transform: [{ scale: 1.055 }], borderColor: TV_GOLD, borderWidth: 3, borderRadius: 14, backgroundColor: "#211B10", shadowColor: TV_GOLD, shadowOpacity: 0.45, shadowRadius: 9, elevation: 8 },
   pressed: { opacity: 0.78 },
   shelf: { gap: 12 },
   shelfHeading: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", paddingRight: 4 },
@@ -374,13 +375,13 @@ const styles = StyleSheet.create({
   clearButton: { width: 38, height: 38, alignItems: "center", justifyContent: "center", borderRadius: 8 },
   chips: { gap: 10, paddingBottom: 14, paddingTop: 2 },
   filter: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 9, backgroundColor: "#171B18", borderWidth: 1, borderColor: color.line },
-  filterActive: { backgroundColor: color.accent, borderColor: color.accent },
+  filterActive: { backgroundColor: TV_GOLD, borderColor: TV_GOLD },
   filterText: { color: color.text, fontFamily: font.medium, fontSize: 14 },
   filterTextActive: { color: "#000", fontFamily: font.bold },
   grid: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", gap: 14, paddingBottom: 40 },
   emptyState: { width: "100%", minHeight: 280, alignItems: "center", justifyContent: "center", gap: 12 },
   infoPage: { flex: 1, alignItems: "flex-start", justifyContent: "center", gap: 16, paddingHorizontal: 28, paddingBottom: 28, maxWidth: 760 },
-  infoMark: { width: 52, height: 52, borderRadius: 14, backgroundColor: color.accent, alignItems: "center", justifyContent: "center" },
+  infoMark: { width: 52, height: 52, borderRadius: 14, backgroundColor: TV_GOLD, alignItems: "center", justifyContent: "center" },
   infoTitle: { color: "#fff", fontFamily: font.black, fontSize: 30 },
   infoSubtitle: { color: color.muted, fontFamily: font.medium, fontSize: 16 },
   infoCard: { width: "100%", gap: 8, padding: 18, borderRadius: 12, borderWidth: 1, borderColor: color.line, backgroundColor: "#101311" },
@@ -399,8 +400,8 @@ const styles = StyleSheet.create({
   playerError: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   episodeRail: { gap: 10, paddingVertical: 4 },
   episodeChip: { width: 170, minHeight: 52, borderRadius: 9, padding: 9, backgroundColor: "#171B18", borderWidth: 1, borderColor: color.line },
-  episodeSelected: { borderColor: color.accent },
-  episodeNumber: { color: color.accent, fontFamily: font.bold, fontSize: 11 },
+  episodeSelected: { borderColor: TV_GOLD },
+  episodeNumber: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11 },
   episodeTitle: { color: color.text, fontSize: 12, marginTop: 3 },
   backButton: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
 });
