@@ -2,8 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-  Alert,
   FlatList,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -29,6 +29,7 @@ export function BrowseScreen() {
 
   const [query, setQuery] = useState(typeof params.q === "string" ? params.q : "");
   const [category, setCategory] = useState<string | null>(typeof params.category === "string" ? params.category : null);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const usable = Math.min(width, contentMaxWidth) - gutter * 2 - space.md * (GRID_COLUMNS - 1);
   const cardWidth = Math.floor(usable / GRID_COLUMNS);
@@ -59,12 +60,8 @@ export function BrowseScreen() {
       .map(({ drama }) => drama);
   }, [indexed, query, category]);
 
-  const openMenu = () => Alert.alert("Classic TV Pakistan", "Choose an option", [
-    { text: "Home", onPress: () => router.push("/") },
-    { text: "My Library", onPress: () => router.push("/library") },
-    { text: "Download Android APK", onPress: openDownloadPage },
-    { text: "Cancel", style: "cancel" },
-  ]);
+  const openMenu = () => setMenuVisible(true);
+  const closeMenu = () => setMenuVisible(false);
 
   const clearAll = () => {
     setQuery("");
@@ -73,6 +70,24 @@ export function BrowseScreen() {
 
   return (
     <View style={styles.screen}>
+      <Modal transparent visible={menuVisible} animationType="fade" statusBarTranslucent onRequestClose={closeMenu}>
+        <Pressable style={styles.menuBackdrop} onPress={closeMenu}>
+          <Pressable style={styles.menuCard} onPress={() => {}}>
+            <Text style={styles.menuTitle}>Classic TV Pakistan</Text>
+            {[
+              { label: "Home", action: () => router.push("/") },
+              { label: "My Library", action: () => router.push("/library") },
+              { label: "Download Android APK", action: openDownloadPage },
+            ].map((item) => (
+              <Pressable key={item.label} style={styles.menuItem} onPress={() => { closeMenu(); item.action(); }}>
+                <Text style={styles.menuItemText}>{item.label}</Text>
+              </Pressable>
+            ))}
+            <Pressable style={styles.menuCancel} onPress={closeMenu}><Text style={styles.menuCancelText}>Close</Text></Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       <TopBar brand actions={[{ icon: "bookmark-outline", label: "My library", onPress: () => router.push("/library") }, { icon: "ellipsis-vertical", label: "More options", onPress: openMenu }]} />
 
       <Pressable
@@ -171,6 +186,13 @@ export function BrowseScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg, width: "100%", maxWidth: contentMaxWidth, alignSelf: "center" },
+  menuBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.62)", justifyContent: "center", alignItems: "center", padding: gutter },
+  menuCard: { width: "100%", maxWidth: 420, backgroundColor: color.surface, borderColor: color.lineStrong, borderWidth: 1, borderRadius: 20, padding: space.lg },
+  menuTitle: { color: color.text, fontFamily: font.extra, fontSize: type.h3, marginBottom: space.md },
+  menuItem: { minHeight: 50, justifyContent: "center", borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.line },
+  menuItemText: { color: color.text, fontFamily: font.medium, fontSize: type.body },
+  menuCancel: { alignSelf: "flex-end", paddingVertical: space.md, paddingHorizontal: space.sm },
+  menuCancelText: { color: color.accent, fontFamily: font.bold, fontSize: type.body },
   apkButton: {
     flexDirection: "row",
     alignItems: "center",
