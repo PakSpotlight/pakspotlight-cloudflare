@@ -10,7 +10,7 @@ import { TopBar } from "../components/TopBar";
 import { useCatalog } from "../lib/catalog";
 import { Drama, episodesLabel, metaLine, seriesStartId } from "../lib/dramas";
 import { getHistory, HistoryEntry } from "../lib/storage";
-import { APP_VERSION, checkForUpdate, openApk, sendLaunchPing, UpdateInfo } from "../lib/update";
+import { APP_VERSION, checkForUpdate, openApk, openDownloadPage, sendLaunchPing, UpdateInfo } from "../lib/update";
 import { color, contentMaxWidth, font, gutter, space, type } from "../theme";
 
 type Section = {
@@ -147,6 +147,17 @@ export function HomeScreen() {
         </Pressable>
       ) : null}
 
+      <Pressable
+        onPress={openDownloadPage}
+        accessibilityRole="button"
+        accessibilityLabel="Download Classic TV Pakistan APK"
+        style={({ pressed }) => [styles.apkButton, pressed && styles.pressed]}
+      >
+        <Ionicons name="download-outline" size={21} color={color.ctaText} />
+        <Text style={styles.apkButtonText}>Download Android APK</Text>
+        <Ionicons name="arrow-forward" size={18} color={color.ctaText} />
+      </Pressable>
+
       {catalog && catalog.stale ? (
         <View style={styles.offlineNote}>
           <Ionicons name="cloud-offline-outline" size={14} color={color.dim} />
@@ -195,6 +206,19 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg, width: "100%", maxWidth: contentMaxWidth, alignSelf: "center" },
   content: { paddingBottom: space.xxl },
+  apkButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: space.sm,
+    marginHorizontal: gutter,
+    marginBottom: space.lg,
+    paddingHorizontal: space.lg,
+    minHeight: 52,
+    borderRadius: 16,
+    backgroundColor: color.ctaBg,
+  },
+  apkButtonText: { color: color.ctaText, fontFamily: font.bold, fontSize: type.body },
   updateBanner: {
     flexDirection: "row",
     alignItems: "center",
