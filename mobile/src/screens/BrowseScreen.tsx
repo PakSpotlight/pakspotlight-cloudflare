@@ -16,6 +16,7 @@ import { StateView } from "../components/StateView";
 import { TopBar } from "../components/TopBar";
 import { useCatalog } from "../lib/catalog";
 import { Drama, displayTitle, normalize } from "../lib/dramas";
+import { openDownloadPage } from "../lib/update";
 import { color, contentMaxWidth, font, GRID_COLUMNS, gutter, radius, space, type } from "../theme";
 
 /** Browse: search field, category chips, three-column poster grid — the whole archive. */
@@ -65,6 +66,17 @@ export function BrowseScreen() {
   return (
     <View style={styles.screen}>
       <TopBar brand actions={[{ icon: "bookmark-outline", label: "My library", onPress: () => router.push("/library") }]} />
+
+      <Pressable
+        onPress={openDownloadPage}
+        accessibilityRole="button"
+        accessibilityLabel="Download Classic TV Pakistan APK"
+        style={({ pressed }) => [styles.apkButton, pressed && styles.pressed]}
+      >
+        <Ionicons name="download-outline" size={19} color={color.ctaText} />
+        <Text style={styles.apkButtonText}>Download Android APK</Text>
+        <Ionicons name="arrow-forward" size={17} color={color.ctaText} />
+      </Pressable>
 
       <View style={styles.searchWrap}>
         <Ionicons name="search" size={18} color={color.dim} />
@@ -151,6 +163,20 @@ export function BrowseScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg, width: "100%", maxWidth: contentMaxWidth, alignSelf: "center" },
+  apkButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: space.sm,
+    marginHorizontal: gutter,
+    marginBottom: space.md,
+    paddingHorizontal: space.md,
+    minHeight: 46,
+    borderRadius: 14,
+    backgroundColor: color.ctaBg,
+  },
+  apkButtonText: { color: color.ctaText, fontFamily: font.bold, fontSize: type.meta },
+  pressed: { opacity: 0.7 },
   searchWrap: {
     flexDirection: "row",
     alignItems: "center",
