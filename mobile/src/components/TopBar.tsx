@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: gutter,
     paddingBottom: space.md,
-    paddingTop: space.md,
+    paddingTop: Math.max(insets.top, space.md),
     minHeight: 64,
   },
   left: { flexDirection: "row", alignItems: "center", flex: 1 },
