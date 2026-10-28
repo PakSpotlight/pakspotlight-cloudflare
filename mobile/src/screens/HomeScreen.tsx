@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Hero } from "../components/Hero";
 import { SectionRow } from "../components/SectionRow";
 import { HomeSkeleton, StateView } from "../components/StateView";
@@ -42,6 +42,7 @@ export function HomeScreen() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [heroIndex, setHeroIndex] = useState(0);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -54,12 +55,8 @@ export function HomeScreen() {
     void checkForUpdate().then(setUpdate);
   }, []);
 
-  const openMenu = () => Alert.alert("Classic TV Pakistan", "Choose an option", [
-    { text: "Browse dramas", onPress: () => router.push("/browse") },
-    { text: "My Library", onPress: () => router.push("/library") },
-    { text: "Download Android APK", onPress: openDownloadPage },
-    { text: "Cancel", style: "cancel" },
-  ]);
+  const openMenu = () => setMenuVisible(true);
+  const closeMenu = () => setMenuVisible(false);
 
   const openDrama = (drama: Drama) => router.push(`/drama/${drama.id}`);
   const playDrama = (drama: Drama) => {
@@ -148,6 +145,24 @@ export function HomeScreen() {
         ]}
       />
 
+      <Modal transparent visible={menuVisible} animationType="fade" statusBarTranslucent onRequestClose={closeMenu}>
+        <Pressable style={styles.menuBackdrop} onPress={closeMenu}>
+          <Pressable style={styles.menuCard} onPress={() => {}}>
+            <Text style={styles.menuTitle}>Classic TV Pakistan</Text>
+            {[
+              { label: "Browse dramas", action: () => router.push("/browse") },
+              { label: "My Library", action: () => router.push("/library") },
+              { label: "Download Android APK", action: openDownloadPage },
+            ].map((item) => (
+              <Pressable key={item.label} style={styles.menuItem} onPress={() => { closeMenu(); item.action(); }}>
+                <Text style={styles.menuItemText}>{item.label}</Text>
+              </Pressable>
+            ))}
+            <Pressable style={styles.menuCancel} onPress={closeMenu}><Text style={styles.menuCancelText}>Close</Text></Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       {update ? (
         <Pressable
           onPress={() => openApk(update)}
@@ -233,6 +248,13 @@ const styles = StyleSheet.create({
     backgroundColor: color.ctaBg,
   },
   apkButtonText: { color: color.ctaText, fontFamily: font.bold, fontSize: type.body },
+  menuBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.62)", justifyContent: "center", alignItems: "center", padding: gutter },
+  menuCard: { width: "100%", maxWidth: 420, backgroundColor: color.surface, borderColor: color.lineStrong, borderWidth: 1, borderRadius: 20, padding: space.lg },
+  menuTitle: { color: color.text, fontFamily: font.extra, fontSize: type.h3, marginBottom: space.md },
+  menuItem: { minHeight: 50, justifyContent: "center", borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.line },
+  menuItemText: { color: color.text, fontFamily: font.medium, fontSize: type.body },
+  menuCancel: { alignSelf: "flex-end", paddingVertical: space.md, paddingHorizontal: space.sm },
+  menuCancelText: { color: color.accent, fontFamily: font.bold, fontSize: type.body },
   updateBanner: {
     flexDirection: "row",
     alignItems: "center",
