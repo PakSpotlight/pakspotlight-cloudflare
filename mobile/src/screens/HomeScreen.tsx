@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Hero } from "../components/Hero";
 import { SectionRow } from "../components/SectionRow";
 import { HomeSkeleton, StateView } from "../components/StateView";
@@ -52,6 +52,13 @@ export function HomeScreen() {
     void sendLaunchPing();
     void checkForUpdate().then(setUpdate);
   }, []);
+
+  const openMenu = () => Alert.alert("Classic TV Pakistan", "Choose an option", [
+    { text: "Browse dramas", onPress: () => router.push("/browse") },
+    { text: "My Library", onPress: () => router.push("/library") },
+    { text: "Download Android APK", onPress: openDownloadPage },
+    { text: "Cancel", style: "cancel" },
+  ]);
 
   const openDrama = (drama: Drama) => router.push(`/drama/${drama.id}`);
   const playDrama = (drama: Drama) => {
@@ -128,6 +135,7 @@ export function HomeScreen() {
         actions={[
           { icon: "search", label: "Search the archive", onPress: () => router.push("/browse") },
           { icon: "bookmark-outline", label: "My library", onPress: () => router.push("/library") },
+          { icon: "ellipsis-vertical", label: "More options", onPress: openMenu },
         ]}
       />
 
