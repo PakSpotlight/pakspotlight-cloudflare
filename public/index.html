@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/modals.css?v=2">
 <link rel="stylesheet" href="/css/responsive-cinematic.css?v=2">
 <link rel="stylesheet" href="/css/brand-polish.css?v=2">
-<link rel="stylesheet" href="/css/ui-fixes.css?v=5">
+<link rel="stylesheet" href="/css/ui-fixes.css?v=6">
 </head>
 <body>
 
@@ -168,7 +168,7 @@
 
   <!-- Vendored Supabase (ES2019 build) + Shared Utilities -->
   <script src="/js/supabase.min.js"></script>
-  <script src="/js/shared.js?v=2"></script>
+  <script src="/js/shared.js?v=3"></script>
 
   <script>
     function renderCategoryNavigation() {
@@ -317,70 +317,146 @@
       }
     }
 
-    // Hero Slider Controls
+    // Hero carousel: one resilient scheduler, re-synced after every render/visibility change.
     let heroIndex = 0;
     let heroTimer = null;
     let heroTotal = 0;
     let heroPaused = false;
+    let heroEventsBoundFor = null;
 
-    function startHeroSlider() {
-      const slides = document.querySelectorAll(".hero-slide");
-      heroTotal = slides.length;
-      heroIndex = 0;
-      clearInterval(heroTimer);
-      heroTimer = setInterval(() => {
-        if (!heroPaused) heroSlideDir(1);
-      }, 5000);
-
-      // Pause on hover (desktop)
-      const bb = $("heroBillboard");
-      if (bb) {
-        bb.addEventListener("mouseenter", () => { heroPaused = true; });
-        bb.addEventListener("mouseleave", () => { heroPaused = false; });
+    function stopHeroTimer() {
+      if (heroTimer !== null) {
+        clearTimeout(heroTimer);
+        heroTimer = null;
       }
-
-      // Touch swipe
-      if (bb) {
-        let touchStartX = 0;
-        let touchStartY = 0;
-        bb.addEventListener("touchstart", e => {
-          touchStartX = e.touches[0].clientX;
-          touchStartY = e.touches[0].clientY;
-        }, { passive: true });
-        bb.addEventListener("touchend", e => {
-          const dx = e.changedTouches[0].clientX - touchStartX;
-          const dy = e.changedTouches[0].clientY - touchStartY;
-          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-            heroSlideDir(dx < 0 ? 1 : -1);
-          }
-        }, { passive: true });
-      }
-    }
-
-    function goToHeroSlide(idx) {
-      heroIndex = idx;
-      updateHeroSlide();
-      clearInterval(heroTimer);
-      heroTimer = setInterval(() => {
-        if (!heroPaused) heroSlideDir(1);
-      }, 5000);
-    }
-
-    function heroSlideDir(dir) {
-      if (heroTotal <= 1) return;
-      heroIndex = (heroIndex + dir + heroTotal) % heroTotal;
-      updateHeroSlide();
     }
 
     function updateHeroSlide() {
-      document.querySelectorAll(".hero-slide").forEach((s, i) => {
-        s.classList.toggle("active", i === heroIndex);
+      const slides = Array.from(document.querySelectorAll("#heroSlides .hero-slide"));
+      const dots = Array.from(document.querySelectorAll("#heroBillboard .hero-dot"));
+      heroTotal = slides.length;
+      if (!heroTotal) return;
+      heroIndex = ((Number(heroIndex) || 0) % heroTotal + heroTotal) % heroTotal;
+      slides.forEach((slide, i) => {
+        const active = i === heroIndex;
+        slide.classList.toggle("active", active);
+        slide.setAttribute("aria-hidden", active ? "false" : "true");
       });
-      document.querySelectorAll(".hero-dot").forEach((d, i) => {
-        d.classList.toggle("active", i === heroIndex);
+      dots.forEach((dot, i) => {
+        const active = i === heroIndex;
+        dot.classList.toggle("active", active);
+        dot.setAttribute("aria-current", active ? "true" : "false");
       });
     }
 
+    function scheduleHeroAdvance() {
+      stopHeroTimer();
+      if (document.hidden || heroPaused || heroTotal < 2 || !document.getElementById("heroSlides")) return;
+      heroTimer = setTimeout(() => {
+        heroTimer = null;
+        if (!document.hidden && !heroPaused) heroSlideDir(1);
+        scheduleHeroAdvance();
+      }, 5000);
+    }
+
+    function startHeroSlider() {
+      const root = document.getElementById("heroBillboard");
+      const slidesRoot = document.getElementById("heroSlides");
+      if (!root || !slidesRoot) {
+        stopHeroTimer();
+        heroTotal = 0;
+        heroEventsBoundFor = null;
+        return;
+      }
+
+      heroTotal = slidesRoot.querySelectorAll(".hero-slide").length;
+      if (!heroTotal) {
+        stopHeroTimer();
+        heroEventsBoundFor = null;
+        return;
+      }
+
+      // A newly rendered homepage gets a new hero root. Clear any pause state
+      // inherited from a detached root (e.g. navigating away while hovered).
+      if (heroEventsBoundFor !== root) {
+        heroPaused = false;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        root.addEventListener("mouseenter", () => {
+          heroPaused = true;
+          stopHeroTimer();
+        });
+        root.addEventListener("mouseleave", () => {
+          heroPaused = false;
+          scheduleHeroAdvance();
+        });
+        root.addEventListener("touchstart", e => {
+          if (!e.touches || !e.touches.length) return;
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        root.addEventListener("touchend", e => {
+          if (!e.changedTouches || !e.changedTouches.length) return;
+          const dx = e.changedTouches[0].clientX - touchStartX;
+          const dy = e.changedTouches[0].clientY - touchStartY;
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+            heroSlideDir(dx < 0 ? 1 : -1);
+          }
+        }, { passive: true });
+        heroEventsBoundFor = root;
+      }
+
+      updateHeroSlide();
+      scheduleHeroAdvance();
+    }
+
+    function goToHeroSlide(idx) {
+      heroIndex = Number(idx) || 0;
+      updateHeroSlide();
+      scheduleHeroAdvance();
+    }
+
+    function heroSlideDir(dir) {
+      const slides = document.querySelectorAll("#heroSlides .hero-slide");
+      heroTotal = slides.length;
+      if (heroTotal < 2) {
+        updateHeroSlide();
+        return;
+      }
+      heroIndex = (heroIndex + (dir < 0 ? -1 : 1) + heroTotal) % heroTotal;
+      updateHeroSlide();
+      scheduleHeroAdvance();
+    }
+
+    function resyncHeroSlider() {
+      // Defer lifecycle resync until DOM/view rendering in the current turn settles.
+      requestAnimationFrame(() => {
+        const root = document.getElementById("heroBillboard");
+        if (!root) {
+          stopHeroTimer();
+          heroTotal = 0;
+          heroEventsBoundFor = null;
+          return;
+        }
+        startHeroSlider();
+      });
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopHeroTimer();
+      } else {
+        resyncHeroSlider();
+      }
+    });
+    window.addEventListener("pageshow", resyncHeroSlider);
+    window.addEventListener("resize", () => {
+      requestAnimationFrame(() => {
+        updateHeroSlide();
+        scheduleHeroAdvance();
+      });
+    }, { passive: true });
+    window.addEventListener("focus", resyncHeroSlider);
     // Initialize Home Page
     Promise.all([loadData(), loadCategories()]).then(() => {
       renderCategoryNavigation();

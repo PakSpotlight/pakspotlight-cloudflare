@@ -18,7 +18,7 @@
 <link rel="stylesheet" href="/css/modals.css?v=2">
 <link rel="stylesheet" href="/css/responsive-cinematic.css?v=2">
 <link rel="stylesheet" href="/css/brand-polish.css?v=2">
-<link rel="stylesheet" href="/css/ui-fixes.css?v=5">
+<link rel="stylesheet" href="/css/ui-fixes.css?v=6">
 </head>
 <body>
 
@@ -70,6 +70,8 @@
         <button class="search-suggestion-chip" onclick="applySearchQuery('Aangan Terha')">Aangan Terha</button>
       </div>
     </div>
+
+    <div id="searchLiveStatus" class="browse-search-status" role="status" aria-live="polite"></div>
 
     <!-- Category Filter Pills -->
     <div class="app-promo-banner browse-app-promo" role="region" aria-label="Get the Android app">
@@ -172,7 +174,7 @@
 
   <!-- Vendored Supabase (ES2019 build) + Shared Utilities -->
   <script src="/js/supabase.min.js"></script>
-  <script src="/js/shared.js?v=2"></script>
+  <script src="/js/shared.js?v=3"></script>
 
   <script>
     let activeCat = "all";
@@ -293,6 +295,12 @@
 
       const groups = groupDramas(filtered);
       countEl.textContent = `${groups.length} title${groups.length !== 1 ? 's' : ''}`;
+      const liveStatus = $("searchLiveStatus");
+      if (liveStatus) {
+        liveStatus.textContent = currentSearchTerm
+          ? (groups.length ? `Found ${groups.length} matching title${groups.length !== 1 ? "s" : ""} for “${currentSearchTerm}”. Tap a result to open it.` : `No dramas found for “${currentSearchTerm}”. Try another title or actor.`)
+          : "";
+      }
 
       if (groups.length === 0) {
         grid.innerHTML = `
@@ -341,10 +349,8 @@
         const val = e.target.value.trim();
         $("browseSearchClear").classList.toggle("visible", !!val);
         clearTimeout(searchDebounce);
-        searchDebounce = setTimeout(() => {
-          currentSearchTerm = val;
-          renderResults();
-        }, 180);
+        currentSearchTerm = val;
+        renderResults();
       });
     }
 
