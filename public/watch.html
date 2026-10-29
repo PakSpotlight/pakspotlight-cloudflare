@@ -208,7 +208,7 @@
       }
       // Update titles
       const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim() && ["serial / series", "series", "serial"].includes(String(currentDrama.type || "").toLowerCase().trim());
-      if (isSer && currentEp) {
+      if (isSer && currentEpisodes.length > 1 && currentEp) {
         const epNum = currentEp.episode == null ? currentEpisodes.indexOf(currentEp) + 1 : currentEp.episode;
         const epTitle = cleanDramaTitle(currentEp.title);
         const newTitle = epTitle && epTitle !== currentDrama.series ? epTitle : `${currentDrama.series} — Episode ${epNum}`;
@@ -248,7 +248,8 @@
 
       const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim() && ["serial / series", "series", "serial"].includes(String(currentDrama.type || "").toLowerCase().trim());
       const baseTitle = isSer ? currentDrama.series : currentDrama.title;
-      const epNum = isSer && currentEp ? (currentEp.episode == null ? currentEpisodes.indexOf(currentEp) + 1 : currentEp.episode) : null;
+      const hasEpisodeList = isSer && currentEpisodes.length > 1;
+      const epNum = hasEpisodeList && currentEp ? (currentEp.episode == null ? currentEpisodes.indexOf(currentEp) + 1 : currentEp.episode) : null;
       const epTitle = isSer && currentEp ? cleanDramaTitle(currentEp.title) : "";
       const pageTitle = epNum ? `${baseTitle} — Episode ${epNum}` : baseTitle;
       const displayTitle = epNum ? (epTitle && epTitle !== baseTitle ? epTitle : `${baseTitle} — Episode ${epNum}`) : baseTitle;

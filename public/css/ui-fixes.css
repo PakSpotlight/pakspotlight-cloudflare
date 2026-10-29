@@ -1,0 +1,48 @@
+/* Classic TV Pakistan — premium archive polish, presentation only. */
+html { background: #050505; }
+body {
+  background-color: #050505 !important;
+  background-image:
+    radial-gradient(ellipse at 50% -12%, rgba(199, 151, 53, .20) 0%, rgba(87, 54, 17, .10) 26%, transparent 58%),
+    radial-gradient(ellipse at 0% 34%, rgba(93, 23, 28, .15) 0%, transparent 38%),
+    radial-gradient(ellipse at 100% 72%, rgba(147, 105, 30, .10) 0%, transparent 42%),
+    linear-gradient(180deg, #0a0907 0%, #050505 38%, #090806 72%, #050505 100%) !important;
+  background-attachment: scroll !important;
+}
+@media (min-width: 851px) {
+  body { background-attachment: fixed !important; }
+}
+/* A restrained vintage-cinema glow behind the archive, without obscuring content. */
+.topbar {
+  background: linear-gradient(90deg, rgba(8,7,5,.98), rgba(18,14,8,.96), rgba(8,7,5,.98)) !important;
+  border-bottom: 1px solid rgba(216,179,90,.28) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+}
+@media (max-width: 850px) {
+  .topbar { min-height: 74px; gap: 9px; padding: 8px 12px; }
+  .brand-group { flex: 1 1 auto; min-width: 0; }
+  .brand { gap: 9px; }
+  .brand-logo { width: 42px; height: 42px; }
+  .brand-titles { min-width: 0; }
+  .brand-name {
+    font-family: var(--font-sans, "Outfit", sans-serif);
+    font-size: clamp(15px, 4.1vw, 19px);
+    font-weight: 900; letter-spacing: .45px; line-height: 1.15;
+    color: #f3d58b; text-shadow: 0 1px 18px rgba(216,179,90,.22);
+    white-space: normal;
+  }
+  .brand-sub { font-size: 10px; line-height: 1.25; }
+  /* Admin stays accessible from the hamburger drawer, not the public header. */
+  #topbarAuthArea { display: none !important; }
+}
+@media (min-width: 851px) {
+  .brand-name {
+    font-size: clamp(22px, 2vw, 30px); font-weight: 900;
+    letter-spacing: 1px; color: #f3d58b;
+    text-shadow: 0 1px 22px rgba(216,179,90,.20);
+  }
+  .brand-logo { width: 54px; height: 54px; }
+}
+/* Preserve the full source thumbnail and avoid cropping YouTube video artwork. */
+.card-media { aspect-ratio: 16 / 9 !important; background: #050505 !important; }
+.card-media img { object-fit: contain !important; object-position: center !important; }
