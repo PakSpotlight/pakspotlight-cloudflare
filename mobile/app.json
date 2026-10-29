@@ -2,7 +2,7 @@
   "expo": {
     "name": "Classic TV Pakistan",
     "slug": "classic-tv-pakistan",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "scheme": "classictvpakistan",
     "userInterfaceStyle": "dark",
@@ -13,7 +13,7 @@
     ],
     "android": {
       "package": "com.classictvpakistan.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "android.permission.WAKE_LOCK"
       ],
