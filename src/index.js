@@ -734,7 +734,7 @@ var index_default = {
         const pid = playlistIdFromUrl(body.url || body.playlistId);
         if (!pid) return json({ error: "Paste a YouTube playlist link (with list=...)." }, 400);
         const meta = await fetchPlaylistMeta(pid, env);
-        const items = await fetchPlaylistItems(pid, env, Math.min(Number(body.limit) || 50, 50));
+        const items = await fetchPlaylistItems(pid, env, Math.min(Math.max(Number(body.limit) || 500, 1), 500));
         return json({
           playlist: meta,
           suggestedSeries: cleanDramaTitle(meta.title),
@@ -754,7 +754,7 @@ var index_default = {
         const pid = playlistIdFromUrl(body.url || body.playlistId);
         if (!pid) return json({ error: "Paste a YouTube playlist link (with list=...)." }, 400);
         const wantedIds = Array.isArray(body.videoIds) ? body.videoIds.map(String) : null;
-        const limit = Math.min(Number(body.limit) || 50, 50);
+        const limit = Math.min(Math.max(Number(body.limit) || 500, 1), 500);
         const meta = await fetchPlaylistMeta(pid, env);
         let items = await fetchPlaylistItems(pid, env, limit);
         if (wantedIds) items = items.filter(it => wantedIds.includes(it.id));
