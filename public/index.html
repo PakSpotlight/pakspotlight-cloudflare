@@ -317,98 +317,115 @@
       }
     }
 
-    // Hero Slider Controls
+    // Hero carousel: one resilient scheduler, re-synced after every render/visibility change.
     let heroIndex = 0;
     let heroTimer = null;
     let heroTotal = 0;
     let heroPaused = false;
+    let heroEventsBoundFor = null;
 
-    let heroEventsBound = false;
-    function startHeroSlider() {
-      const slides = document.querySelectorAll(".hero-slide");
-      heroTotal = slides.length;
-      if (!heroTotal) {
-        clearInterval(heroTimer);
+    function stopHeroTimer() {
+      if (heroTimer !== null) {
+        clearTimeout(heroTimer);
         heroTimer = null;
-        return;
       }
-      heroIndex = Math.max(0, Math.min(heroIndex, heroTotal - 1));
-      updateHeroSlide();
-      clearInterval(heroTimer);
-      if (!document.hidden && heroTotal > 1) {
-        heroTimer = setInterval(() => {
-          if (!heroPaused && !document.hidden) heroSlideDir(1);
-        }, 5000);
-      }
-
-      // Bind input handlers only once; repeated page restores must not stack listeners.
-      const bb = $("heroBillboard");
-      if (bb && !heroEventsBound) {
-        bb.addEventListener("mouseenter", () => { heroPaused = true; });
-        bb.addEventListener("mouseleave", () => { heroPaused = false; });
-        let touchStartX = 0;
-        let touchStartY = 0;
-        bb.addEventListener("touchstart", e => {
-          if (!e.touches.length) return;
-          touchStartX = e.touches[0].clientX;
-          touchStartY = e.touches[0].clientY;
-        }, { passive: true });
-        bb.addEventListener("touchend", e => {
-          if (!e.changedTouches.length) return;
-          const dx = e.changedTouches[0].clientX - touchStartX;
-          const dy = e.changedTouches[0].clientY - touchStartY;
-          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) heroSlideDir(dx < 0 ? 1 : -1);
-        }, { passive: true });
-        heroEventsBound = true;
-      }
-    }
-
-    // Android WebView and mobile browsers may suspend timers while a tab is backgrounded.
-    // Re-sync the visible slide and restart rotation when the page becomes active again.
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        clearInterval(heroTimer);
-        heroTimer = null;
-      } else {
-        startHeroSlider();
-      }
-    });
-    window.addEventListener("pageshow", () => startHeroSlider());
-    window.addEventListener("resize", () => {
-      requestAnimationFrame(() => {
-        const slides = document.querySelectorAll(".hero-slide");
-        heroTotal = slides.length;
-        if (heroTotal) {
-          heroIndex = ((heroIndex % heroTotal) + heroTotal) % heroTotal;
-          updateHeroSlide();
-        }
-      });
-    }, { passive: true });
-
-    function goToHeroSlide(idx) {
-      heroIndex = idx;
-      updateHeroSlide();
-      clearInterval(heroTimer);
-      heroTimer = setInterval(() => {
-        if (!heroPaused) heroSlideDir(1);
-      }, 5000);
-    }
-
-    function heroSlideDir(dir) {
-      if (heroTotal <= 1) return;
-      heroIndex = (heroIndex + dir + heroTotal) % heroTotal;
-      updateHeroSlide();
     }
 
     function updateHeroSlide() {
-      document.querySelectorAll(".hero-slide").forEach((s, i) => {
-        s.classList.toggle("active", i === heroIndex);
+      const slides = Array.from(document.querySelectorAll("#heroSlides .hero-slide"));
+      const dots = Array.from(document.querySelectorAll("#heroBillboard .hero-dot"));
+      heroTotal = slides.length;
+      if (!heroTotal) return;
+      heroIndex = ((Number(heroIndex) || 0) % heroTotal + heroTotal) % heroTotal;
+      slides.forEach((slide, i) => {
+        const active = i === heroIndex;
+        slide.classList.toggle("active", active);
+        slide.setAttribute("aria-hidden", active ? "false" : "true");
       });
-      document.querySelectorAll(".hero-dot").forEach((d, i) => {
-        d.classList.toggle("active", i === heroIndex);
+      dots.forEach((dot, i) => {
+        const active = i === heroIndex;
+        dot.classList.toggle("active", active);
+        dot.setAttribute("aria-current", active ? "true" : "false");
       });
     }
 
+    function scheduleHeroAdvance() {
+      stopHeroTimer();
+      if (document.hidden || heroPaused || heroTotal < 2 || !document.getElementById("heroSlides")) return;
+      heroTimer = setTimeout(() => {
+        heroTimer = null;
+        if (!document.hidden && !heroPaused) heroSlideDir(1);
+        scheduleHeroAdvance();
+      }, 5000);
+    }
+
+    function startHeroSlider() {
+      const root = document.getElementById("heroBillboard");
+      const slidesRoot = document.getElementById("heroSlides");
+      if (!root || !slidesRoot) {
+        stopHeroTimer();
+        heroTotal = 0;
+        return;
+      }
+      heroTotal = slidesRoot.querySelectorAll(".hero-slide").length;
+      if (!heroTotal) {
+        stopHeroTimer();
+        return;
+      }
+      updateHeroSlide();
+
+      // Avoid duplicate listeners when the same hero element remains in the DOM.
+      if (heroEventsBoundFor !== root) {
+        root.addEventListener("mouseenter", () => { heroPaused = true; stopHeroTimer(); });
+        root.addEventListener("mouseleave", () => { heroPaused = false; scheduleHeroAdvance(); });
+        let touchStartX = 0;
+        let touchStartY = 0;
+        root.addEventListener("touchstart", e => {
+          if (!e.touches || !e.touches.length) return;
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        root.addEventListener("touchend", e => {
+          if (!e.changedTouches || !e.changedTouches.length) return;
+          const dx = e.changedTouches[0].clientX - touchStartX;
+          const dy = e.changedTouches[0].clientY - touchStartY;
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) heroSlideDir(dx < 0 ? 1 : -1);
+        }, { passive: true });
+        heroEventsBoundFor = root;
+      }
+      scheduleHeroAdvance();
+    }
+
+    function goToHeroSlide(idx) {
+      heroIndex = Number(idx) || 0;
+      updateHeroSlide();
+      scheduleHeroAdvance();
+    }
+
+    function heroSlideDir(dir) {
+      const slides = document.querySelectorAll("#heroSlides .hero-slide");
+      heroTotal = slides.length;
+      if (heroTotal < 2) {
+        updateHeroSlide();
+        return;
+      }
+      heroIndex = (heroIndex + (dir < 0 ? -1 : 1) + heroTotal) % heroTotal;
+      updateHeroSlide();
+      scheduleHeroAdvance();
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stopHeroTimer();
+      else startHeroSlider();
+    });
+    window.addEventListener("pageshow", startHeroSlider);
+    window.addEventListener("resize", () => {
+      requestAnimationFrame(() => {
+        updateHeroSlide();
+        scheduleHeroAdvance();
+      });
+    }, { passive: true });
+    window.addEventListener("focus", startHeroSlider);
     // Initialize Home Page
     Promise.all([loadData(), loadCategories()]).then(() => {
       renderCategoryNavigation();
