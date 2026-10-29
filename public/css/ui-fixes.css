@@ -235,3 +235,60 @@ body {
   .hero-actions { gap: 5px !important; }
   .hero-btn-play, .hero-btn-mylist { padding-inline: 9px !important; font-size: 12px !important; }
 }
+
+
+/* Correct hero detail row: Play/Save on the left, titles to their right. */
+.hero-foreground {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  grid-template-areas: "actions title" "actions urdu" !important;
+  align-items: center !important;
+  justify-items: start !important;
+  column-gap: clamp(10px, 2.4vw, 26px) !important;
+  row-gap: 2px !important;
+}
+.hero-actions {
+  grid-area: actions !important;
+  justify-self: start !important;
+  align-self: center !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  gap: 8px !important;
+  margin: 0 !important;
+}
+.hero-title {
+  grid-area: title !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  overflow-wrap: anywhere !important;
+  line-height: 1.25 !important;
+}
+.hero-urdu {
+  grid-area: urdu !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  overflow-wrap: anywhere !important;
+  line-height: 1.65 !important;
+}
+.hero-btn-play, .hero-btn-mylist {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+@media (max-width: 520px) {
+  .hero-foreground {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    column-gap: 8px !important;
+    padding: 10px 12px 16px !important;
+  }
+  .hero-actions { gap: 5px !important; }
+  .hero-btn-play, .hero-btn-mylist {
+    padding-inline: 8px !important;
+    font-size: 11px !important;
+  }
+  .hero-title { font-size: clamp(14px, 3.8vw, 20px) !important; }
+  .hero-urdu { font-size: clamp(12px, 3.3vw, 16px) !important; }
+}
