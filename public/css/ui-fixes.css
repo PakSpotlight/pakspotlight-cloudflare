@@ -1,0 +1,29 @@
+/* Classic TV Pakistan — targeted UI fixes; presentation only. */
+@media (max-width: 850px) {
+  .topbar { min-height: 70px; gap: 9px; padding: 8px 12px; }
+  .brand-group { flex: 1 1 auto; min-width: 0; }
+  .brand { gap: 9px; }
+  .brand-logo { width: 40px; height: 40px; }
+  .brand-titles { min-width: 0; }
+  .brand-name {
+    font-family: var(--font-sans, "Outfit", sans-serif);
+    font-size: clamp(12px, 3.35vw, 16px);
+    font-weight: 900; letter-spacing: .35px; line-height: 1.2;
+    color: #f3d58b; text-shadow: 0 1px 14px rgba(216,179,90,.16);
+    white-space: normal;
+  }
+  .brand-sub { font-size: 10px; line-height: 1.25; }
+  /* Admin stays accessible from the hamburger drawer, not the public header. */
+  #topbarAuthArea { display: none !important; }
+}
+@media (min-width: 851px) {
+  .brand-name {
+    font-size: clamp(17px, 1.55vw, 23px); font-weight: 900;
+    letter-spacing: .8px; color: #f3d58b;
+    text-shadow: 0 1px 18px rgba(216,179,90,.14);
+  }
+  .brand-logo { width: 48px; height: 48px; }
+}
+/* Preserve the complete source thumbnail, including non-16:9 originals. */
+.card-media { aspect-ratio: 16 / 9 !important; background: #050505 !important; }
+.card-media img { object-fit: contain !important; object-position: center !important; }
