@@ -152,7 +152,7 @@ export function HomeScreen() {
             {[
               { label: "Browse dramas", action: () => router.push("/browse") },
               { label: "My Library", action: () => router.push("/library") },
-              { label: "Download Android APK", action: openDownloadPage },
+              { label: update ? `Update app · v${update.versionName}` : "App updates", action: () => update ? openApk(update) : openDownloadPage },
             ].map((item) => (
               <Pressable key={item.label} style={styles.menuItem} onPress={() => { closeMenu(); item.action(); }}>
                 <Text style={styles.menuItemText}>{item.label}</Text>
@@ -177,17 +177,6 @@ export function HomeScreen() {
           <Text style={styles.updateAction}>Download</Text>
         </Pressable>
       ) : null}
-
-      <Pressable
-        onPress={openDownloadPage}
-        accessibilityRole="button"
-        accessibilityLabel="Download Classic TV Pakistan APK"
-        style={({ pressed }) => [styles.apkButton, pressed && styles.pressed]}
-      >
-        <Ionicons name="download-outline" size={21} color={color.ctaText} />
-        <Text style={styles.apkButtonText}>Download Android APK</Text>
-        <Ionicons name="arrow-forward" size={18} color={color.ctaText} />
-      </Pressable>
 
       {catalog && catalog.stale ? (
         <View style={styles.offlineNote}>
@@ -235,19 +224,6 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg, width: "100%", maxWidth: contentMaxWidth, alignSelf: "center" },
   content: { paddingBottom: space.xxl },
-  apkButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: space.sm,
-    marginHorizontal: gutter,
-    marginBottom: space.lg,
-    paddingHorizontal: space.lg,
-    minHeight: 52,
-    borderRadius: 16,
-    backgroundColor: color.ctaBg,
-  },
-  apkButtonText: { color: color.ctaText, fontFamily: font.bold, fontSize: type.body },
   menuBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.62)", justifyContent: "center", alignItems: "center", padding: gutter },
   menuCard: { width: "100%", maxWidth: 420, backgroundColor: color.surface, borderColor: color.lineStrong, borderWidth: 1, borderRadius: 20, padding: space.lg },
   menuTitle: { color: color.text, fontFamily: font.extra, fontSize: type.h3, marginBottom: space.md },
