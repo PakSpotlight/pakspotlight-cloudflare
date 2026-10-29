@@ -93,3 +93,34 @@ body {
   .browse-grid { grid-template-columns: repeat(auto-fill,minmax(280px,1fr)) !important; gap: clamp(16px,1.8vw,28px) !important; }
   .browse-grid .netflix-card { width: 100% !important; min-width: 0 !important; max-width: 100% !important; }
 }
+
+
+/* Final visual correction: cooler near-black palette and uncropped featured artwork. */
+body {
+  background-color: #050505 !important;
+  background-image:
+    radial-gradient(ellipse 82% 34% at 50% 0%, rgba(184,143,49,.13) 0%, transparent 72%),
+    radial-gradient(ellipse 48% 44% at 0% 42%, rgba(105,18,35,.15) 0%, transparent 78%),
+    radial-gradient(ellipse 48% 46% at 100% 72%, rgba(105,20,34,.10) 0%, transparent 80%),
+    linear-gradient(180deg,#090909 0%,#050505 44%,#080607 76%,#040404 100%) !important;
+}
+/* The hero artwork is a thumbnail too: fit the entire source image in its frame. */
+.hero-backdrop {
+  background-size: contain !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-color: #050505 !important;
+}
+.hero-slide.active .hero-backdrop {
+  animation: none !important;
+  transform: none !important;
+}
+.hero-vignette {
+  background:
+    linear-gradient(0deg,rgba(0,0,0,.92) 0%,rgba(0,0,0,.55) 22%,rgba(0,0,0,.10) 58%,rgba(0,0,0,.06) 100%),
+    linear-gradient(90deg,rgba(0,0,0,.48) 0%,rgba(0,0,0,.12) 42%,transparent 76%) !important;
+}
+@media (max-width: 850px) {
+  .hero-billboard { background: #050505 !important; }
+  .hero-backdrop { background-size: contain !important; background-position: center center !important; }
+}
