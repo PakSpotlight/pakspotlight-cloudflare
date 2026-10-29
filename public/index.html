@@ -365,21 +365,31 @@
       if (!root || !slidesRoot) {
         stopHeroTimer();
         heroTotal = 0;
+        heroEventsBoundFor = null;
         return;
       }
+
       heroTotal = slidesRoot.querySelectorAll(".hero-slide").length;
       if (!heroTotal) {
         stopHeroTimer();
+        heroEventsBoundFor = null;
         return;
       }
-      updateHeroSlide();
 
-      // Avoid duplicate listeners when the same hero element remains in the DOM.
+      // A newly rendered homepage gets a new hero root. Clear any pause state
+      // inherited from a detached root (e.g. navigating away while hovered).
       if (heroEventsBoundFor !== root) {
-        root.addEventListener("mouseenter", () => { heroPaused = true; stopHeroTimer(); });
-        root.addEventListener("mouseleave", () => { heroPaused = false; scheduleHeroAdvance(); });
+        heroPaused = false;
         let touchStartX = 0;
         let touchStartY = 0;
+        root.addEventListener("mouseenter", () => {
+          heroPaused = true;
+          stopHeroTimer();
+        });
+        root.addEventListener("mouseleave", () => {
+          heroPaused = false;
+          scheduleHeroAdvance();
+        });
         root.addEventListener("touchstart", e => {
           if (!e.touches || !e.touches.length) return;
           touchStartX = e.touches[0].clientX;
@@ -389,10 +399,14 @@
           if (!e.changedTouches || !e.changedTouches.length) return;
           const dx = e.changedTouches[0].clientX - touchStartX;
           const dy = e.changedTouches[0].clientY - touchStartY;
-          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) heroSlideDir(dx < 0 ? 1 : -1);
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+            heroSlideDir(dx < 0 ? 1 : -1);
+          }
         }, { passive: true });
         heroEventsBoundFor = root;
       }
+
+      updateHeroSlide();
       scheduleHeroAdvance();
     }
 
@@ -414,18 +428,35 @@
       scheduleHeroAdvance();
     }
 
+    function resyncHeroSlider() {
+      // Defer lifecycle resync until DOM/view rendering in the current turn settles.
+      requestAnimationFrame(() => {
+        const root = document.getElementById("heroBillboard");
+        if (!root) {
+          stopHeroTimer();
+          heroTotal = 0;
+          heroEventsBoundFor = null;
+          return;
+        }
+        startHeroSlider();
+      });
+    }
+
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) stopHeroTimer();
-      else startHeroSlider();
+      if (document.hidden) {
+        stopHeroTimer();
+      } else {
+        resyncHeroSlider();
+      }
     });
-    window.addEventListener("pageshow", startHeroSlider);
+    window.addEventListener("pageshow", resyncHeroSlider);
     window.addEventListener("resize", () => {
       requestAnimationFrame(() => {
         updateHeroSlide();
         scheduleHeroAdvance();
       });
     }, { passive: true });
-    window.addEventListener("focus", startHeroSlider);
+    window.addEventListener("focus", resyncHeroSlider);
     // Initialize Home Page
     Promise.all([loadData(), loadCategories()]).then(() => {
       renderCategoryNavigation();
