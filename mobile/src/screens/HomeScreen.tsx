@@ -152,31 +152,17 @@ export function HomeScreen() {
             {[
               { label: "Browse dramas", action: () => router.push("/browse") },
               { label: "My Library", action: () => router.push("/library") },
-              { label: update ? `Update app · v${update.versionName}` : "App updates", action: () => update ? openApk(update) : openDownloadPage },
+              { label: update ? `Update app · v${update.versionName}` : "App updates", action: () => update ? openApk(update) : openDownloadPage, hasUpdate: !!update },
             ].map((item) => (
               <Pressable key={item.label} style={styles.menuItem} onPress={() => { closeMenu(); item.action(); }}>
                 <Text style={styles.menuItemText}>{item.label}</Text>
+                {"hasUpdate" in item && item.hasUpdate ? <View style={styles.updateDot} /> : null}
               </Pressable>
             ))}
             <Pressable style={styles.menuCancel} onPress={closeMenu}><Text style={styles.menuCancelText}>Close</Text></Pressable>
           </Pressable>
         </Pressable>
       </Modal>
-
-      {update ? (
-        <Pressable
-          onPress={() => openApk(update)}
-          accessibilityRole="button"
-          accessibilityLabel={`Download version ${update.versionName}`}
-          style={({ pressed }) => [styles.updateBanner, pressed && styles.pressed]}
-        >
-          <Ionicons name="arrow-down-circle" size={18} color={color.accent} />
-          <Text style={styles.updateText}>
-            Version {update.versionName} is ready{update.sizeMB ? ` · ${update.sizeMB} MB` : ""}
-          </Text>
-          <Text style={styles.updateAction}>Download</Text>
-        </Pressable>
-      ) : null}
 
       {catalog && catalog.stale ? (
         <View style={styles.offlineNote}>
@@ -229,6 +215,7 @@ const styles = StyleSheet.create({
   menuTitle: { color: color.text, fontFamily: font.extra, fontSize: type.h3, marginBottom: space.md },
   menuItem: { minHeight: 50, justifyContent: "center", borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.line },
   menuItemText: { color: color.text, fontFamily: font.medium, fontSize: type.body },
+  updateDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: color.accent, marginLeft: "auto" },
   menuCancel: { alignSelf: "flex-end", paddingVertical: space.md, paddingHorizontal: space.sm },
   menuCancelText: { color: color.accent, fontFamily: font.bold, fontSize: type.body },
   updateBanner: {
