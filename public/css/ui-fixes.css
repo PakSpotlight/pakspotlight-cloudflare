@@ -1,48 +1,55 @@
-/* Classic TV Pakistan — premium archive polish, presentation only. */
-html { background: #050505; }
+/* Classic TV Pakistan — visible premium cinema background and responsive artwork sizing. */
+:root { --ctp-gold: #e0bd67; }
+html { min-height: 100%; background: #050505 !important; }
 body {
+  min-height: 100vh;
   background-color: #050505 !important;
   background-image:
-    radial-gradient(ellipse at 50% -12%, rgba(199, 151, 53, .20) 0%, rgba(87, 54, 17, .10) 26%, transparent 58%),
-    radial-gradient(ellipse at 0% 34%, rgba(93, 23, 28, .15) 0%, transparent 38%),
-    radial-gradient(ellipse at 100% 72%, rgba(147, 105, 30, .10) 0%, transparent 42%),
-    linear-gradient(180deg, #0a0907 0%, #050505 38%, #090806 72%, #050505 100%) !important;
+    radial-gradient(ellipse 80% 42% at 50% 0%, rgba(192,145,47,.24) 0%, rgba(95,57,20,.12) 42%, transparent 76%),
+    radial-gradient(ellipse 45% 48% at 0% 35%, rgba(110,24,35,.20) 0%, transparent 78%),
+    radial-gradient(ellipse 48% 54% at 100% 70%, rgba(155,105,28,.14) 0%, transparent 76%),
+    linear-gradient(180deg,#100d08 0%,#080706 38%,#0d0908 70%,#050505 100%) !important;
+  background-repeat: no-repeat;
   background-attachment: scroll !important;
 }
-@media (min-width: 851px) {
-  body { background-attachment: fixed !important; }
-}
-/* A restrained vintage-cinema glow behind the archive, without obscuring content. */
+/* Keep opaque page wrappers from hiding the cinematic backdrop. */
+#app, main, .rows-container, .carousel-row, .browse-view, .browse-grid,
+.page-content, .content-container { background-color: transparent !important; }
 .topbar {
-  background: linear-gradient(90deg, rgba(8,7,5,.98), rgba(18,14,8,.96), rgba(8,7,5,.98)) !important;
-  border-bottom: 1px solid rgba(216,179,90,.28) !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  background: linear-gradient(90deg,rgba(5,5,5,.98),rgba(26,19,9,.97),rgba(5,5,5,.98)) !important;
+  border-bottom: 1px solid rgba(224,189,103,.42) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,.3),0 1px 0 rgba(224,189,103,.08);
 }
 @media (max-width: 850px) {
-  .topbar { min-height: 74px; gap: 9px; padding: 8px 12px; }
-  .brand-group { flex: 1 1 auto; min-width: 0; }
-  .brand { gap: 9px; }
-  .brand-logo { width: 42px; height: 42px; }
-  .brand-titles { min-width: 0; }
-  .brand-name {
-    font-family: var(--font-sans, "Outfit", sans-serif);
-    font-size: clamp(15px, 4.1vw, 19px);
-    font-weight: 900; letter-spacing: .45px; line-height: 1.15;
-    color: #f3d58b; text-shadow: 0 1px 18px rgba(216,179,90,.22);
-    white-space: normal;
-  }
-  .brand-sub { font-size: 10px; line-height: 1.25; }
-  /* Admin stays accessible from the hamburger drawer, not the public header. */
-  #topbarAuthArea { display: none !important; }
+  .topbar { min-height:74px; gap:9px; padding:8px 12px; }
+  .brand-group { flex:1 1 auto; min-width:0; }
+  .brand { gap:9px; }
+  .brand-logo { width:42px; height:42px; }
+  .brand-titles { min-width:0; }
+  .brand-name { font-family:var(--font-sans,"Outfit",sans-serif); font-size:clamp(15px,4.1vw,19px); font-weight:900; letter-spacing:.45px; line-height:1.15; color:#f3d58b; text-shadow:0 1px 18px rgba(216,179,90,.28); white-space:normal; }
+  .brand-sub { font-size:10px; line-height:1.25; }
+  #topbarAuthArea { display:none !important; }
 }
+/* Desktop: give YouTube-style 16:9 thumbnails enough width to read comfortably. */
 @media (min-width: 851px) {
-  .brand-name {
-    font-size: clamp(22px, 2vw, 30px); font-weight: 900;
-    letter-spacing: 1px; color: #f3d58b;
-    text-shadow: 0 1px 22px rgba(216,179,90,.20);
+  .brand-name { font-size:clamp(22px,2vw,30px); font-weight:900; letter-spacing:1px; color:#f3d58b; text-shadow:0 1px 22px rgba(216,179,90,.28); }
+  .brand-logo { width:54px; height:54px; }
+  .rows-container { max-width:1800px; margin-inline:auto; }
+  .carousel-track { gap:clamp(14px,1.5vw,24px) !important; }
+  .netflix-card {
+    flex:0 0 clamp(280px,24vw,380px) !important;
+    width:clamp(280px,24vw,380px) !important;
+    min-width:clamp(280px,24vw,380px) !important;
+    max-width:clamp(280px,24vw,380px) !important;
   }
-  .brand-logo { width: 54px; height: 54px; }
+  .card-media { width:100%; aspect-ratio:16/9 !important; background:#080706 !important; }
+  .card-media img { object-fit:contain !important; object-position:center !important; }
+  .card-title { font-size:15px; }
+  .card-info { padding:10px 4px 12px; }
+  .browse-view { max-width:1800px; }
+  .browse-grid { grid-template-columns:repeat(auto-fill,minmax(280px,1fr)) !important; gap:clamp(16px,1.8vw,28px) !important; }
+  .browse-grid .netflix-card { width:100% !important; min-width:0 !important; max-width:100% !important; }
 }
-/* Preserve the full source thumbnail and avoid cropping YouTube video artwork. */
-.card-media { aspect-ratio: 16 / 9 !important; background: #050505 !important; }
-.card-media img { object-fit: contain !important; object-position: center !important; }
+/* Always retain the full source thumbnail, not a cropped poster. */
+.card-media { aspect-ratio:16/9 !important; background:#080706 !important; }
+.card-media img { object-fit:contain !important; object-position:center !important; }
