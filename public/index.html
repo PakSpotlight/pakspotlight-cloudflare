@@ -323,39 +323,67 @@
     let heroTotal = 0;
     let heroPaused = false;
 
+    let heroEventsBound = false;
     function startHeroSlider() {
       const slides = document.querySelectorAll(".hero-slide");
       heroTotal = slides.length;
-      heroIndex = 0;
+      if (!heroTotal) {
+        clearInterval(heroTimer);
+        heroTimer = null;
+        return;
+      }
+      heroIndex = Math.max(0, Math.min(heroIndex, heroTotal - 1));
+      updateHeroSlide();
       clearInterval(heroTimer);
-      heroTimer = setInterval(() => {
-        if (!heroPaused) heroSlideDir(1);
-      }, 5000);
-
-      // Pause on hover (desktop)
-      const bb = $("heroBillboard");
-      if (bb) {
-        bb.addEventListener("mouseenter", () => { heroPaused = true; });
-        bb.addEventListener("mouseleave", () => { heroPaused = false; });
+      if (!document.hidden && heroTotal > 1) {
+        heroTimer = setInterval(() => {
+          if (!heroPaused && !document.hidden) heroSlideDir(1);
+        }, 5000);
       }
 
-      // Touch swipe
-      if (bb) {
+      // Bind input handlers only once; repeated page restores must not stack listeners.
+      const bb = $("heroBillboard");
+      if (bb && !heroEventsBound) {
+        bb.addEventListener("mouseenter", () => { heroPaused = true; });
+        bb.addEventListener("mouseleave", () => { heroPaused = false; });
         let touchStartX = 0;
         let touchStartY = 0;
         bb.addEventListener("touchstart", e => {
+          if (!e.touches.length) return;
           touchStartX = e.touches[0].clientX;
           touchStartY = e.touches[0].clientY;
         }, { passive: true });
         bb.addEventListener("touchend", e => {
+          if (!e.changedTouches.length) return;
           const dx = e.changedTouches[0].clientX - touchStartX;
           const dy = e.changedTouches[0].clientY - touchStartY;
-          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-            heroSlideDir(dx < 0 ? 1 : -1);
-          }
+          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) heroSlideDir(dx < 0 ? 1 : -1);
         }, { passive: true });
+        heroEventsBound = true;
       }
     }
+
+    // Android WebView and mobile browsers may suspend timers while a tab is backgrounded.
+    // Re-sync the visible slide and restart rotation when the page becomes active again.
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        clearInterval(heroTimer);
+        heroTimer = null;
+      } else {
+        startHeroSlider();
+      }
+    });
+    window.addEventListener("pageshow", () => startHeroSlider());
+    window.addEventListener("resize", () => {
+      requestAnimationFrame(() => {
+        const slides = document.querySelectorAll(".hero-slide");
+        heroTotal = slides.length;
+        if (heroTotal) {
+          heroIndex = ((heroIndex % heroTotal) + heroTotal) % heroTotal;
+          updateHeroSlide();
+        }
+      });
+    }, { passive: true });
 
     function goToHeroSlide(idx) {
       heroIndex = idx;
