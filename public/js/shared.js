@@ -261,11 +261,32 @@ function heroPick() {
 
 function scrollCarousel(rowId, direction) {
   const track = document.getElementById("track-" + rowId);
-  if (track) {
-    const scrollAmount = 600 * direction;
-    track.scrollBy({ left: scrollAmount, behavior: "smooth" });
-  }
+  if (!track) return;
+  const card = track.querySelector(".netflix-card");
+  const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 12;
+  const step = card ? (card.getBoundingClientRect().width + gap) * Math.max(1, Math.floor(track.clientWidth / Math.max(1, card.getBoundingClientRect().width + gap))) : track.clientWidth * 0.85;
+  track.scrollBy({ left: step * direction, behavior: "smooth" });
 }
+
+// Recalculate horizontal scrollers after orientation, viewport, or WebView size changes.
+let carouselResizeFrame = 0;
+function refreshCarouselLayout() {
+  if (carouselResizeFrame) cancelAnimationFrame(carouselResizeFrame);
+  carouselResizeFrame = requestAnimationFrame(() => {
+    document.querySelectorAll(".carousel-track").forEach(track => {
+      track.style.maxWidth = "100%";
+      track.querySelectorAll(".netflix-card").forEach(card => { card.style.flexShrink = "0"; });
+    });
+    const dots = document.querySelector(".hero-dots");
+    if (dots) dots.querySelectorAll(".hero-dot").forEach((dot, i) => {
+      dot.classList.toggle("active", i === heroIndex);
+    });
+    carouselResizeFrame = 0;
+  });
+}
+window.addEventListener("resize", refreshCarouselLayout, { passive: true });
+window.addEventListener("orientationchange", refreshCarouselLayout, { passive: true });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshCarouselLayout(); });
 
 
 function getDramaSeriesEpisodes(drama) {
