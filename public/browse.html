@@ -71,6 +71,8 @@
       </div>
     </div>
 
+    <div id="searchLiveStatus" class="browse-search-status" role="status" aria-live="polite"></div>
+
     <!-- Category Filter Pills -->
     <div class="app-promo-banner browse-app-promo" role="region" aria-label="Get the Android app">
       <div class="app-promo-copy"><span class="app-promo-kicker">YOUR CLASSICS, ANYTIME</span><strong>Watch on the Android app</strong><span>Keep your favourite classic dramas close at hand.</span></div>
@@ -293,6 +295,12 @@
 
       const groups = groupDramas(filtered);
       countEl.textContent = `${groups.length} title${groups.length !== 1 ? 's' : ''}`;
+      const liveStatus = $("searchLiveStatus");
+      if (liveStatus) {
+        liveStatus.textContent = currentSearchTerm
+          ? (groups.length ? `Found ${groups.length} matching title${groups.length !== 1 ? "s" : ""} for “${currentSearchTerm}”. Tap a result to open it.` : `No dramas found for “${currentSearchTerm}”. Try another title or actor.`)
+          : "";
+      }
 
       if (groups.length === 0) {
         grid.innerHTML = `
@@ -341,10 +349,8 @@
         const val = e.target.value.trim();
         $("browseSearchClear").classList.toggle("visible", !!val);
         clearTimeout(searchDebounce);
-        searchDebounce = setTimeout(() => {
-          currentSearchTerm = val;
-          renderResults();
-        }, 180);
+        currentSearchTerm = val;
+        renderResults();
       });
     }
 
