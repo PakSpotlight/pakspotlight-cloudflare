@@ -124,3 +124,67 @@ body {
   .hero-billboard { background: #050505 !important; }
   .hero-backdrop { background-size: contain !important; background-position: center center !important; }
 }
+
+
+/* Hero redesign: image first, then actions, then readable English/Urdu titles below. */
+.hero-billboard {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  background: #050505 !important;
+}
+.hero-slides {
+  height: auto !important;
+  min-height: 0 !important;
+  position: relative !important;
+}
+.hero-slide {
+  display: none !important;
+  position: relative !important;
+  inset: auto !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+.hero-slide.active { display: flex !important; flex-direction: column !important; }
+.hero-backdrop {
+  position: relative !important;
+  inset: auto !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+  flex: 0 0 auto !important;
+  background-size: contain !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-color: #050505 !important;
+}
+.hero-vignette { display: none !important; }
+.hero-foreground {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+  padding: 12px clamp(16px,4vw,52px) 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 7px !important;
+  background: linear-gradient(180deg,#080808 0%,#050505 100%) !important;
+  transform: none !important;
+}
+.hero-actions { order: 1 !important; margin: 0 0 5px !important; }
+.hero-title { order: 2 !important; max-width: 100% !important; font-size: clamp(21px,2.5vw,34px) !important; line-height: 1.25 !important; }
+.hero-urdu { order: 3 !important; max-width: 100% !important; font-size: clamp(17px,2vw,25px) !important; line-height: 1.8 !important; }
+.hero-dots { top: 12px !important; bottom: auto !important; right: 12px !important; }
+@media (max-width: 850px) {
+  .hero-billboard { height: auto !important; min-height: 0 !important; max-height: none !important; }
+  .hero-slides { min-height: 0 !important; }
+  .hero-backdrop { aspect-ratio: 16 / 9 !important; width: 100% !important; }
+  .hero-foreground { padding: 10px 16px 18px !important; gap: 6px !important; }
+  .hero-actions { order: 1 !important; display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }
+  .hero-title { order: 2 !important; font-size: clamp(19px,5.2vw,27px) !important; }
+  .hero-urdu { order: 3 !important; font-size: clamp(16px,4.2vw,21px) !important; }
+}
