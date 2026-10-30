@@ -166,7 +166,7 @@ export function HomeScreen() {
         actions={[
           { icon: "search", label: "Search the archive", onPress: () => router.push("/browse") },
           { icon: "bookmark-outline", label: "My library", onPress: () => router.push("/library") },
-          { icon: "ellipsis-vertical", label: "More options", onPress: openMenu },
+          { icon: "menu", label: "Open menu", onPress: openMenu },
         ]}
       />
 
