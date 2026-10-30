@@ -20,7 +20,7 @@ export function SectionRow({
   episodeCounts,
   onPressItem,
   onSeeAll,
-  cardWidth = 108,
+  cardWidth = 160,
   testID,
 }: Props) {
   if (items.length === 0) return null;
