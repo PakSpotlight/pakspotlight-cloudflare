@@ -225,7 +225,15 @@
   }
 
   .hero-backdrop {
-    background-position: center 15%;
+    background-position: center center;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  /* Keep the full programme artwork visible in narrow WebViews. */
+  .hero-slide.active .hero-backdrop {
+    transform: none !important;
+    animation: none !important;
   }
 
   .hero-vignette {
