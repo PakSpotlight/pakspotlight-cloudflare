@@ -40,6 +40,7 @@ function NotificationNavigation() {
       if (!Number.isSafeInteger(id) || id <= 0) return;
       lastHandled = request.identifier;
       router.push(`/drama/${id}`);
+      void Notifications.clearLastNotificationResponseAsync();
     };
     const subscription = Notifications.addNotificationResponseReceivedListener(openDrama);
     void Notifications.getLastNotificationResponseAsync().then((response) => {
