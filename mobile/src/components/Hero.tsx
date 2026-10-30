@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   chips: { flexDirection: "row", gap: space.sm, marginTop: space.md, flexWrap: "wrap" },
   cta: { marginTop: space.md, alignSelf: "flex-start", minWidth: 0, height: 36, paddingHorizontal: space.md },
-  ctaSplit: { marginTop: space.md, alignSelf: "flex-start", minWidth: 0, height: 42, paddingHorizontal: space.lg },
+  ctaSplit: { marginTop: space.md, alignSelf: "flex-start", minWidth: 0, height: 36, paddingHorizontal: space.md },
   urdu: {
     color: color.muted,
     fontFamily: font.urdu,
