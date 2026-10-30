@@ -81,6 +81,7 @@ async function sendNewDrama(env, row, tokens) {
     sound: "default",
     priority: "high",
     channelId: "new-dramas",
+    ...(row.thumbnail_url ? { richContent: { image: row.thumbnail_url } } : {}),
     data: {
       type: "new_drama",
       dramaId: Number(row.id),
