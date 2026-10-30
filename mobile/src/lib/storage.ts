@@ -13,6 +13,7 @@ const HISTORY_KEY = "ctv.history";
 const INSTALL_KEY = "ctv.install.id";
 const UPDATE_KEY = "ctv.update.checkedAt";
 const PING_KEY = "ctv.ping.sentAt";
+const PROGRESS_KEY = "ctv.playback.progress";
 
 const HISTORY_LIMIT = 40;
 
@@ -119,6 +120,34 @@ export async function recordWatch(drama: Drama, episodeCount: number): Promise<v
 
 export async function clearHistory(): Promise<void> {
   await writeJSON(HISTORY_KEY, []);
+}
+
+// ─────────────────────────── Playback resume ───────────────────────────
+
+export type PlaybackProgress = {
+  episodeId: number;
+  seconds: number;
+  updatedAt: number;
+};
+
+export async function getPlaybackProgress(episodeId: number): Promise<PlaybackProgress | null> {
+  const all = await readJSON<Record<string, PlaybackProgress>>(PROGRESS_KEY, {});
+  const item = all[String(episodeId)];
+  if (!item || !Number.isFinite(item.seconds) || item.seconds < 5) return null;
+  return item;
+}
+
+export async function savePlaybackProgress(episodeId: number, seconds: number): Promise<void> {
+  if (!Number.isFinite(seconds) || seconds < 0) return;
+  const all = await readJSON<Record<string, PlaybackProgress>>(PROGRESS_KEY, {});
+  all[String(episodeId)] = { episodeId, seconds: Math.floor(seconds), updatedAt: Date.now() };
+  await writeJSON(PROGRESS_KEY, all);
+}
+
+export async function clearPlaybackProgress(episodeId: number): Promise<void> {
+  const all = await readJSON<Record<string, PlaybackProgress>>(PROGRESS_KEY, {});
+  delete all[String(episodeId)];
+  await writeJSON(PROGRESS_KEY, all);
 }
 
 // ─────────────────────── Install id and throttles ───────────────────────
