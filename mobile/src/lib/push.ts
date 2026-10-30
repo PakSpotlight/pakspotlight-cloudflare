@@ -68,7 +68,7 @@ export async function disableNewDramaAlerts(): Promise<void> {
   }
 }
 
-/** Refresh a previously opted-in token on launch without prompting for permission again. */
+/** Refresh an opted-in device token on each app launch without asking for permission again. */
 export async function refreshNewDramaRegistration(): Promise<void> {
   if (Platform.OS !== "android" || !(await areNewDramaAlertsEnabled())) return;
   const permissions = await Notifications.getPermissionsAsync();
