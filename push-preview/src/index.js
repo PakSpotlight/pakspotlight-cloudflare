@@ -16,16 +16,6 @@ function response(data, status = 200) {
   });
 }
 
-function titleKey(row) {
-  const raw = String(row.series_name || row.title || "")
-    .replace(/\s*\|\s*.*$/, "")
-    .replace(/\b(ep|episode|part|qist|hissa)\s*\.?\s*#?\s*\d+\b/gi, "")
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .trim()
-    .toLocaleLowerCase();
-  return raw.slice(0, 120);
-}
-
 async function hash(value) {
   const bytes = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -34,7 +24,7 @@ async function hash(value) {
 
 function isExpoToken(value) {
   return typeof value === "string" &&
-    /^(Expo|Exponent)PushToken\[[A-Za-z0-9_-]{10,}\]$/.test(value);
+    /^(Expo|Exponent)PushToken\\[[A-Za-z0-9_-]{10,}\\]$/.test(value);
 }
 
 async function readRows(env, filter = "", offset = 0) {
@@ -74,10 +64,11 @@ async function registeredTokens(env) {
 async function sendNewDrama(env, row, tokens) {
   if (!tokens.length) return true;
   const name = String(row.series_name || row.title || "A new classic programme").slice(0, 120);
+  const episode = row.episode_number == null ? "" : ` — Episode ${row.episode_number}`;
   const messages = tokens.map((to) => ({
     to,
-    title: "New drama added",
-    body: name,
+    title: "New drama or episode added",
+    body: `${name}${episode}`.slice(0, 180),
     sound: "default",
     priority: "high",
     channelId: "new-dramas",
@@ -105,58 +96,43 @@ async function sendNewDrama(env, row, tokens) {
 
 async function scheduledCheck(env) {
   let cursor = await env.PUSH_STORE.get("catalog_cursor");
-  let known = await env.PUSH_STORE.get("known_series", "json");
 
   // First run only establishes a baseline. It never sends a burst of old-catalogue alerts.
-  if (cursor === null || !Array.isArray(known)) {
-    const seeded = new Set();
+  if (cursor === null) {
     let latestId = 0;
     for (let page = 0; page < MAX_PAGES; page += 1) {
       const rows = await readRows(env, "", page * PAGE_SIZE);
       for (const row of rows) {
         const id = Number(row.id) || 0;
         if (id > latestId) latestId = id;
-        const key = titleKey(row);
-        if (key) seeded.add(key);
       }
       if (rows.length < PAGE_SIZE) break;
     }
-    await env.PUSH_STORE.put("known_series", JSON.stringify([...seeded]));
     await env.PUSH_STORE.put("catalog_cursor", String(latestId));
     return;
   }
 
-  const seen = new Set(known);
   let latestId = Number(cursor) || 0;
   const startCursor = latestId;
-  const newRows = [];
+  const tokens = await registeredTokens(env);
+
   for (let page = 0; page < MAX_PAGES; page += 1) {
     const rows = await readRows(env, `gt.${startCursor}`, page * PAGE_SIZE);
     if (!rows.length) break;
+
     for (const row of rows) {
       const id = Number(row.id) || 0;
       if (id <= latestId) continue;
+
+      const ok = await sendNewDrama(env, row, tokens);
+      if (!ok) throw new Error(`Push delivery failed for catalogue row ${id}; cursor was not advanced past this row`);
+
       latestId = id;
-      const key = titleKey(row);
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      newRows.push(row);
+      await env.PUSH_STORE.put("catalog_cursor", String(latestId));
     }
+
     if (rows.length < PAGE_SIZE) break;
   }
-
-  if (!newRows.length) {
-    await env.PUSH_STORE.put("catalog_cursor", String(latestId));
-    return;
-  }
-
-  const tokens = await registeredTokens(env);
-  for (const row of newRows) {
-    const ok = await sendNewDrama(env, row, tokens);
-    if (!ok) throw new Error("Push delivery failed; catalogue cursor was not advanced");
-  }
-  await env.PUSH_STORE.put("known_series", JSON.stringify([...seen]));
-  await env.PUSH_STORE.put("catalog_cursor", String(latestId));
 }
 
 export default {
