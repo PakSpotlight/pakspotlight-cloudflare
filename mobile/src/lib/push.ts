@@ -6,6 +6,7 @@ import { getInstallId } from "./storage";
 
 const PUSH_SERVICE = "https://ctv-mobile-push-preview.pakifun3.workers.dev";
 const ENABLED_KEY = "ctv.notifications.newDrama.enabled";
+const INITIAL_PROMPT_KEY = "ctv.notifications.initialPromptShown";
 
 function getProjectId(): string | undefined {
   return Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
@@ -80,5 +81,23 @@ export async function refreshNewDramaRegistration(): Promise<void> {
     await registerToken();
   } catch {
     // Retry on a later app launch; never block the catalogue.
+  }
+}
+
+
+/** Ask for notification permission once on the first app launch after installation. */
+export async function requestInitialNotificationPermission(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  if (await AsyncStorage.getItem(INITIAL_PROMPT_KEY)) return;
+  await AsyncStorage.setItem(INITIAL_PROMPT_KEY, "true");
+
+  try {
+    const current = await Notifications.getPermissionsAsync();
+    const permissions = current.granted ? current : await Notifications.requestPermissionsAsync();
+    if (!permissions.granted) return;
+    await registerToken();
+    await AsyncStorage.setItem(ENABLED_KEY, "true");
+  } catch {
+    // Never block startup; users can still enable alerts from the menu.
   }
 }
