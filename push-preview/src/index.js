@@ -127,9 +127,10 @@ async function scheduledCheck(env) {
 
   const seen = new Set(known);
   let latestId = Number(cursor) || 0;
+  const startCursor = latestId;
   const newRows = [];
   for (let page = 0; page < MAX_PAGES; page += 1) {
-    const rows = await readRows(env, `gt.${latestId}`);
+    const rows = await readRows(env, `gt.${startCursor}`, page * PAGE_SIZE);
     if (!rows.length) break;
     for (const row of rows) {
       const id = Number(row.id) || 0;
