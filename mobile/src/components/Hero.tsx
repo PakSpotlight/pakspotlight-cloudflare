@@ -133,8 +133,8 @@ const styles = StyleSheet.create({
   fullTitle: {
     color: color.text,
     fontFamily: font.black,
-    fontSize: type.h1,
-    lineHeight: 34,
+    fontSize: 26,
+    lineHeight: 30,
     letterSpacing: -0.6,
   },
 
@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   chips: { flexDirection: "row", gap: space.sm, marginTop: space.md, flexWrap: "wrap" },
-  cta: { marginTop: space.lg, alignSelf: "flex-start", minWidth: 210 },
-  ctaSplit: { marginTop: space.lg, alignSelf: "stretch", height: 46 },
+  cta: { marginTop: space.md, alignSelf: "flex-start", minWidth: 0, height: 42, paddingHorizontal: space.lg },
+  ctaSplit: { marginTop: space.md, alignSelf: "flex-start", minWidth: 0, height: 42, paddingHorizontal: space.lg },
   urdu: {
     color: color.muted,
     fontFamily: font.urdu,
@@ -170,11 +170,11 @@ const styles = StyleSheet.create({
   urduFull: {
     color: "rgba(255,255,255,0.94)",
     fontFamily: font.urdu,
-    fontSize: 20,
-    lineHeight: 40,
+    fontSize: 18,
+    lineHeight: 34,
     textAlign: "right",
     alignSelf: "stretch",
     marginBottom: 2,
   },
-  meta: { color: color.muted, fontFamily: font.medium, fontSize: type.meta, marginTop: space.sm },
+  meta: { color: color.muted, fontFamily: font.medium, fontSize: 12, marginTop: space.xs },
 });
