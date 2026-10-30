@@ -19,7 +19,8 @@ type Props = {
 /** 16:9 landscape thumbnail matching the website mobile carousel. */
 export function PosterCard({ drama, width, episodeCount = 1, progress, onPress, onLongPress }: Props) {
   const [failed, setFailed] = useState(false);
-  // Match the website mobile carousel: YouTube thumbnails are landscape 16:9.\n  const height = Math.round(width * 9 / 16);
+  // Match the website mobile carousel: YouTube thumbnails are landscape 16:9.
+  const height = Math.round(width * 9 / 16);
   const showImage = !!drama.image && !failed;
   const meta = drama.year ? `${drama.year}` : prettyType(drama.type);
   const title = displayTitle(drama);
