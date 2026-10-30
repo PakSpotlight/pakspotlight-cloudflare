@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Hero } from "../components/Hero";
 import { SectionRow } from "../components/SectionRow";
 import { HomeSkeleton, StateView } from "../components/StateView";
@@ -9,6 +9,7 @@ import { TopBar } from "../components/TopBar";
 import { useCatalog } from "../lib/catalog";
 import { Drama, episodesLabel, metaLine, seriesStartId } from "../lib/dramas";
 import { getHistory, HistoryEntry } from "../lib/storage";
+import { areNewDramaAlertsEnabled, disableNewDramaAlerts, enableNewDramaAlerts } from "../lib/push";
 import { APP_VERSION, checkForUpdate, openApk, openDownloadPage, sendLaunchPing, UpdateInfo } from "../lib/update";
 import { color, contentMaxWidth, font, gutter, space, type } from "../theme";
 
@@ -43,10 +44,12 @@ export function HomeScreen() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [alertsEnabled, setAlertsEnabled] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       void getHistory().then(setHistory);
+      void areNewDramaAlertsEnabled().then(setAlertsEnabled);
     }, [])
   );
 
@@ -57,6 +60,26 @@ export function HomeScreen() {
 
   const openMenu = () => setMenuVisible(true);
   const closeMenu = () => setMenuVisible(false);
+
+  const toggleNewDramaAlerts = async () => {
+    try {
+      if (alertsEnabled) {
+        await disableNewDramaAlerts();
+        setAlertsEnabled(false);
+        Alert.alert("New drama alerts", "Notifications have been turned off on this phone.");
+        return;
+      }
+      const enabled = await enableNewDramaAlerts();
+      setAlertsEnabled(enabled);
+      if (enabled) {
+        Alert.alert("New drama alerts enabled", "We’ll notify you when a new drama is added.");
+      } else {
+        Alert.alert("Permission needed", "Allow notifications in Android settings to receive new drama alerts.");
+      }
+    } catch (error) {
+      Alert.alert("Notifications not ready", error instanceof Error ? error.message : "Please try again later.");
+    }
+  };
 
   const openDrama = (drama: Drama) => router.push(`/drama/${drama.id}`);
   const playDrama = (drama: Drama) => {
@@ -152,9 +175,10 @@ export function HomeScreen() {
             {[
               { label: "Browse dramas", action: () => router.push("/browse") },
               { label: "My Library", action: () => router.push("/library") },
-              { label: update ? `Update app · v${update.versionName}` : "App updates", action: () => update ? openApk(update) : openDownloadPage, hasUpdate: !!update },
+              { label: alertsEnabled ? "New drama alerts · On" : "Enable new drama alerts", action: toggleNewDramaAlerts },
+              { label: update ? `Update app · v${update.versionName}` : "App Updates", action: () => update ? openApk(update) : openDownloadPage(), hasUpdate: !!update },
             ].map((item) => (
-              <Pressable key={item.label} style={styles.menuItem} onPress={() => { closeMenu(); item.action(); }}>
+              <Pressable key={item.label} style={styles.menuItem} onPress={() => { closeMenu(); void item.action(); }}>
                 <Text style={styles.menuItemText}>{item.label}</Text>
                 {"hasUpdate" in item && item.hasUpdate ? <View style={styles.updateDot} /> : null}
               </Pressable>
