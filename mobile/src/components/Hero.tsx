@@ -85,7 +85,7 @@ export function Hero({ drama, meta, ctaLabel, onPlay, secondary }: Props) {
             {displayTitle(drama)}
           </Text>
           {meta ? <Text style={styles.meta}>{meta}</Text> : null}
-          <PillButton label={ctaLabel} icon="play" onPress={onPlay} style={styles.cta} />
+          <PillButton label={ctaLabel} icon="play" size="md" onPress={onPlay} style={styles.cta} />
         </View>
       </View>
     );
@@ -119,7 +119,7 @@ export function Hero({ drama, meta, ctaLabel, onPlay, secondary }: Props) {
           <Chip label={drama.year || "Archive"} />
           <Chip label={prettyType(drama.type)} />
         </View>
-        <PillButton label={ctaLabel} icon="play" onPress={onPlay} style={styles.ctaSplit} />
+        <PillButton label={ctaLabel} icon="play" size="md" onPress={onPlay} style={styles.ctaSplit} />
       </View>
     </View>
   );
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   chips: { flexDirection: "row", gap: space.sm, marginTop: space.md, flexWrap: "wrap" },
-  cta: { marginTop: space.md, alignSelf: "flex-start", minWidth: 0, height: 42, paddingHorizontal: space.lg },
+  cta: { marginTop: space.md, alignSelf: "flex-start", minWidth: 0, height: 36, paddingHorizontal: space.md },
   ctaSplit: { marginTop: space.md, alignSelf: "flex-start", minWidth: 0, height: 42, paddingHorizontal: space.lg },
   urdu: {
     color: color.muted,
