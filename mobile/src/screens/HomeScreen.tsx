@@ -7,7 +7,7 @@ import { SectionRow } from "../components/SectionRow";
 import { HomeSkeleton, StateView } from "../components/StateView";
 import { TopBar } from "../components/TopBar";
 import { useCatalog } from "../lib/catalog";
-import { Drama, episodesLabel, metaLine, seriesStartId } from "../lib/dramas";
+import { Drama, seriesStartId } from "../lib/dramas";
 import { getHistory, HistoryEntry } from "../lib/storage";
 import { areNewDramaAlertsEnabled, disableNewDramaAlerts, enableNewDramaAlerts } from "../lib/push";
 import { APP_VERSION, checkForUpdate, openApk, openDownloadPage, sendLaunchPing, UpdateInfo } from "../lib/update";
@@ -200,7 +200,7 @@ export function HomeScreen() {
       {hero ? (
         <Hero
           drama={hero}
-          meta={metaLine(hero, [hero.year, episodesLabel(hero, heroCount)])}
+          
           ctaLabel={heroCount > 1 ? "Play episode 1" : "Play"}
           onPlay={() => playDrama(hero)}
         />
