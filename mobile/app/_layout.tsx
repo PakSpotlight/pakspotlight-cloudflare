@@ -92,6 +92,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={navigationTheme}>
       <CatalogProvider>
+        <NotificationNavigation />
         <StatusBar style="light" backgroundColor={color.bg} />
         <Stack
           screenOptions={{
