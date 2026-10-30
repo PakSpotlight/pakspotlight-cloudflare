@@ -127,7 +127,7 @@ export function Hero({ drama, meta, ctaLabel, onPlay, secondary }: Props) {
 
 const styles = StyleSheet.create({
   // Full-bleed variant
-  fullWrap: { height: 280, justifyContent: "flex-end" },
+  fullWrap: { height: 320, justifyContent: "flex-end" },
   fullImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
   fullContent: { paddingHorizontal: gutter, paddingBottom: space.lg },
   fullTitle: {
@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   chips: { flexDirection: "row", gap: space.sm, marginTop: space.md, flexWrap: "wrap" },
-  cta: { marginTop: space.md, alignSelf: "flex-start", minWidth: 0, height: 36, paddingHorizontal: space.md },
-  ctaSplit: { marginTop: space.md, alignSelf: "flex-start", minWidth: 0, height: 36, paddingHorizontal: space.md },
+  cta: { marginTop: space.sm, alignSelf: "flex-start", minWidth: 0, height: 34, paddingHorizontal: 14 },
+  ctaSplit: { marginTop: space.sm, alignSelf: "flex-start", minWidth: 0, height: 34, paddingHorizontal: 14 },
   urdu: {
     color: color.muted,
     fontFamily: font.urdu,
