@@ -34,6 +34,6 @@ export const font = {
   brush: "PermanentMarker_400Regular",
 } as const;
 export const type = { h1: 30, h2: 24, h3: 20, title: 17, body: 15, meta: 13, micro: 11 } as const;
-export const heroScrim = ["rgba(2,8,15,0.08)", "rgba(2,8,15,0.70)", "#06111D"] as const;
+export const heroScrim = ["rgba(2,8,15,0.02)", "rgba(2,8,15,0.38)", "rgba(6,17,29,0.78)"] as const;
 export const POSTER_RATIO = 3 / 2;
 export const GRID_COLUMNS = 3;
