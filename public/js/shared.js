@@ -174,6 +174,19 @@ async function loadData() {
       if (Array.isArray(parsed) && parsed.length > 0) {
         console.log("✓ Using cached data:", parsed.length, "rows");
         rows = parsed.map(mapRow);
+        // Featured slide IDs are independent of the drama catalogue cache.
+        // Always refresh them so the homepage does not fall back to one latest drama.
+        try {
+          const featRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/featured.json?t=${Date.now()}`);
+          if (featRes.ok) {
+            const featList = await featRes.json();
+            if (Array.isArray(featList)) {
+              featuredIds = featList.map(Number).filter(n => !isNaN(n) && n > 0);
+            }
+          }
+        } catch (err) {
+          console.warn("Could not refresh featured IDs while using cached dramas:", err);
+        }
         return rows;
       }
     }
