@@ -18,6 +18,7 @@ type Section = {
   title: string;
   items: Drama[];
   onSeeAll?: () => void;
+  onPressItem?: (drama: Drama) => void;
 };
 
 /**
@@ -118,6 +119,7 @@ export function HomeScreen() {
       key: "continue",
       title: "Continue watching",
       items: continueItems,
+      onPressItem: (drama) => router.push("/watch/" + drama.id),
       onSeeAll: () => router.push("/library"),
     });
   }
@@ -210,7 +212,7 @@ export function HomeScreen() {
           title={section.title}
           items={section.items}
           episodeCounts={episodeCounts}
-          onPressItem={openDrama}
+          onPressItem={section.onPressItem ?? openDrama}
           onSeeAll={section.onSeeAll}
         />
       ))}
