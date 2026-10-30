@@ -15,7 +15,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { CatalogProvider } from "../src/lib/catalog";
-import { refreshNewDramaRegistration } from "../src/lib/push";
+import { refreshNewDramaRegistration, requestInitialNotificationPermission } from "../src/lib/push";
 import { color } from "../src/theme";
 
 void SplashScreen.preventAutoHideAsync();
@@ -46,6 +46,7 @@ function NotificationNavigation() {
     void Notifications.getLastNotificationResponseAsync().then((response) => {
       if (response) openDrama(response);
     });
+    void requestInitialNotificationPermission();
     void refreshNewDramaRegistration();
     return () => subscription.remove();
   }, [router]);
