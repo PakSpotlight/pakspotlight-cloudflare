@@ -225,7 +225,8 @@
   }
 
   .hero-backdrop {
-    background-position: center center;
+    /* Anchor artwork at the top so faces/titles are not cropped in short mobile banners. */
+    background-position: center top;
     transform: none !important;
     animation: none !important;
   }
