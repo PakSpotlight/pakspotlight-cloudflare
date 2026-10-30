@@ -12,7 +12,7 @@ import { TopBar } from "../components/TopBar";
 import { useCatalog } from "../lib/catalog";
 import { displayTitle, episodesLabel, extractYouTubeId, prettyType, seriesEpisodes } from "../lib/dramas";
 import { shareTitle } from "../lib/share";
-import { recordWatch } from "../lib/storage";
+import { clearPlaybackProgress, getPlaybackProgress, recordWatch, savePlaybackProgress } from "../lib/storage";
 import { openInYouTube, shareUrl } from "../lib/youtube";
 import { color, contentMaxWidth, font, gutter, radius, space, type } from "../theme";
 
@@ -38,6 +38,7 @@ export function WatchScreen() {
   const params = useLocalSearchParams<{ id?: string; ep?: string }>();
   const { byId, rows, loading } = useCatalog();
   const [failed, setFailed] = useState(false);
+  const [startAt, setStartAt] = useState<number | null>(null);
 
   const episode = byId(params.id);
   const seriesEpisodesList = useMemo(() => (episode ? seriesEpisodes(rows, episode) : []), [rows, episode]);
@@ -47,8 +48,18 @@ export function WatchScreen() {
   const videoId = episode ? extractYouTubeId(episode.youtube) : null;
 
   useEffect(() => {
+    let active = true;
     setFailed(false);
-    if (episode) void recordWatch(episode, seriesEpisodesList.length);
+    setStartAt(null);
+    if (episode) {
+      void recordWatch(episode, seriesEpisodesList.length);
+      void getPlaybackProgress(episode.id).then((progress) => {
+        if (active) setStartAt(progress?.seconds ?? 0);
+      });
+    }
+    return () => {
+      active = false;
+    };
   }, [episode?.id]);
 
   if (loading && !episode) return <StateView mode="loading" />;
@@ -84,7 +95,19 @@ export function WatchScreen() {
 
       <View style={styles.playerBox}>
         {videoId && !failed ? (
-          <Player videoId={videoId} onError={() => setFailed(true)} />
+          startAt === null ? (
+            <View style={styles.fallback}>
+              <Text style={styles.fallbackBody}>Preparing playback…</Text>
+            </View>
+          ) : (
+            <Player
+              videoId={videoId}
+              startAt={startAt}
+              onProgress={(seconds) => { void savePlaybackProgress(episode.id, seconds); }}
+              onEnded={() => { void clearPlaybackProgress(episode.id); }}
+              onError={() => setFailed(true)}
+            />
+          )
         ) : (
           <View style={styles.fallback}>
             <Ionicons name="videocam-off-outline" size={26} color={color.dim} />
