@@ -237,7 +237,9 @@
 
       // Build rows based on categories
       const categoryRowsHtml = categories.map(cat => {
-        const catGroups = allGroups.filter(g => {
+        const catGroups = cat.toLowerCase().trim() === "latest dramas"
+          ? recentGroups.slice(0, 20)
+          : allGroups.filter(g => {
           const dramaType = String(g[0].type || "").toLowerCase().trim();
           const target = cat.toLowerCase().trim();
           if (target === "serial / series" || target === "series" || target === "serial") {
