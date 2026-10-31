@@ -52,9 +52,11 @@ export function BrowseScreen() {
 
   const results = useMemo(() => {
     const q = normalize(query);
+    const latestIds = new Set([...indexed].sort((a, b) => Number(b.drama.id) - Number(a.drama.id)).slice(0, 20).map(x => x.drama.id));
     return indexed
       .filter(({ drama, haystack }) => {
-        if (category && drama.type !== category) return false;
+        if (category === "Latest Dramas" && !latestIds.has(drama.id)) return false;
+        if (category && category !== "Latest Dramas" && drama.type !== category) return false;
         return !q || haystack.includes(q);
       })
       .map(({ drama }) => drama);
