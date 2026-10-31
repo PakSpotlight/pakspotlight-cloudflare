@@ -8,7 +8,9 @@
     "web": "expo start --web",
     "android": "expo run:android",
     "prebuild:android": "expo prebuild --platform android --clean",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "eas:build:android": "eas build --platform android --profile production",
+    "eas:build:preview": "eas build --platform android --profile preview"
   },
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",
@@ -23,6 +25,7 @@
     "expo-keep-awake": "~13.0.2",
     "expo-linear-gradient": "~13.0.2",
     "expo-linking": "~6.3.1",
+    "expo-notifications": "~0.28.19",
     "expo-router": "~3.5.24",
     "expo-splash-screen": "~0.27.7",
     "expo-status-bar": "~1.12.1",
