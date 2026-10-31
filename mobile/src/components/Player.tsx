@@ -10,11 +10,11 @@ import { openInYouTube, playerHtml } from "../lib/youtube";
  * (YouTube refuses playback without one — player error 153), and navigations away from the
  * embed are handed to the YouTube app instead of hijacking the player surface.
  */
-export function Player({ videoId, onError }: { videoId: string; onError?: (message?: string) => void }) {
+export function Player({ videoId, startAt = 0, onProgress, onEnded, onError }: { videoId: string; startAt?: number; onProgress?: (seconds: number) => void; onEnded?: () => void; onError?: (message?: string) => void }) {
   return (
     <WebView
       style={styles.webview}
-      source={{ html: playerHtml(videoId), baseUrl: SITE_ORIGIN }}
+      source={{ html: playerHtml(videoId, startAt), baseUrl: SITE_ORIGIN }}
       originWhitelist={["https://*", "http://*"]}
       javaScriptEnabled
       domStorageEnabled
@@ -22,6 +22,15 @@ export function Player({ videoId, onError }: { videoId: string; onError?: (messa
       allowsInlineMediaPlayback
       mediaPlaybackRequiresUserAction={false}
       setSupportMultipleWindows={false}
+      onMessage={(event) => {
+        try {
+          const message = JSON.parse(event.nativeEvent.data) as { type?: string; seconds?: number };
+          if (message.type === "progress" && typeof message.seconds === "number") onProgress?.(message.seconds);
+          if (message.type === "ended") onEnded?.();
+        } catch {
+          // Ignore messages that are not player progress events.
+        }
+      }}
       onError={() => onError?.()}
       onHttpError={() => onError?.()}
       onShouldStartLoadWithRequest={(request) => {

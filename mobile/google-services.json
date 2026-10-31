@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "326381843101",
+    "project_id": "classic-tv-pakistan",
+    "storage_bucket": "classic-tv-pakistan.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:326381843101:android:e0b8f67b2575af4cab9a74",
+        "android_client_info": {
+          "package_name": "com.classictvpakistan.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDokcEpDZkRjZ7QXv6eBB6Ni5td8FpTX2w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

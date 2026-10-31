@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Drama, displayTitle, prettyType } from "../lib/dramas";
-import { color, font, POSTER_RATIO, radius, space, type } from "../theme";
+import { color, font, radius, space, type } from "../theme";
 import { ProgressLine } from "./Skeleton";
 
 type Props = {
@@ -16,10 +16,11 @@ type Props = {
   onLongPress?: () => void;
 };
 
-/** 2:3 archive poster with an episode badge. Every grid and row in the app uses this card. */
+/** 16:9 landscape thumbnail matching the website mobile carousel. */
 export function PosterCard({ drama, width, episodeCount = 1, progress, onPress, onLongPress }: Props) {
   const [failed, setFailed] = useState(false);
-  const height = Math.round(width * POSTER_RATIO);
+  // Match the website mobile carousel: YouTube thumbnails are landscape 16:9.
+  const height = Math.round(width * 9 / 16);
   const showImage = !!drama.image && !failed;
   const meta = drama.year ? `${drama.year}` : prettyType(drama.type);
   const title = displayTitle(drama);

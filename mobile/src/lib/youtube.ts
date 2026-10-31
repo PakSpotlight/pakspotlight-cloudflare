@@ -16,7 +16,7 @@ import { SITE_ORIGIN } from "./api";
 
 const ORIGIN = SITE_ORIGIN;
 
-export function embedUrl(videoId: string, opts?: { autoplay?: boolean; origin?: string }): string {
+export function embedUrl(videoId: string, opts?: { autoplay?: boolean; origin?: string; startAt?: number }): string {
   const params = new URLSearchParams({
     rel: "0",
     playsinline: "1",
@@ -24,6 +24,7 @@ export function embedUrl(videoId: string, opts?: { autoplay?: boolean; origin?: 
     origin: opts?.origin ?? ORIGIN,
   });
   if (opts?.autoplay) params.set("autoplay", "1");
+  if (opts?.startAt && opts.startAt > 0) params.set("start", String(Math.floor(opts.startAt)));
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 }
 
@@ -37,8 +38,8 @@ export function shareUrl(dramaId: number): string {
 }
 
 /** The document loaded by the native WebView player. */
-export function playerHtml(videoId: string): string {
-  const src = embedUrl(videoId, { autoplay: true });
+export function playerHtml(videoId: string, startAt = 0): string {
+  const src = embedUrl(videoId, { autoplay: true, startAt });
   return `<!DOCTYPE html>
 <html>
   <head>
@@ -52,6 +53,7 @@ export function playerHtml(videoId: string): string {
   </head>
   <body>
     <iframe
+      id="player"
       src="${src}"
       title="Episode player"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -59,6 +61,41 @@ export function playerHtml(videoId: string): string {
       referrerpolicy="strict-origin-when-cross-origin"
       frameborder="0"
     ></iframe>
+    <script>
+      (function () {
+        var startAt = ${Math.max(0, Math.floor(startAt))};
+        var player;
+        function send(type, seconds) {
+          try {
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({ type: type, seconds: seconds || 0 }));
+            }
+          } catch (_) {}
+        }
+        function onYouTubeIframeAPIReady() {
+          player = new YT.Player("player", {
+            events: {
+              onReady: function (event) {
+                if (startAt > 0) event.target.seekTo(startAt, true);
+                window.setInterval(function () {
+                  try { send("progress", Math.floor(player.getCurrentTime())); } catch (_) {}
+                }, 5000);
+              },
+              onStateChange: function (event) {
+                try {
+                  if (event.data === YT.PlayerState.ENDED) send("ended", 0);
+                  else send("progress", Math.floor(player.getCurrentTime()));
+                } catch (_) {}
+              }
+            }
+          });
+        }
+        window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+        var api = document.createElement("script");
+        api.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(api);
+      })();
+    </script>
   </body>
 </html>`;
 }

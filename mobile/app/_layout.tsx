@@ -9,14 +9,49 @@ import {
 import { NotoNastaliqUrdu_400Regular } from "@expo-google-fonts/noto-nastaliq-urdu";
 import { PermanentMarker_400Regular } from "@expo-google-fonts/permanent-marker";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { CatalogProvider } from "../src/lib/catalog";
+import { refreshNewDramaRegistration, requestInitialNotificationPermission } from "../src/lib/push";
 import { color } from "../src/theme";
 
 void SplashScreen.preventAutoHideAsync();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+function NotificationNavigation() {
+  const router = useRouter();
+  useEffect(() => {
+    let lastHandled: string | null = null;
+    const openDrama = (response: Notifications.NotificationResponse) => {
+      const request = response.notification.request;
+      if (lastHandled === request.identifier) return;
+      const data = request.content.data as { dramaId?: number | string };
+      const id = Number(data?.dramaId);
+      if (!Number.isSafeInteger(id) || id <= 0) return;
+      lastHandled = request.identifier;
+      router.push(`/drama/${id}`);
+      void Notifications.clearLastNotificationResponseAsync();
+    };
+    const subscription = Notifications.addNotificationResponseReceivedListener(openDrama);
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) openDrama(response);
+    });
+    void requestInitialNotificationPermission();
+    void refreshNewDramaRegistration();
+    return () => subscription.remove();
+  }, [router]);
+  return null;
+}
 
 /**
  * React Navigation's default theme paints a light grey `background` behind every screen; this
@@ -59,6 +94,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={navigationTheme}>
       <CatalogProvider>
+        <NotificationNavigation />
         <StatusBar style="light" backgroundColor={color.bg} />
         <Stack
           screenOptions={{

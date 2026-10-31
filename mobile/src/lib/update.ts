@@ -11,8 +11,8 @@ import { getInstallId, throttle } from "./storage";
 import { openUrl } from "./youtube";
 
 /** Keep in sync with `expo.android.versionCode` / `expo.version` in app.json. */
-export const APP_VERSION_CODE = 2;
-export const APP_VERSION = "1.0.1";
+export const APP_VERSION_CODE = 3;
+export const APP_VERSION = "1.0.2";
 
 const UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const PING_INTERVAL_MS = 12 * 60 * 60 * 1000;

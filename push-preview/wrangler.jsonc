@@ -1,0 +1,25 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "ctv-mobile-push-preview",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-30",
+  "workers_dev": true,
+  "kv_namespaces": [
+    {
+      "binding": "PUSH_STORE",
+      "id": "4b28d3dfc6d84aebb3dca861250f1b6a"
+    }
+  ],
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+  "vars": {
+    "SUPABASE_URL": "https://whcseoasnaswlhnzduix.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk",
+    "PUSH_ENVIRONMENT": "preview"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}
