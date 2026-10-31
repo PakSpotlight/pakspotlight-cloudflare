@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - fresh-mobile-ui
+      - phone-apk-icon-fix
     paths:
       - "mobile/**"
       - ".github/workflows/fresh-mobile-apk.yml"
