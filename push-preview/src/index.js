@@ -24,7 +24,7 @@ async function hash(value) {
 
 function isExpoToken(value) {
   return typeof value === "string" &&
-    /^(Expo|Exponent)PushToken\\[[A-Za-z0-9_-]{10,}\\]$/.test(value);
+    /^(Expo|Exponent)PushToken\[[A-Za-z0-9_-]{10,}\]$/.test(value);
 }
 
 async function readRows(env, filter = "", offset = 0) {
@@ -62,7 +62,7 @@ async function registeredTokens(env) {
 }
 
 async function sendNewDrama(env, row, tokens) {
-  if (!tokens.length) return true;
+  if (!tokens.length) throw new Error("No registered Expo push tokens; refusing to advance the catalogue cursor");
   const name = String(row.series_name || row.title || "A new classic programme").slice(0, 120);
   const episode = row.episode_number == null ? "" : ` — Episode ${row.episode_number}`;
   const messages = tokens.map((to) => ({
