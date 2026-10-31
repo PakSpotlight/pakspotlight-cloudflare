@@ -1,4 +1,5 @@
 name: Fresh Mobile APK (EAS)
+# Phone-only preview build; push trigger runs on fresh-mobile-ui.
 
 on:
   push:
