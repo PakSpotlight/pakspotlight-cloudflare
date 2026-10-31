@@ -803,47 +803,68 @@ var index_default = {
         const pick = (field) => String(given[field] || "").trim() || shared?.[field] || "";
 
         const results = [];
-        for (let i = 0; i < items.length; i++) {
-          const it = items[i];
+        // Process selected videos in small bulk requests. The old per-video
+        // duplicate-check + insert loop made two network calls per episode and
+        // was routinely cut off partway through large playlists.
+        const batchSize = 50;
+        for (let offset = 0; offset < items.length; offset += batchSize) {
+          const batch = items.slice(offset, offset + batchSize);
           try {
-            // Skip videos already in the archive (same YouTube URL).
-            const dupCheck = await supaRest(`Drama?select=id&youtube_url=eq.${encodeURIComponent(it.url)}`, auth.token);
-            const dupData = await dupCheck.json().catch(() => []);
-            if (Array.isArray(dupData) && dupData.length > 0) {
-              results.push({ id: it.id, title: it.title, status: "skipped", note: "Already added" });
+            const inList = batch.map(it => '"' + it.url.replace(/"/g, '\\"') + '"').join(",");
+            const existingRes = await supaRest(
+              `Drama?select=youtube_url&youtube_url=in.(${encodeURIComponent(inList)})`,
+              auth.token
+            );
+            if (!existingRes.ok) {
+              const detail = (await existingRes.text()).slice(0, 160);
+              for (const it of batch) results.push({ id: it.id, title: it.title, status: "error", note: detail });
               continue;
             }
-            const ep = parseEpisodeNumber(it.title, "") || String(i + 1);
-            const title = cleanDramaTitle(it.title) || `${seriesName} Ep ${ep}`;
-            const payload = {
-              title,
-              urdu_title: pick("urdu_title"),
-              year: pick("year") || String(it.publishedAt || "").slice(0, 4),
-              type,
-              series_name: seriesName,
-              episode_number: Number(ep) || null,
-              writer: pick("writer"),
-              director: pick("director"),
-              produced: pick("produced"),
-              cast: pick("cast"),
-              description: (it.description || shared?.description || "").slice(0, 800),
-              youtube_url: it.url,
-              thumbnail_url: it.thumbnail || ""
-            };
+            const existingRows = await existingRes.json().catch(() => []);
+            const existingUrls = new Set((Array.isArray(existingRows) ? existingRows : []).map(row => row.youtube_url));
+            const payloads = [];
+            for (let j = 0; j < batch.length; j++) {
+              const it = batch[j];
+              if (existingUrls.has(it.url)) {
+                results.push({ id: it.id, title: it.title, status: "skipped", note: "Already added" });
+                continue;
+              }
+              const globalIndex = offset + j;
+              const ep = parseEpisodeNumber(it.title, "") || String(globalIndex + 1);
+              const title = cleanDramaTitle(it.title) || `${seriesName} Ep ${ep}`;
+              payloads.push({
+                id: it.id, title, episode: ep,
+                row: {
+                  title,
+                  urdu_title: pick("urdu_title"),
+                  year: pick("year") || String(it.publishedAt || "").slice(0, 4),
+                  type,
+                  series_name: seriesName,
+                  episode_number: Number(ep) || null,
+                  writer: pick("writer"),
+                  director: pick("director"),
+                  produced: pick("produced"),
+                  cast: pick("cast"),
+                  description: (it.description || shared?.description || "").slice(0, 800),
+                  youtube_url: it.url,
+                  thumbnail_url: it.thumbnail || ""
+                }
+              });
+            }
+            if (!payloads.length) continue;
             const ins = await supaRest("Drama", auth.token, {
               method: "POST",
-              headers: { Prefer: "return=representation" },
-              body: JSON.stringify(payload)
+              headers: { Prefer: "return=minimal" },
+              body: JSON.stringify(payloads.map(x => x.row))
             });
             if (!ins.ok) {
-              const t = await ins.text();
-              results.push({ id: it.id, title: it.title, status: "error", note: t.slice(0, 160) });
-              continue;
+              const detail = (await ins.text()).slice(0, 160);
+              for (const item of payloads) results.push({ id: item.id, title: item.title, status: "error", note: detail });
+            } else {
+              for (const item of payloads) results.push({ id: item.id, title: item.title, status: "added", episode: item.episode });
             }
-            const row = await ins.json().catch(() => []);
-            results.push({ id: it.id, title, status: "added", dramaId: row?.[0]?.id || null, episode: ep });
           } catch (e) {
-            results.push({ id: it.id, title: it.title, status: "error", note: e.message || String(e) });
+            for (const it of batch) results.push({ id: it.id, title: it.title, status: "error", note: e.message || String(e) });
           }
         }
 
