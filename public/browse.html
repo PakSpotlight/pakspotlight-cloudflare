@@ -262,7 +262,11 @@
         filtered = list.map(id => rows.find(r => r.id === id)).filter(Boolean);
         titleEl.textContent = "My List";
       } else if (activeCat !== "all") {
-        filtered = rows.filter(r => normalize(r.type) === normalize(activeCat));
+        if (normalize(activeCat) === "latest dramas") {
+          filtered = [...rows].sort((a, b) => Number(b.id) - Number(a.id));
+        } else {
+          filtered = rows.filter(r => normalize(r.type) === normalize(activeCat));
+        }
         titleEl.textContent = activeCat;
       } else {
         titleEl.textContent = currentSearchTerm ? `Search: "${currentSearchTerm}"` : "All Classics";
