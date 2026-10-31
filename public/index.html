@@ -304,7 +304,7 @@
         </nav>
 
         <div class="rows-container">
-          ${recentTop.length > 5 ? renderCarouselRow("Recently Added", "recent", recentTop, "/browse") : ''}
+          ${recentTop.length > 0 ? renderCarouselRow("Latest Drama", "recent", recentTop, "/browse") : ''}
           ${categoryRowsHtml}
           ${goldenAge.length ? renderCarouselRow("Golden Age: 70s, 80s & 90s Classics", "vintage", goldenAge, "/browse") : ''}
           ${renderCarouselRow("Complete Masterpiece Collection", "all", allGroups, "/browse")}
