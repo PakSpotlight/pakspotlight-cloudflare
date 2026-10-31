@@ -1,11 +1,9 @@
 {
   "published": true,
-  "versionCode": 2,
-  "versionName": "1.0.1",
-  "apkUrl": "https://pub-94b93a0e41ce44d1ab2beb9ab3bdad4f.r2.dev/android/classic-tv-pakistan-1.0.1.apk",
-  "notes": "",
-  "sizeMB": 66.2,
-  "sha256": "e346a80c2becf2de5e42cd4dc6b54bc40573f61eb9467628564dc8ef0416213d",
+  "versionCode": 3,
+  "versionName": "1.0.2",
+  "apkUrl": "https://pub-94b93a0e41ce44d1ab2beb9ab3bdad4f.r2.dev/android/application-5cb7782f-d9b3-420b-9da2-48b455a9cb8a.apk",
+  "notes": "Download the Classic TV Pakistan v1.0.2 Android app.",
   "minAndroid": "6.0",
-  "releasedAt": "2026-10-31T18:56:17.511Z"
+  "releasedAt": "2026-10-31T00:00:00.000Z"
 }
