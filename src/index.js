@@ -734,7 +734,7 @@ var index_default = {
         const pid = playlistIdFromUrl(body.url || body.playlistId);
         if (!pid) return json({ error: "Paste a YouTube playlist link (with list=...)." }, 400);
         const meta = await fetchPlaylistMeta(pid, env);
-        const items = await fetchPlaylistItems(pid, env, Math.min(Number(body.limit) || 50, 50));
+        const items = await fetchPlaylistItems(pid, env, Math.min(Number(body.limit) || 5000, 5000));
         return json({
           playlist: meta,
           suggestedSeries: cleanDramaTitle(meta.title),
@@ -848,7 +848,8 @@ var index_default = {
 
         const added = results.filter(r => r.status === "added").length;
         const skipped = results.filter(r => r.status === "skipped").length;
-        return json({ success: true, series: seriesName, added, skipped, total: results.length, results });
+        const failed = results.filter(r => r.status === "error").length;
+        return json({ success: true, series: seriesName, added, skipped, failed, total: results.length, results });
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
       }
