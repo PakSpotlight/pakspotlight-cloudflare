@@ -754,7 +754,8 @@ var index_default = {
         const pid = playlistIdFromUrl(body.url || body.playlistId);
         if (!pid) return json({ error: "Paste a YouTube playlist link (with list=...)." }, 400);
         const wantedIds = Array.isArray(body.videoIds) ? body.videoIds.map(String) : null;
-        const limit = Math.min(Number(body.limit) || 50, 50);
+        const requestedCount = wantedIds ? wantedIds.length : (Number(body.limit) || 5000);
+        const limit = Math.min(Math.max(requestedCount, 1), 5000);
         const meta = await fetchPlaylistMeta(pid, env);
         let items = await fetchPlaylistItems(pid, env, limit);
         if (wantedIds) items = items.filter(it => wantedIds.includes(it.id));
