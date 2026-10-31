@@ -1,4 +1,4 @@
-name: Fresh Mobile APK
+name: Fresh Mobile APK (EAS)
 
 on:
   push:
@@ -14,13 +14,13 @@ permissions:
 
 jobs:
   build:
-    name: Build Classic TV Pakistan mobile APK
+    name: Build Classic TV Pakistan phone APK with EAS
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: mobile
     steps:
-      - name: Checkout mobile UI branch
+      - name: Checkout phone app branch
         uses: actions/checkout@v4
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -28,30 +28,11 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: mobile/package-lock.json
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-      - name: Locate Android SDK
-        run: |
-          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          test -d "$SDK"
-          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
-          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
       - name: Install locked dependencies
         run: npm ci
       - name: Type-check app
         run: npm run typecheck
-      - name: Generate Android project
-        run: npx expo prebuild --platform android --no-install
-      - name: Build APK
-        working-directory: mobile/android
-        run: ./gradlew assembleRelease --no-daemon
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Classic-TV-Pakistan-Mobile-APK
-          path: mobile/android/app/build/outputs/apk/release/*.apk
-          if-no-files-found: error
-          retention-days: 14
+      - name: Submit signed APK build to Expo EAS
+        run: npx --yes eas-cli@latest build --platform android --profile preview --non-interactive --wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
