@@ -69,18 +69,18 @@ export async function disableNewDramaAlerts(): Promise<void> {
   }
 }
 
-/** Refresh an opted-in device token on each app launch without asking for permission again. */
+/** Register or refresh the device whenever Android notification permission is already granted.
+ * This also recovers installs where the first registration attempt failed due to a server error.
+ */
 export async function refreshNewDramaRegistration(): Promise<void> {
-  if (Platform.OS !== "android" || !(await areNewDramaAlertsEnabled())) return;
+  if (Platform.OS !== "android") return;
   const permissions = await Notifications.getPermissionsAsync();
-  if (!permissions.granted) {
-    await AsyncStorage.setItem(ENABLED_KEY, "false");
-    return;
-  }
+  if (!permissions.granted) return;
   try {
     await registerToken();
+    await AsyncStorage.setItem(ENABLED_KEY, "true");
   } catch {
-    // Retry on a later app launch; never block the catalogue.
+    // Retry on the next app launch; never block the catalogue.
   }
 }
 
