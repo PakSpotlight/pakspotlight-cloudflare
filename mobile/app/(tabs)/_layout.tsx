@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { Tabs } from "expo-router";
 import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,6 +7,7 @@ import { color, contentMaxWidth, font } from "../../src/theme";
 
 /** Three destinations. The active item is the accent — the only coloured thing in the chrome. */
 export default function TabsLayout() {
+  const isTvBuild = Constants.expoConfig?.extra?.classicTvAndroidTv === true;
   const insets = useSafeAreaInsets();
   const barHeight = 56 + insets.bottom;
   return (
@@ -15,6 +17,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: color.accent,
         tabBarInactiveTintColor: color.muted,
         tabBarStyle: {
+          display: isTvBuild ? "none" : "flex",
           backgroundColor: "#000000",
           borderTopColor: color.line,
           borderTopWidth: StyleSheet.hairlineWidth,
