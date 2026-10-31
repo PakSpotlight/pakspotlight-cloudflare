@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   urdu: {
-    color: color.muted,
+    color: "#d8b35a",
     fontFamily: font.urdu,
     fontSize: 16,
     lineHeight: 32,
