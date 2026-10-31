@@ -150,6 +150,7 @@ async function loadCategories() {
   } catch (e) {
     console.warn("Could not load categories.json, using defaults:", e);
   }
+  categories = ["Latest Dramas", ...categories.filter(x => x.toLowerCase() !== "latest dramas")];
   return categories;
 }
 
