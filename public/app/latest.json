@@ -1,11 +1,9 @@
 {
   "published": true,
   "versionCode": 2,
-  "versionName": "1.0.1",
-  "apkUrl": "https://github.com/PakSpotlight/pakspotlight-cloudflare/releases/download/app-v1.0.1/classic-tv-pakistan-1.0.1.apk",
-  "notes": "",
-  "sizeMB": 66.2,
-  "sha256": "cadf8821640814f6319a1f7394fe787304505719f2b085fa0725067a15db5ec8",
+  "versionName": "1.0.2",
+  "apkUrl": "https://expo.dev/accounts/pakifun3-team/projects/qadeer/builds/4d4b1b93-0751-4d77-bc27-9967426abcdd",
+  "notes": "Open the Expo build page and tap Download to get the Classic TV Pakistan v1.0.2 APK.",
   "minAndroid": "6.0",
-  "releasedAt": "2026-10-27T13:24:06.854Z"
+  "releasedAt": "2026-10-31T00:00:00.000Z"
 }
