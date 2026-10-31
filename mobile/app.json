@@ -15,7 +15,8 @@
       "package": "com.classictvpakistan.app",
       "versionCode": 2,
       "permissions": [
-        "android.permission.WAKE_LOCK"
+        "android.permission.WAKE_LOCK",
+        "android.permission.POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

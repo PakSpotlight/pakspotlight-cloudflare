@@ -13,15 +13,12 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import AppBootstrap from "../src/components/AppBootstrap";
 import { CatalogProvider } from "../src/lib/catalog";
 import { color } from "../src/theme";
 
 void SplashScreen.preventAutoHideAsync();
 
-/**
- * React Navigation's default theme paints a light grey `background` behind every screen; this
- * replaces it with the app's black canvas so no default colour ever leaks through.
- */
 const navigationTheme = {
   ...DarkTheme,
   colors: {
@@ -35,10 +32,6 @@ const navigationTheme = {
   },
 };
 
-/**
- * Every font in the app is bundled — never fetched at runtime. Old Android devices in this
- * archive's audience cannot be asked to wait on a font request.
- */
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     Archivo_400Regular,
@@ -59,6 +52,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={navigationTheme}>
       <CatalogProvider>
+        <AppBootstrap />
         <StatusBar style="light" backgroundColor={color.bg} />
         <Stack
           screenOptions={{
