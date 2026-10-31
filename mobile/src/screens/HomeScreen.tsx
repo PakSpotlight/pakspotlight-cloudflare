@@ -61,9 +61,13 @@ export function HomeScreen() {
   const featured = (catalog ? catalog.featuredIds : [])
     .map((id) => rows.find((r) => r.id === id))
     .filter((d): d is Drama => !!d);
-  const categoryRows = categories
-    .map((cat) => ({ category: cat, items: series.filter((g) => g[0].type === cat).slice(0, 12).map((g) => g[0]) }))
-    .filter((row) => row.items.length > 0);
+  const latestItems = [...series].sort((a, b) => Number(b[0]?.id ?? 0) - Number(a[0]?.id ?? 0)).slice(0, 12).map((g) => g[0]);
+  const categoryRows = [
+    ...(latestItems.length ? [{ category: "Latest Dramas", items: latestItems }] : []),
+    ...categories.filter((cat) => cat.toLowerCase() !== "latest dramas")
+      .map((cat) => ({ category: cat, items: series.filter((g) => g[0].type === cat).slice(0, 12).map((g) => g[0]) }))
+      .filter((row) => row.items.length > 0),
+  ];
 
   const sections: Section[] = [];
   if (continueItems.length > 0) sections.push({
