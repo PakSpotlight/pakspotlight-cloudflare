@@ -1,9 +1,9 @@
 {
   "published": true,
-  "versionCode": 2,
+  "versionCode": 3,
   "versionName": "1.0.2",
-  "apkUrl": "https://expo.dev/accounts/pakifun3-team/projects/qadeer/builds/4d4b1b93-0751-4d77-bc27-9967426abcdd",
-  "notes": "Open the Expo build page and tap Download to get the Classic TV Pakistan v1.0.2 APK.",
+  "apkUrl": "https://pub-94b93a0e41ce44d1ab2beb9ab3bdad4f.r2.dev/android/application-5cb7782f-d9b3-420b-9da2-48b455a9cb8a.apk",
+  "notes": "Download the Classic TV Pakistan v1.0.2 Android app.",
   "minAndroid": "6.0",
   "releasedAt": "2026-10-31T00:00:00.000Z"
 }
