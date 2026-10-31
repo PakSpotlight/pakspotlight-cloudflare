@@ -57,6 +57,10 @@
     "plugins": [
       "expo-router",
       [
+        "expo-notifications",
+        {}
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
