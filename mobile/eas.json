@@ -1,5 +1,4 @@
 {
-  "owner": "pakifun3-team",
   "cli": {
     "version": ">= 12.0.0",
     "appVersionSource": "local"
