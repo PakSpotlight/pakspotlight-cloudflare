@@ -11,6 +11,7 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "owner": "pakifun3-team",
     "android": {
       "package": "com.classictvpakistan.app",
       "versionCode": 3,
