@@ -17,6 +17,17 @@ export function AboutScreen() {
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.subheading}>Our YouTube channels</Text>
+        <Text style={styles.body}>Watch more classic Pakistani television on our official channels.</Text>
+        <Text accessibilityRole="link" style={styles.link} onPress={() => Linking.openURL("https://youtube.com/@classictvpak")}>
+          Classic TV Pakistan ↗
+        </Text>
+        <Text accessibilityRole="link" style={styles.link} onPress={() => Linking.openURL("https://youtube.com/@drama_khazana")}>
+          Drama Khazana ↗
+        </Text>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.subheading}>Contact us</Text>
         <Text style={styles.label}>Email</Text>
         <Text accessibilityRole="link" style={styles.link} onPress={() => Linking.openURL(`mailto:${CONTACT_EMAIL}`)}>
