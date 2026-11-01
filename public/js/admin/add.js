@@ -244,7 +244,7 @@ async function handleAddFetch() {
       const res = await fetch("/api/playlist-preview", {
         method: "POST",
         headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
-        body: JSON.stringify({ url, limit: 50 })
+        body: JSON.stringify({ url, limit: 500 })
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || "Could not read this playlist.");
