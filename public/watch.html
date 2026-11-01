@@ -207,7 +207,7 @@
         ytLink.href = currentEp.youtube;
       }
       // Update titles
-      const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim() && ["serial / series", "series", "serial"].includes(String(currentDrama.type || "").toLowerCase().trim());
+      const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim();
       if (isSer && currentEpisodes.length > 1 && currentEp) {
         const epNum = currentEp.episode == null ? currentEpisodes.indexOf(currentEp) + 1 : currentEp.episode;
         const epTitle = cleanDramaTitle(currentEp.title);
@@ -246,7 +246,7 @@
         return;
       }
 
-      const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim() && ["serial / series", "series", "serial"].includes(String(currentDrama.type || "").toLowerCase().trim());
+      const isSer = isSeries(currentDrama) && !!String(currentDrama.series || "").trim();
       const baseTitle = isSer ? currentDrama.series : currentDrama.title;
       const hasEpisodeList = isSer && currentEpisodes.length > 1;
       const epNum = hasEpisodeList && currentEp ? (currentEp.episode == null ? currentEpisodes.indexOf(currentEp) + 1 : currentEp.episode) : null;
