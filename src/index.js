@@ -305,8 +305,24 @@ async function aiAutofill(video, env, opts = {}) {
       temperature: 0.1,
       max_tokens: 1024
     });
-    const text = String(cfResp?.result?.response || cfResp?.response || "").trim();
-    if (!text) throw new Error("Cloudflare AI returned no metadata. Please retry.");
+    // Workers AI may return either plain text or a structured response object.
+    // Never coerce an object with String(), which produces "[object Object]".
+    const candidates = [
+      cfResp?.result?.response,
+      cfResp?.response,
+      cfResp?.result?.choices?.[0]?.message?.content,
+      cfResp?.choices?.[0]?.message?.content,
+      cfResp?.result?.output_text,
+      cfResp?.output_text,
+      cfResp?.result
+    ];
+    let content = candidates.find(value => typeof value === "string" && value.trim());
+    if (content === undefined) {
+      const structured = candidates.find(value => value && typeof value === "object");
+      if (structured !== undefined) content = JSON.stringify(structured);
+    }
+    const text = typeof content === "string" ? content.trim() : "";
+    if (!text) throw new Error("Cloudflare AI returned no readable metadata. Please retry.");
     return text;
   };
 
