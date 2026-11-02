@@ -326,57 +326,56 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  // Fresh research: two separate Google Search-grounded Gemini passes.
-  // Forced research never falls back to ungrounded model output.
+  // Forced AI Search Details uses Gemini's free model inference without paid Google Search grounding.
+  // Evidence is limited to the YouTube title, description, upload date, and playlist context.
+  // The model must leave uncertain historical credits and release years blank rather than invent them.
   var groundingQueries = [];
   if (opts.forceSearch) {
     const geminiKey = env.GEMINI_API_KEY;
-    if (!geminiKey) throw new Error("Fresh web research requires GEMINI_API_KEY. No cached or ungrounded metadata was used.");
+    if (!geminiKey) throw new Error("GEMINI_API_KEY is not configured in Cloudflare. No metadata was generated.");
     const geminiModels = [DEFAULT_AI_MODEL];
     let researchError = null;
     for (const geminiModel of geminiModels) {
       try {
-        const runGroundedPass = async (passPrompt) => {
-          const response = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: passPrompt }] }],
-              tools: [{ google_search: {} }]
-            })
-          });
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok) throw new Error(data.error?.message || `Gemini search failed (${response.status}).`);
-          const candidate = data.candidates?.[0];
-          const text = (candidate?.content?.parts || []).map(p => p.text || "").join("\n").trim();
-          const metadata = candidate?.groundingMetadata || {};
-          const queries = metadata.webSearchQueries || [];
-          const chunks = metadata.groundingChunks || [];
-          if (!text || (!queries.length && !chunks.length)) {
-            throw new Error("Google Search did not return grounded sources. Please retry; no unverified details were accepted.");
-          }
-          return { text, queries };
-        };
-        const context = opts.researchContext ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500) : "";
-        const first = await runGroundedPass(
-          prompt + context +
-          "\nRESEARCH PASS 1: Use Google Search now. Search the exact drama title and identify reliable Pakistani TV/PTV archive sources. Do not treat the YouTube upload date as the original release year. Return only the requested JSON."
-        );
-        const secondPrompt =
-          "Independently verify this Pakistani PTV drama metadata using a NEW Google Search research pass. Use different search wording and seek corroboration from sources independent of the first pass. Do not blindly copy the candidate. Correct unsupported claims; if a credit, year, or Urdu title cannot be corroborated, return an empty string for that field. Return ONLY JSON with keys title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. The type must be exactly one of: " + categoriesListStr + ". " +
-          "\nYouTube title: " + video.title +
-          "\nCandidate from first research pass: " + first.text.slice(0, 5000) + context;
-        const second = await runGroundedPass(secondPrompt);
-        groundingQueries = [...first.queries, ...second.queries];
-        rawContent = second.text;
-        aiProvider = `gemini:${geminiModel}:google-search-x2`;
+        const researchPrompt =
+          "You are researching metadata for Classic TV Pakistan, an archive of classic Pakistani PTV dramas. " +
+          "Identify the programme using your existing knowledge and ONLY the supplied YouTube evidence. " +
+          "Do not claim that you searched the web or verified external sources. " +
+          "Do not invent writers, directors, producers, cast members, or original release years. " +
+          "If a historical fact is not confidently known from the title, description, or your reliable knowledge, return an empty string for that field. " +
+          "Never use the YouTube upload date as the original release year. " +
+          "Clean the programme title by removing episode numbers, channel names, HD, and promotional suffixes. " +
+          "Provide the Urdu title in Urdu script only when confidently known. " +
+          "For an episode, set series_name to the parent drama title and episode_number from the supplied title/description when present. " +
+          "For a standalone long play, leave series_name and episode_number empty. " +
+          "Write a short viewer-friendly description based on known plot details; do not fabricate plot details. " +
+          "The type must be exactly one of: " + categoriesListStr + ". " +
+          "Return ONLY a JSON object with keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description.\n\n" +
+          "YouTube title: " + video.title + "\n" +
+          "YouTube description:\n" + desc.slice(0, 4000) + "\n" +
+          "YouTube upload date (NOT the original release year): " + video.publishedAt +
+          (opts.researchContext ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500) : "") +
+          (sharedCredits ? "\nPreviously identified playlist credits (reuse only if applicable): " + JSON.stringify(sharedCredits) : "");
+        const response = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: researchPrompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error?.message || `Gemini request failed (${response.status}).`);
+        rawContent = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("\n").trim();
+        if (!rawContent) throw new Error("Gemini returned an empty response. Please retry.");
+        aiProvider = `gemini:${geminiModel}:free-no-grounding`;
         break;
       } catch (e) {
         researchError = e;
-        console.warn(`Grounded Gemini research failed on ${geminiModel}:`, e?.message || e);
+        console.warn(`Gemini metadata research failed on ${geminiModel}:`, e?.message || e);
       }
     }
-    if (!rawContent) throw new Error(researchError?.message || "Two independent Google Search research passes could not be completed.");
+    if (!rawContent) throw new Error(researchError?.message || "Gemini metadata research could not be completed.");
   } else if (!rawContent) {
     // Normal non-forced fallback for legacy/internal calls.
     const geminiKey = env.GEMINI_API_KEY;
