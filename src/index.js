@@ -425,7 +425,7 @@ async function aiAutofill(video, env, opts = {}) {
   const fields = {
     title: baseTitle || video.title,
     urdu_title: out.urdu_title || "",
-    year: out.year || yearFallback,
+    year: out.year || (opts.forceSearch ? "" : yearFallback),
     type: (allowedCategories.find(c => c.toLowerCase() === String(out.type || "").trim().toLowerCase()) || (allowedCategories.includes(out.type) ? out.type : (allowedCategories[0] || "Long Play"))),
     series_name: out.series_name || (epFallback || /serial|series|ep|episode|part/i.test(video.title) ? baseTitle : ""),
     episode_number: out.episode_number || epFallback,
