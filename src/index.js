@@ -335,7 +335,7 @@ async function aiAutofill(video, env, opts = {}) {
   if (opts.forceSearch) {
     const geminiKey = env.GEMINI_API_KEY;
     if (!geminiKey) throw new Error("Fresh web research requires GEMINI_API_KEY. No cached or ungrounded metadata was used.");
-    const geminiModel = env.GEMINI_MODEL || DEFAULT_AI_MODEL;
+    const geminiModel = DEFAULT_AI_MODEL;
     const response = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
