@@ -312,17 +312,17 @@ async function aiAutofill(video, env, opts = {}) {
 
   if (opts.forceSearch) {
     const context = opts.researchContext
-      ? "\\nPlaylist context: " + String(opts.researchContext).slice(0, 1500)
+      ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500)
       : "";
     const first = await runCloudflarePass(
       prompt + context +
-      "\\nVERIFICATION PASS 1: Independently identify this drama from the supplied YouTube title and description plus your existing knowledge. Do not guess. Return only the requested JSON."
+      "\nVERIFICATION PASS 1: Independently identify this drama from the supplied YouTube title and description plus your existing knowledge. Do not guess. Return only the requested JSON."
     );
     const secondPrompt =
       "Perform a SECOND independent accuracy review of this Pakistani PTV drama metadata. Do not simply repeat the candidate. Reconsider the exact title, Urdu title, year, writer, director, producer, cast, category, and synopsis using only the supplied YouTube information and your existing knowledge. There is no web search in this workflow. If a detail is uncertain or unsupported, return an empty string. Return ONLY JSON with keys title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. The type must be exactly one of: " + categoriesListStr + "." +
-      "\\nYouTube title: " + video.title +
-      "\\nYouTube description (clue only, not proof):\\n" + desc.slice(0, 4000) +
-      "\\nFirst-pass candidate (review critically; do not assume correct): " + first.slice(0, 5000) + context;
+      "\nYouTube title: " + video.title +
+      "\nYouTube description (clue only, not proof):\n" + desc.slice(0, 4000) +
+      "\nFirst-pass candidate (review critically; do not assume correct): " + first.slice(0, 5000) + context;
     rawContent = await runCloudflarePass(secondPrompt);
     aiProvider = "cloudflare:@cf/meta/llama-3.1-8b-instruct-fast:verification-x2";
   } else {
@@ -388,7 +388,7 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  return { video, searched: Boolean(opts.forceSearch), searchPasses: opts.forceSearch ? 2 : 0, groundingQueries, provider: aiProvider, fields };
+  return { video, searched: false, searchPasses: 0, verificationPasses: opts.forceSearch ? 2 : 1, webSearchUsed: false, provider: aiProvider, fields };
 }
 
 // Set by fetch handler so aiAutofill can background-save the cache.
@@ -819,7 +819,7 @@ var index_default = {
 
         const added = results.filter(r => r.status === "added").length;
         const skipped = results.filter(r => r.status === "skipped").length;
-        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: 2, provider: first.provider, queries: first.groundingQueries || [] }, results });
+        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: 0, verificationPasses: 2, webSearchUsed: false, provider: first.provider }, results });
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
       }
