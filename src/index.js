@@ -4,7 +4,7 @@ var SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
 var YOUTUBE_HANDLE = "@pkspotlight";
 var GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-var DEFAULT_AI_MODEL = "gemini-2.5-flash";
+var DEFAULT_AI_MODEL = "gemini-3.8-flash";
 
 const DEFAULT_CATEGORIES = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
 
@@ -335,29 +335,47 @@ async function aiAutofill(video, env, opts = {}) {
   if (opts.forceSearch) {
     const geminiKey = env.GEMINI_API_KEY;
     if (!geminiKey) throw new Error("Fresh web research requires GEMINI_API_KEY. No cached or ungrounded metadata was used.");
-    const geminiModel = DEFAULT_AI_MODEL;
-    const response = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt + (opts.researchContext ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500) : "") }] }],
-        tools: [{ google_search: {} }]
-      })
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error?.message || `Gemini Google Search failed (${response.status}).`);
-    const candidate = data.candidates?.[0];
-    rawContent = (candidate?.content?.parts || []).map(p => p.text || "").join("\n").trim();
-    const metadata = candidate?.groundingMetadata || {};
-    groundingQueries = metadata.webSearchQueries || [];
-    groundingSources = (metadata.groundingChunks || []).map(chunk => ({
-      title: chunk.web?.title || "",
-      url: chunk.web?.uri || ""
-    })).filter(source => source.url);
-    if (!rawContent || (!groundingQueries.length && !groundingSources.length)) {
-      throw new Error("Google Search did not return verifiable sources. Please retry; no ungrounded metadata was accepted.");
+    // Prefer the previously fast 2.5 model when this API project still has access.
+    // Google now limits 2.5 access to projects that used it before; fall back to
+    // the currently available 3.8 model without ever dropping Search grounding.
+    const geminiModels = ["gemini-2.5-flash", "gemini-3.8-flash"];
+    let researchError = null;
+    for (const geminiModel of geminiModels) {
+      try {
+        const response = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt + (opts.researchContext ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500) : "") }] }],
+            tools: [{ google_search: {} }]
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error?.message || `Gemini Google Search failed (${response.status}).`);
+        const candidate = data.candidates?.[0];
+        const candidateText = (candidate?.content?.parts || []).map(p => p.text || "").join("\n").trim();
+        const metadata = candidate?.groundingMetadata || {};
+        const queries = metadata.webSearchQueries || [];
+        const sources = (metadata.groundingChunks || []).map(chunk => ({
+          title: chunk.web?.title || "",
+          url: chunk.web?.uri || ""
+        })).filter(source => source.url);
+        if (!candidateText || (!queries.length && !sources.length)) {
+          throw new Error("Google Search did not return verifiable sources for " + geminiModel + ".");
+        }
+        rawContent = candidateText;
+        groundingQueries = queries;
+        groundingSources = sources;
+        aiProvider = `gemini:${geminiModel}:google-search`;
+        break;
+      } catch (e) {
+        researchError = e;
+        console.warn(`Grounded Gemini search failed on ${geminiModel}:`, e?.message || e);
+      }
     }
-    aiProvider = `gemini:${geminiModel}:google-search`;
+    if (!rawContent) {
+      throw new Error(researchError?.message || "Gemini Google Search failed on all configured models. No ungrounded metadata was accepted.");
+    }
   } else if (!rawContent) {
     // Normal non-forced fallback for legacy/internal calls.
     const geminiKey = env.GEMINI_API_KEY;
@@ -845,7 +863,7 @@ var index_default = {
             const payload = {
               title,
               urdu_title: pick("urdu_title"),
-              year: pick("year") || String(it.publishedAt || "").slice(0, 4),
+              year: pick("year") || null,
               type,
               series_name: seriesName,
               episode_number: Number(ep) || null,
