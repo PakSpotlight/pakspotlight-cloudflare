@@ -329,7 +329,6 @@ async function aiAutofill(video, env, opts = {}) {
   // Forced AI Search Details uses Gemini's free model inference without paid Google Search grounding.
   // Evidence is limited to the YouTube title, description, upload date, and playlist context.
   // The model must leave uncertain historical credits and release years blank rather than invent them.
-  var groundingQueries = [];
   if (opts.forceSearch) {
     const geminiKey = env.GEMINI_API_KEY;
     if (!geminiKey) throw new Error("GEMINI_API_KEY is not configured in Cloudflare. No metadata was generated.");
@@ -463,7 +462,7 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  return { video, searched: false, searchPasses: 0, verificationPasses: opts.forceSearch ? 2 : 1, webSearchUsed: false, provider: aiProvider, fields };
+  return { video, searched: false, searchPasses: 0, verificationPasses: 1, webSearchUsed: false, provider: aiProvider, fields };
 }
 
 // Set by fetch handler so aiAutofill can background-save the cache.
