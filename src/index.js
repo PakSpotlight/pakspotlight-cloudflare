@@ -275,21 +275,23 @@ async function aiAutofill(video, env, opts = {}) {
   const yearHint = String(video.publishedAt || "").slice(0, 4);
   const epHint = parseEpisodeNumber(video.title, video.description);
 
-  var prompt =
-    "Classic TV Pakistan = archive of classic Pakistani PTV dramas. Identify the exact programme using the YouTube title/description, then verify its metadata with Google Search.\\n" +
-    "Return one JSON object with the requested fields. Never invent credits, dates, cast members, Urdu titles, or production details. If a fact is not supported by a reliable source, return an empty string for that field. " +
-    "Clean the title (remove EPISODE/PART numbers, | PTV, HD, etc). " +
-    "Use the original broadcast/release year only when a reliable source confirms it; the YouTube upload date is NOT the original release year. " +
-    "Use the Urdu-script title only when it can be verified. " +
-    "Episode: \\"" + (epHint || "none seen") + "\\". Series name: the actual drama serial name; leave empty for standalone long plays if uncertain. " +
-    "Description: 2-3 factual sentences supported by the search results. " +
-    "Category: exactly one of: " + categoriesListStr + ".\\n" +
-    (sharedCredits ? "Known admin-provided credits (preserve these unless clearly contradicted): " + JSON.stringify(sharedCredits) + "\\n" : "") +
-    "Return ONLY valid JSON, no markdown. Keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description.\\n\\n" +
-    "Search the exact title plus Pakistani PTV/drama context and verify writer, director, cast, production and original year from reliable sources.\\n" +
-    "YouTube title: " + video.title + "\\n" +
-    "YouTube description:\\n" + desc.slice(0, 4000) + "\\n" +
-    "Uploaded: " + video.publishedAt;
+  var prompt = [
+    "Classic TV Pakistan = archive of classic Pakistani PTV dramas. Identify the exact programme using the YouTube title/description, then verify its metadata with Google Search.",
+    "Return one JSON object with the requested fields. Never invent credits, dates, cast members, Urdu titles, or production details. If a fact is not supported by a reliable source, return an empty string for that field.",
+    "Clean the title (remove EPISODE/PART numbers, | PTV, HD, etc).",
+    "Use the original broadcast/release year only when a reliable source confirms it; the YouTube upload date is NOT the original release year.",
+    "Use the Urdu-script title only when it can be verified.",
+    "Episode: " + (epHint || "none seen") + ". Series name: the actual drama serial name; leave empty for standalone long plays if uncertain.",
+    "Description: 2-3 factual sentences supported by the search results.",
+    "Category: exactly one of: " + categoriesListStr + ".",
+    (sharedCredits ? "Known admin-provided credits (preserve these unless clearly contradicted): " + JSON.stringify(sharedCredits) : ""),
+    "Return ONLY valid JSON, no markdown. Keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description.",
+    "Search the exact title plus Pakistani PTV/drama context and verify writer, director, cast, production and original year from reliable sources.",
+    "YouTube title: " + video.title,
+    "YouTube description:",
+    desc.slice(0, 4000),
+    "Uploaded: " + video.publishedAt
+  ].filter(Boolean).join("\n");
 
   var rawContent = "";
   var aiProvider = "";
@@ -338,7 +340,7 @@ async function aiAutofill(video, env, opts = {}) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt + (opts.researchContext ? "\\nPlaylist context: " + String(opts.researchContext).slice(0, 1500) : "") }] }],
+        contents: [{ parts: [{ text: prompt + (opts.researchContext ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500) : "") }] }],
         tools: [{ google_search: {} }],
         generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
       })
@@ -346,7 +348,7 @@ async function aiAutofill(video, env, opts = {}) {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error?.message || `Gemini Google Search failed (${response.status}).`);
     const candidate = data.candidates?.[0];
-    rawContent = (candidate?.content?.parts || []).map(p => p.text || "").join("\\n").trim();
+    rawContent = (candidate?.content?.parts || []).map(p => p.text || "").join("\n").trim();
     const metadata = candidate?.groundingMetadata || {};
     groundingQueries = metadata.webSearchQueries || [];
     groundingSources = (metadata.groundingChunks || []).map(chunk => ({
@@ -875,7 +877,7 @@ var index_default = {
 
         const added = results.filter(r => r.status === "added").length;
         const skipped = results.filter(r => r.status === "skipped").length;
-        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: 0, verificationPasses: 2, webSearchUsed: false, provider: first.provider }, results });
+        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: first.searchPasses || 0, verificationPasses: first.verificationPasses || 0, webSearchUsed: Boolean(first.webSearchUsed), provider: first.provider, queries: first.groundingQueries || [], sources: first.groundingSources || [] }, results });
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
       }
