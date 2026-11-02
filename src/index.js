@@ -341,8 +341,7 @@ async function aiAutofill(video, env, opts = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt + (opts.researchContext ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500) : "") }] }],
-        tools: [{ google_search: {} }],
-        generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
+        tools: [{ google_search: {} }]
       })
     });
     const data = await response.json().catch(() => ({}));
@@ -446,7 +445,7 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  return { video, searched: Boolean(opts.forceSearch), searchPasses: opts.forceSearch ? 1 : 0, verificationPasses: opts.forceSearch ? 1 : 0, webSearchUsed: Boolean(opts.forceSearch && groundingQueries.length), groundingQueries, groundingSources, provider: aiProvider, fields };
+  return { video, searched: Boolean(opts.forceSearch), searchPasses: opts.forceSearch ? 1 : 0, verificationPasses: opts.forceSearch ? 1 : 0, webSearchUsed: Boolean(opts.forceSearch && (groundingQueries.length || groundingSources.length)), groundingQueries, groundingSources, provider: aiProvider, fields };
 }
 
 // Set by fetch handler so aiAutofill can background-save the cache.
