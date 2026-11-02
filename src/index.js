@@ -351,7 +351,7 @@ async function aiAutofill(video, env, opts = {}) {
           "\nRESEARCH PASS 1: Use Google Search now. Search the exact drama title and identify reliable Pakistani TV/PTV archive sources. Do not treat the YouTube upload date as the original release year. Return only the requested JSON."
         );
         const secondPrompt =
-          "Independently verify this Pakistani PTV drama metadata using a NEW Google Search research pass. Use different search wording and seek corroboration from sources independent of the first pass. Do not blindly copy the candidate. Correct unsupported claims; if a credit, year, or Urdu title cannot be corroborated, return an empty string for that field. Return ONLY JSON with keys title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description." +
+          "Independently verify this Pakistani PTV drama metadata using a NEW Google Search research pass. Use different search wording and seek corroboration from sources independent of the first pass. Do not blindly copy the candidate. Correct unsupported claims; if a credit, year, or Urdu title cannot be corroborated, return an empty string for that field. Return ONLY JSON with keys title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. The type must be exactly one of: " + categoriesListStr + ". " +
           "\nYouTube title: " + video.title +
           "\nCandidate from first research pass: " + first.text.slice(0, 5000) + context;
         const second = await runGroundedPass(secondPrompt);
