@@ -104,6 +104,51 @@ function parseEpisodeNumber(title, description) {
 }
 
 // "Dhoop Kinare Ep 5 | PTV" -> "Dhoop Kinare"
+// Live web research for drama metadata. Tavily's free Researcher plan includes
+// 1,000 basic-search credits per month; two independent queries are used per run.
+async function searchDramaWebEvidence(query, env) {
+  if (!env.TAVILY_API_KEY) {
+    throw new Error("Live web research is not configured yet. Please add the TAVILY_API_KEY secret in Cloudflare, then retry.");
+  }
+  const queries = [
+    `${query} Pakistani PTV television drama original cast writer director year`,
+    `${query} Pakistan television serial drama credits cast writer producer archive`
+  ];
+  const responses = await Promise.all(queries.map(async q => {
+    const res = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        api_key: env.TAVILY_API_KEY,
+        query: q,
+        topic: "general",
+        search_depth: "basic",
+        max_results: 5,
+        include_answer: false,
+        include_raw_content: true
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || data.message || `Web research request failed (${res.status}).`);
+    return Array.isArray(data.results) ? data.results : [];
+  }));
+  const seen = new Set();
+  const results = [];
+  for (const item of responses.flat()) {
+    const url = String(item.url || "").trim();
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    results.push({
+      title: String(item.title || "").slice(0, 240),
+      url,
+      content: String(item.raw_content || item.content || "").slice(0, 2200),
+      score: Number(item.score || 0)
+    });
+  }
+  if (!results.length) throw new Error("Web research found no usable sources for this drama. Please check the YouTube title and try again.");
+  return results.slice(0, 7);
+}
+
 function cleanDramaTitle(title) {
   return String(title || "")
     .replace(/\s*\|\s*.*$/, "")
@@ -326,21 +371,28 @@ async function aiAutofill(video, env, opts = {}) {
     return text;
   };
 
+  let researchSources = [];
   if (opts.forceSearch) {
+    const researchQuery = String(opts.searchQuery || cleanedTitle || video.title).trim();
+    researchSources = await searchDramaWebEvidence(researchQuery, env);
     const context = opts.researchContext
       ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500)
       : "";
+    const evidence = "\nLIVE WEB RESEARCH EVIDENCE (use these sources; do not invent unsupported facts):\n" +
+      JSON.stringify(researchSources.map((x, i) => ({ source: i + 1, title: x.title, url: x.url, content: x.content }))).slice(0, 12500);
     const first = await runCloudflarePass(
-      prompt + context +
-      "\nVERIFICATION PASS 1: Independently identify this drama from the supplied YouTube title and description plus your existing knowledge. Do not guess. Return only the requested JSON."
+      prompt.replace("Use the supplied YouTube information and your existing knowledge only. No web search is available in this workflow.", "Use the supplied YouTube information and the live web research evidence below. Prefer facts corroborated by credible sources; leave uncertain fields blank.") +
+      evidence + context +
+      "\nRESEARCH PASS 1: Identify the exact Pakistani drama and extract only metadata supported by the web evidence. Treat YouTube upload date as unrelated to original release year. Return only the requested JSON."
     );
     const secondPrompt =
-      "Perform a SECOND independent accuracy review of this Pakistani PTV drama metadata. Do not simply repeat the candidate. Reconsider the exact title, Urdu title, year, writer, director, producer, cast, category, and synopsis using only the supplied YouTube information and your existing knowledge. There is no web search in this workflow. If a detail is uncertain or unsupported, return an empty string. Return ONLY JSON with keys title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. The type must be exactly one of: " + categoriesListStr + "." +
+      "Perform a second, critical source-check of this Pakistani drama metadata. Compare every proposed field against the live web evidence. Reject details that belong to another drama with a similar title. Do not infer cast, writer, director, producer, Urdu title, year, or synopsis from memory. If sources conflict or do not support a field, return an empty string. Return ONLY JSON with keys title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. The type must be exactly one of: " + categoriesListStr + "." +
       "\nYouTube title: " + video.title +
-      "\nYouTube description (clue only, not proof):\n" + desc.slice(0, 4000) +
-      "\nFirst-pass candidate (review critically; do not assume correct): " + first.slice(0, 5000) + context;
+      "\nYouTube description (identity clue only):\n" + desc.slice(0, 2500) +
+      evidence + context +
+      "\nFirst-pass candidate (check it against sources; do not assume it is correct): " + first.slice(0, 4000);
     rawContent = await runCloudflarePass(secondPrompt);
-    aiProvider = "cloudflare:@cf/meta/llama-3.1-8b-instruct-fast:verification-x2";
+    aiProvider = "tavily:web-search+cloudflare:@cf/meta/llama-3.1-8b-instruct-fast:two-pass";
   } else {
     rawContent = await runCloudflarePass(prompt);
     aiProvider = "cloudflare:@cf/meta/llama-3.1-8b-instruct-fast";
@@ -404,7 +456,16 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  return { video, searched: false, searchPasses: 0, verificationPasses: opts.forceSearch ? 2 : 1, webSearchUsed: false, provider: aiProvider, fields };
+  return {
+    video,
+    searched: Boolean(opts.forceSearch),
+    searchPasses: opts.forceSearch ? 2 : 0,
+    verificationPasses: opts.forceSearch ? 2 : 1,
+    webSearchUsed: Boolean(opts.forceSearch),
+    provider: aiProvider,
+    researchSources: researchSources.map(({ title, url, score }) => ({ title, url, score })),
+    fields
+  };
 }
 
 // Set by fetch handler so aiAutofill can background-save the cache.
@@ -774,6 +835,7 @@ var index_default = {
           authToken: auth.token,
           forceSearch: true,
           skipCache: true,
+          searchQuery: meta.title || seriesName,
           researchContext: meta.title + "\n" + (meta.description || "")
         });
         const shared = {
@@ -804,7 +866,7 @@ var index_default = {
             const payload = {
               title,
               urdu_title: pick("urdu_title"),
-              year: pick("year") || String(it.publishedAt || "").slice(0, 4),
+              year: pick("year"),
               type,
               series_name: seriesName,
               episode_number: Number(ep) || null,
@@ -812,7 +874,7 @@ var index_default = {
               director: pick("director"),
               produced: pick("produced"),
               cast: pick("cast"),
-              description: (it.description || shared?.description || "").slice(0, 800),
+              description: String(shared?.description || "").slice(0, 800),
               youtube_url: it.url,
               thumbnail_url: it.thumbnail || ""
             };
@@ -835,7 +897,7 @@ var index_default = {
 
         const added = results.filter(r => r.status === "added").length;
         const skipped = results.filter(r => r.status === "skipped").length;
-        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: 0, verificationPasses: 2, webSearchUsed: false, provider: first.provider }, results });
+        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: first.searchPasses, verificationPasses: first.verificationPasses, webSearchUsed: first.webSearchUsed, provider: first.provider, sources: first.researchSources }, results });
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
       }
