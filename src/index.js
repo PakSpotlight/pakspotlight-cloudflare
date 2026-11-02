@@ -4,7 +4,7 @@ var SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
 var YOUTUBE_HANDLE = "@pkspotlight";
 var GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-var DEFAULT_AI_MODEL = "gemini-3.5-flash";
+var DEFAULT_AI_MODEL = "gemini-3.8-flash";
 
 const DEFAULT_CATEGORIES = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
 
@@ -332,8 +332,7 @@ async function aiAutofill(video, env, opts = {}) {
   if (opts.forceSearch) {
     const geminiKey = env.GEMINI_API_KEY;
     if (!geminiKey) throw new Error("Fresh web research requires GEMINI_API_KEY. No cached or ungrounded metadata was used.");
-    const geminiModels = [env.GEMINI_MODEL || DEFAULT_AI_MODEL, "gemini-3-flash-preview", "gemini-2.5-flash"]
-      .filter((m, i, arr) => m && arr.indexOf(m) === i);
+    const geminiModels = [DEFAULT_AI_MODEL];
     let researchError = null;
     for (const geminiModel of geminiModels) {
       try {
@@ -343,8 +342,7 @@ async function aiAutofill(video, env, opts = {}) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ parts: [{ text: passPrompt }] }],
-              tools: [{ google_search: {} }],
-              generationConfig: { temperature: 0.2 }
+              tools: [{ google_search: {} }]
             })
           });
           const data = await response.json().catch(() => ({}));
@@ -383,13 +381,12 @@ async function aiAutofill(video, env, opts = {}) {
     // Normal non-forced fallback for legacy/internal calls.
     const geminiKey = env.GEMINI_API_KEY;
     if (geminiKey) {
-      const geminiModels = [env.GEMINI_MODEL || DEFAULT_AI_MODEL, "gemini-3-flash-preview", "gemini-2.5-flash-lite"]
-        .filter((m, i, arr) => m && arr.indexOf(m) === i);
+      const geminiModels = [DEFAULT_AI_MODEL];
       for (const geminiModel of geminiModels) {
         try {
           const body = {
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+            generationConfig: { responseMimeType: "application/json" }
           };
           const geminiResp = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
             method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
