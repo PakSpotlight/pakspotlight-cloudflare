@@ -294,17 +294,90 @@ async function aiAutofill(video, env, opts = {}) {
   var rawContent = "";
   var aiProvider = "";
 
-  // ── PRIMARY: Cloudflare Workers AI ──
-  if (!opts.forceSearch && env.AI) {
+  // Admin AI Search Details uses conservative evidence rules for every provider.
+  const researchPrompt =
+    "You are researching metadata for Classic TV Pakistan, an archive of classic Pakistani PTV dramas. " +
+    "Identify the programme using your existing knowledge and ONLY the supplied YouTube evidence. " +
+    "Do not claim that you searched the web or verified external sources. " +
+    "Do not invent writers, directors, producers, cast members, or original release years. " +
+    "If a historical fact is not confidently known from the title, description, or your reliable knowledge, return an empty string for that field. " +
+    "Never use the YouTube upload date as the original release year. " +
+    "Clean the programme title by removing episode numbers, channel names, HD, and promotional suffixes. " +
+    "Provide the Urdu title in Urdu script only when confidently known. " +
+    "For an episode, set series_name to the parent drama title and episode_number from the supplied title/description when present. " +
+    "For a standalone long play, leave series_name and episode_number empty. " +
+    "Write a short viewer-friendly description based on known plot details; do not fabricate plot details. " +
+    "The type must be exactly one of: " + categoriesListStr + ". " +
+    "Return ONLY a JSON object with keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description.\n\n" +
+    "YouTube title: " + video.title + "\n" +
+    "YouTube description:\n" + desc.slice(0, 4000) + "\n" +
+    "YouTube upload date (NOT the original release year): " + video.publishedAt +
+    (opts.researchContext ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500) : "") +
+    (sharedCredits ? "\nPreviously identified playlist credits (reuse only if applicable): " + JSON.stringify(sharedCredits) : "");
+
+  const providerPrompt = opts.forceSearch ? researchPrompt : prompt;
+  const metadataKeys = ["title", "urdu_title", "year", "type", "series_name", "episode_number", "writer", "director", "produced", "cast", "description"];
+  const enrichmentKeys = ["urdu_title", "year", "writer", "director", "produced", "cast"];
+  const parseProviderJson = value => {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      if (metadataKeys.some(k => value[k] !== undefined)) return value;
+      return null;
+    }
+    const text = String(value || "").trim();
+    if (!text) return null;
     try {
-      const cfResp = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
+      const parsed = JSON.parse(text);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+    } catch {}
+    const a = text.indexOf("{");
+    const b = text.lastIndexOf("}");
+    if (a >= 0 && b > a) {
+      try {
+        const parsed = JSON.parse(text.slice(a, b + 1));
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+      } catch {}
+    }
+    return null;
+  };
+  let bestOut = null;
+  const providersUsed = [];
+  let lastProviderError = "";
+  const mergeCandidate = candidate => {
+    if (!candidate) return;
+    if (!bestOut) bestOut = {};
+    for (const keyName of metadataKeys) {
+      const existing = bestOut[keyName] === undefined || bestOut[keyName] === null ? "" : String(bestOut[keyName]).trim();
+      const incoming = candidate[keyName] === undefined || candidate[keyName] === null ? "" : String(candidate[keyName]).trim();
+      if (!existing && incoming) bestOut[keyName] = candidate[keyName];
+    }
+  };
+  const missingEnrichmentCount = () => enrichmentKeys.filter(k => !String((bestOut && bestOut[k]) || "").trim()).length;
+  const shouldEnrich = () => opts.forceSearch && (!bestOut || missingEnrichmentCount() >= 2);
+  const recordProvider = (provider, content) => {
+    const parsed = parseProviderJson(content);
+    if (!parsed) return false;
+    mergeCandidate(parsed);
+    if (!providersUsed.includes(provider)) providersUsed.push(provider);
+    return true;
+  };
+
+  // Bound each provider's wait so a stalled endpoint cannot leave Admin Studio searching indefinitely.
+  const withProviderTimeout = (promise, ms, providerName) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(providerName + " timed out after " + Math.round(ms / 1000) + " seconds.")), ms))
+  ]);
+
+  // 1) Cloudflare Workers AI is always tried first, including forced AI Search Details.
+  if (env.AI) {
+    try {
+      const cfResp = await withProviderTimeout(env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
         messages: [
-          { role: "system", content: "Return ONLY valid JSON with ALL keys filled, best effort. Never add explanations." },
-          { role: "user", content: prompt }
+          { role: "system", content: "Return ONLY a valid JSON object using the requested keys. Do not add explanations. For historical facts, leave uncertain values blank." },
+          { role: "user", content: providerPrompt }
         ],
         temperature: 0.2,
         max_tokens: 1024
-      });
+      }), 12000, "Cloudflare AI");
       const candidates = [
         cfResp?.result?.response,
         cfResp?.response,
@@ -317,95 +390,121 @@ async function aiAutofill(video, env, opts = {}) {
       let content = candidates.find(value => typeof value === "string" && value.trim());
       if (content === undefined) {
         const structured = candidates.find(value => value && typeof value === "object");
-        if (structured !== undefined) content = JSON.stringify(structured);
+        if (structured !== undefined) content = structured;
       }
-      rawContent = typeof content === "string" ? content.trim() : "";
-      if (rawContent) aiProvider = "cloudflare";
+      recordProvider("cloudflare", content);
     } catch (cfErr) {
-      console.warn("Cloudflare AI failed, falling back to Gemini:", cfErr?.message || cfErr);
+      lastProviderError = cfErr?.message || String(cfErr);
+      console.warn("Cloudflare AI failed; trying the next free provider:", lastProviderError);
     }
   }
 
-  // Fresh research: two separate Google Search-grounded Gemini passes.
-  // Forced research never falls back to ungrounded model output.
-  var groundingQueries = [];
-  if (opts.forceSearch) {
-    const geminiKey = env.GEMINI_API_KEY;
-    if (!geminiKey) throw new Error("Fresh web research requires GEMINI_API_KEY. No cached or ungrounded metadata was used.");
-    const geminiModels = [DEFAULT_AI_MODEL];
-    let researchError = null;
-    for (const geminiModel of geminiModels) {
-      try {
-        const runGroundedPass = async (passPrompt) => {
-          const response = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
+  // 2) Gemini free inference. Retry only transient overload/rate-limit errors.
+  if (env.GEMINI_API_KEY && (!bestOut || shouldEnrich())) {
+    try {
+      const geminiModel = DEFAULT_AI_MODEL;
+      let geminiContent = "";
+      let geminiError = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const response = await withProviderTimeout(fetch(GEMINI_API_URL + "/" + geminiModel + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: passPrompt }] }],
-              tools: [{ google_search: {} }]
+              contents: [{ parts: [{ text: providerPrompt }] }],
+              generationConfig: { responseMimeType: "application/json" }
             })
-          });
+          }), 15000, "Gemini");
           const data = await response.json().catch(() => ({}));
-          if (!response.ok) throw new Error(data.error?.message || `Gemini search failed (${response.status}).`);
-          const candidate = data.candidates?.[0];
-          const text = (candidate?.content?.parts || []).map(p => p.text || "").join("\n").trim();
-          const metadata = candidate?.groundingMetadata || {};
-          const queries = metadata.webSearchQueries || [];
-          const chunks = metadata.groundingChunks || [];
-          if (!text || (!queries.length && !chunks.length)) {
-            throw new Error("Google Search did not return grounded sources. Please retry; no unverified details were accepted.");
+          if (!response.ok) {
+            const error = new Error(data.error?.message || ("Gemini request failed (" + response.status + ")."));
+            error.status = response.status;
+            throw error;
           }
-          return { text, queries };
-        };
-        const context = opts.researchContext ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500) : "";
-        const first = await runGroundedPass(
-          prompt + context +
-          "\nRESEARCH PASS 1: Use Google Search now. Search the exact drama title and identify reliable Pakistani TV/PTV archive sources. Do not treat the YouTube upload date as the original release year. Return only the requested JSON."
-        );
-        const secondPrompt =
-          "Independently verify this Pakistani PTV drama metadata using a NEW Google Search research pass. Use different search wording and seek corroboration from sources independent of the first pass. Do not blindly copy the candidate. Correct unsupported claims; if a credit, year, or Urdu title cannot be corroborated, return an empty string for that field. Return ONLY JSON with keys title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. The type must be exactly one of: " + categoriesListStr + ". " +
-          "\nYouTube title: " + video.title +
-          "\nCandidate from first research pass: " + first.text.slice(0, 5000) + context;
-        const second = await runGroundedPass(secondPrompt);
-        groundingQueries = [...first.queries, ...second.queries];
-        rawContent = second.text;
-        aiProvider = `gemini:${geminiModel}:google-search-x2`;
-        break;
-      } catch (e) {
-        researchError = e;
-        console.warn(`Grounded Gemini research failed on ${geminiModel}:`, e?.message || e);
-      }
-    }
-    if (!rawContent) throw new Error(researchError?.message || "Two independent Google Search research passes could not be completed.");
-  } else if (!rawContent) {
-    // Normal non-forced fallback for legacy/internal calls.
-    const geminiKey = env.GEMINI_API_KEY;
-    if (geminiKey) {
-      const geminiModels = [DEFAULT_AI_MODEL];
-      for (const geminiModel of geminiModels) {
-        try {
-          const body = {
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
-          };
-          const geminiResp = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
-            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
-          });
-          if (!geminiResp.ok) continue;
-          const geminiData = await geminiResp.json();
-          rawContent = (geminiData.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("\n").trim();
-          if (rawContent) { aiProvider = `gemini:${geminiModel}`; break; }
-        } catch (geminiErr) {
-          console.warn(`Gemini (${geminiModel}) request failed:`, geminiErr?.message || geminiErr);
+          geminiContent = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("\n").trim();
+          if (!geminiContent) throw new Error("Gemini returned an empty response.");
+          break;
+        } catch (e) {
+          geminiError = e;
+          const retryable = [429, 500, 502, 503, 504].includes(Number(e?.status));
+          if (!retryable || attempt === 2) break;
+          await new Promise(resolve => setTimeout(resolve, attempt === 0 ? 700 : 1400));
         }
       }
+      if (geminiContent) recordProvider("gemini:" + geminiModel + ":free", geminiContent);
+      else if (geminiError) throw geminiError;
+    } catch (e) {
+      lastProviderError = e?.message || String(e);
+      console.warn("Gemini metadata request failed; trying the next free provider:", lastProviderError);
     }
   }
 
-  if (!rawContent) {
-    throw new Error("Both Cloudflare AI and Gemini failed. Please try again.");
+  // Shared OpenAI-compatible request helper for Groq and OpenRouter.
+  const callCompatibleProvider = async (url, apiKey, model, providerName, extraHeaders = {}) => {
+    const response = await withProviderTimeout(fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + apiKey,
+        ...extraHeaders
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: "Return ONLY a valid JSON object using the requested keys. Do not add explanations. Do not invent historical facts; leave uncertain values blank." },
+          { role: "user", content: providerPrompt }
+        ],
+        temperature: 0.2,
+        max_tokens: 1200,
+        response_format: { type: "json_object" }
+      })
+    }), 12000, providerName);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error?.message || (providerName + " request failed (" + response.status + ")."));
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error(providerName + " returned an empty response.");
+    return content;
+  };
+
+  // 3) Groq free tier, only if earlier providers failed or left key fields blank.
+  if (env.GROQ_API_KEY && (!bestOut || shouldEnrich())) {
+    try {
+      const content = await callCompatibleProvider(
+        "https://api.groq.com/openai/v1/chat/completions",
+        env.GROQ_API_KEY,
+        "openai/gpt-oss-20b",
+        "Groq"
+      );
+      recordProvider("groq:openai/gpt-oss-20b:free-tier", content);
+    } catch (e) {
+      lastProviderError = e?.message || String(e);
+      console.warn("Groq metadata request failed; trying the next free provider:", lastProviderError);
+    }
   }
 
+  // 4) OpenRouter free-model router. It selects an available free model only.
+  if (env.OPENROUTER_API_KEY && (!bestOut || shouldEnrich())) {
+    try {
+      const content = await callCompatibleProvider(
+        "https://openrouter.ai/api/v1/chat/completions",
+        env.OPENROUTER_API_KEY,
+        "openrouter/free",
+        "OpenRouter",
+        { "HTTP-Referer": "https://classictvpakistan.com", "X-Title": "Classic TV Pakistan" }
+      );
+      recordProvider("openrouter/free", content);
+    } catch (e) {
+      lastProviderError = e?.message || String(e);
+      console.warn("OpenRouter metadata request failed:", lastProviderError);
+    }
+  }
+
+  if (!bestOut) {
+    throw new Error(lastProviderError || "All configured free AI providers failed. Please try again.");
+  }
+  if (!String(bestOut.title || "").trim()) bestOut.title = cleanedTitle || video.title || "";
+  rawContent = JSON.stringify(bestOut);
+  aiProvider = providersUsed.join(" + ") || "unknown";
   // Parse JSON from response
   var out = {};
   try {
@@ -464,7 +563,7 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  return { video, searched: false, searchPasses: 0, verificationPasses: opts.forceSearch ? 2 : 1, webSearchUsed: false, provider: aiProvider, fields };
+  return { video, searched: false, searchPasses: 0, verificationPasses: 1, webSearchUsed: false, provider: aiProvider, fields };
 }
 
 // Set by fetch handler so aiAutofill can background-save the cache.
@@ -895,7 +994,7 @@ var index_default = {
 
         const added = results.filter(r => r.status === "added").length;
         const skipped = results.filter(r => r.status === "skipped").length;
-        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: 0, verificationPasses: 2, webSearchUsed: false, provider: first.provider }, results });
+        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: 0, verificationPasses: 1, webSearchUsed: false, provider: first.provider }, results });
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
       }
