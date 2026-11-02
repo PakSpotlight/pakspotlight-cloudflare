@@ -233,7 +233,7 @@ async function aiAutofill(video, env, opts = {}) {
   const key = cacheKeyForTitle(video.title);
 
   // 1. Free path: same drama filled before -> reuse, no AI cost at all.
-  if (!opts.skipCache && key) {
+  if (!opts.skipCache && !opts.forceSearch && key) {
     try {
       const cache = await getAiCache();
       const hit = cache[key];
@@ -295,7 +295,7 @@ async function aiAutofill(video, env, opts = {}) {
   var aiProvider = "";
 
   // ── PRIMARY: Cloudflare Workers AI ──
-  if (env.AI) {
+  if (!opts.forceSearch && env.AI) {
     try {
       const cfResp = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
         messages: [
@@ -312,15 +312,65 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  // ── FALLBACK: Google Gemini (multi-model so quota/overload on one never kills the flow) ──
-  if (!rawContent) {
+  // Fresh research: two separate Google Search-grounded Gemini passes.
+  // Forced research never falls back to ungrounded model output.
+  var groundingQueries = [];
+  if (opts.forceSearch) {
+    const geminiKey = env.GEMINI_API_KEY;
+    if (!geminiKey) throw new Error("Fresh web research requires GEMINI_API_KEY. No cached or ungrounded metadata was used.");
+    const geminiModels = [env.GEMINI_MODEL || DEFAULT_AI_MODEL, "gemini-3-flash-preview", "gemini-2.5-flash"]
+      .filter((m, i, arr) => m && arr.indexOf(m) === i);
+    let researchError = null;
+    for (const geminiModel of geminiModels) {
+      try {
+        const runGroundedPass = async (passPrompt) => {
+          const response = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: passPrompt }] }],
+              tools: [{ google_search: {} }],
+              generationConfig: { temperature: 0.2 }
+            })
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.error?.message || `Gemini search failed (${response.status}).`);
+          const candidate = data.candidates?.[0];
+          const text = (candidate?.content?.parts || []).map(p => p.text || "").join("\n").trim();
+          const metadata = candidate?.groundingMetadata || {};
+          const queries = metadata.webSearchQueries || [];
+          const chunks = metadata.groundingChunks || [];
+          if (!text || (!queries.length && !chunks.length)) {
+            throw new Error("Google Search did not return grounded sources. Please retry; no unverified details were accepted.");
+          }
+          return { text, queries };
+        };
+        const context = opts.researchContext ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500) : "";
+        const first = await runGroundedPass(
+          prompt + context +
+          "\nRESEARCH PASS 1: Use Google Search now. Search the exact drama title and identify reliable Pakistani TV/PTV archive sources. Do not treat the YouTube upload date as the original release year. Return only the requested JSON."
+        );
+        const secondPrompt =
+          "Independently verify this Pakistani PTV drama metadata using a NEW Google Search research pass. Use different search wording and seek corroboration from sources independent of the first pass. Do not blindly copy the candidate. Correct unsupported claims; if a credit, year, or Urdu title cannot be corroborated, return an empty string for that field. Return ONLY JSON with keys title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. The type must be exactly one of: " + categoriesListStr + ". " +
+          "\nYouTube title: " + video.title +
+          "\nCandidate from first research pass: " + first.text.slice(0, 5000) + context;
+        const second = await runGroundedPass(secondPrompt);
+        groundingQueries = [...first.queries, ...second.queries];
+        rawContent = second.text;
+        aiProvider = `gemini:${geminiModel}:google-search-x2`;
+        break;
+      } catch (e) {
+        researchError = e;
+        console.warn(`Grounded Gemini research failed on ${geminiModel}:`, e?.message || e);
+      }
+    }
+    if (!rawContent) throw new Error(researchError?.message || "Two independent Google Search research passes could not be completed.");
+  } else if (!rawContent) {
+    // Normal non-forced fallback for legacy/internal calls.
     const geminiKey = env.GEMINI_API_KEY;
     if (geminiKey) {
-      const geminiModels = [
-        env.GEMINI_MODEL || DEFAULT_AI_MODEL,
-        "gemini-3-flash-preview",
-        "gemini-2.5-flash-lite"
-      ].filter((m, i, arr) => m && arr.indexOf(m) === i);
+      const geminiModels = [env.GEMINI_MODEL || DEFAULT_AI_MODEL, "gemini-3-flash-preview", "gemini-2.5-flash-lite"]
+        .filter((m, i, arr) => m && arr.indexOf(m) === i);
       for (const geminiModel of geminiModels) {
         try {
           const body = {
@@ -328,18 +378,11 @@ async function aiAutofill(video, env, opts = {}) {
             generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
           };
           const geminiResp = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
           });
-          if (!geminiResp.ok) {
-            var geminiErr = {};
-            try { geminiErr = await geminiResp.json(); } catch {}
-            console.warn(`Gemini (${geminiModel}) error:`, geminiErr.error?.message || geminiResp.status);
-            continue;
-          }
-          var geminiData = await geminiResp.json();
-          rawContent = (geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
+          if (!geminiResp.ok) continue;
+          const geminiData = await geminiResp.json();
+          rawContent = (geminiData.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("\n").trim();
           if (rawContent) { aiProvider = `gemini:${geminiModel}`; break; }
         } catch (geminiErr) {
           console.warn(`Gemini (${geminiModel}) request failed:`, geminiErr?.message || geminiErr);
@@ -382,7 +425,7 @@ async function aiAutofill(video, env, opts = {}) {
   const fields = {
     title: baseTitle || video.title,
     urdu_title: out.urdu_title || "",
-    year: out.year || yearFallback,
+    year: out.year || (opts.forceSearch ? "" : yearFallback),
     type: (allowedCategories.find(c => c.toLowerCase() === String(out.type || "").trim().toLowerCase()) || (allowedCategories.includes(out.type) ? out.type : (allowedCategories[0] || "Long Play"))),
     series_name: out.series_name || (epFallback || /serial|series|ep|episode|part/i.test(video.title) ? baseTitle : ""),
     episode_number: out.episode_number || epFallback,
@@ -410,7 +453,7 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  return { video, searched: false, provider: aiProvider, fields };
+  return { video, searched: Boolean(opts.forceSearch), searchPasses: opts.forceSearch ? 2 : 0, groundingQueries, provider: aiProvider, fields };
 }
 
 // Set by fetch handler so aiAutofill can background-save the cache.
@@ -717,8 +760,9 @@ var index_default = {
         const video = await identifyVideo(body.url, env);
         return json(await aiAutofill(video, env, {
           authToken: auth.token,
-          forceSearch: body.forceSearch === true,
-          skipSearch: body.skipSearch === true
+          forceSearch: true,
+          skipCache: true,
+          skipSearch: false
         }));
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
@@ -766,38 +810,30 @@ var index_default = {
         const type = allowedCategories.find(c => c.toLowerCase() === category.toLowerCase())
           || allowedCategories[0] || "Long Play";
 
-        // Credits the admin reviewed in the preview form win. Anything
-        // left blank falls back to one AI read of the first video.
+        // Always perform fresh two-pass web research for every new playlist,
+        // even when the admin filled every field. Admin-entered values take precedence.
         const given = body.credits && typeof body.credits === "object" ? body.credits : {};
-        const needsAi = !String(given.writer || "").trim()
-          || !String(given.director || "").trim()
-          || !String(given.cast || "").trim()
-          || !String(given.year || "").trim()
-          || !String(given.urdu_title || "").trim();
-
-        // One AI call with search for episode 1 -> shared credits for all.
-        // Skipped entirely when the admin already supplied full credits.
-        let shared = null;
-        if (needsAi) {
-          try {
-            const first = await aiAutofill({
-              id: items[0].id,
-              title: items[0].title,
-              description: items[0].description,
-              publishedAt: items[0].publishedAt,
-              thumbnail: items[0].thumbnail
-            }, env, { authToken: auth.token, forceSearch: true });
-            shared = {
-              writer: first.fields.writer,
-              director: first.fields.director,
-              produced: first.fields.produced,
-              cast: first.fields.cast,
-              year: first.fields.year,
-              urdu_title: first.fields.urdu_title,
-              description: first.fields.description
-            };
-          } catch {}
-        }
+        const first = await aiAutofill({
+          id: items[0].id,
+          title: items[0].title,
+          description: items[0].description,
+          publishedAt: items[0].publishedAt,
+          thumbnail: items[0].thumbnail
+        }, env, {
+          authToken: auth.token,
+          forceSearch: true,
+          skipCache: true,
+          researchContext: meta.title + "\n" + (meta.description || "")
+        });
+        const shared = {
+          writer: first.fields.writer,
+          director: first.fields.director,
+          produced: first.fields.produced,
+          cast: first.fields.cast,
+          year: first.fields.year,
+          urdu_title: first.fields.urdu_title,
+          description: first.fields.description
+        };
 
         const pick = (field) => String(given[field] || "").trim() || shared?.[field] || "";
 
@@ -848,7 +884,7 @@ var index_default = {
 
         const added = results.filter(r => r.status === "added").length;
         const skipped = results.filter(r => r.status === "skipped").length;
-        return json({ success: true, series: seriesName, added, skipped, total: results.length, results });
+        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: 2, provider: first.provider, queries: first.groundingQueries || [] }, results });
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
       }
