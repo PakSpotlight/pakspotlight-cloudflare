@@ -361,17 +361,23 @@ async function aiAutofill(video, env, opts = {}) {
     return true;
   };
 
+  // Bound each provider's wait so a stalled endpoint cannot leave Admin Studio searching indefinitely.
+  const withProviderTimeout = (promise, ms, providerName) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(providerName + " timed out after " + Math.round(ms / 1000) + " seconds.")), ms))
+  ]);
+
   // 1) Cloudflare Workers AI is always tried first, including forced AI Search Details.
   if (env.AI) {
     try {
-      const cfResp = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
+      const cfResp = await withProviderTimeout(env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
         messages: [
           { role: "system", content: "Return ONLY a valid JSON object using the requested keys. Do not add explanations. For historical facts, leave uncertain values blank." },
           { role: "user", content: providerPrompt }
         ],
         temperature: 0.2,
         max_tokens: 1024
-      });
+      }), 12000, "Cloudflare AI");
       const candidates = [
         cfResp?.result?.response,
         cfResp?.response,
@@ -401,14 +407,14 @@ async function aiAutofill(video, env, opts = {}) {
       let geminiError = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const response = await fetch(GEMINI_API_URL + "/" + geminiModel + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
+          const response = await withProviderTimeout(fetch(GEMINI_API_URL + "/" + geminiModel + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ parts: [{ text: providerPrompt }] }],
               generationConfig: { responseMimeType: "application/json" }
             })
-          });
+          }), 15000, "Gemini");
           const data = await response.json().catch(() => ({}));
           if (!response.ok) {
             const error = new Error(data.error?.message || ("Gemini request failed (" + response.status + ")."));
@@ -435,7 +441,7 @@ async function aiAutofill(video, env, opts = {}) {
 
   // Shared OpenAI-compatible request helper for Groq and OpenRouter.
   const callCompatibleProvider = async (url, apiKey, model, providerName, extraHeaders = {}) => {
-    const response = await fetch(url, {
+    const response = await withProviderTimeout(fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -452,7 +458,7 @@ async function aiAutofill(video, env, opts = {}) {
         max_tokens: 1200,
         response_format: { type: "json_object" }
       })
-    });
+    }), 12000, providerName);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error?.message || (providerName + " request failed (" + response.status + ")."));
     const content = data.choices?.[0]?.message?.content;
