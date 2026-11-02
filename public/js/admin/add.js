@@ -99,12 +99,6 @@ function renderAddPane() {
                 <textarea id="f_description" placeholder="What is this drama about?"></textarea>
               </div>
               <div class="field full">
-                <label for="f_aiCorrections">AI got something wrong? Tell it what to correct</label>
-                <textarea id="f_aiCorrections" rows="3" placeholder="Example: The writer is Haseena Moin, not the name shown. The drama originally aired in 1985. Leave cast blank if you cannot confirm it."></textarea>
-                <button class="btn btn-quiet btn-sm" type="button" id="retryAiBtn" onclick="retryAiAutofill()">Try again with my correction</button>
-                <div class="status" id="aiRetryStatus"></div>
-              </div>
-              <div class="field full">
                 <label for="f_customFile">Artwork</label>
                 <div class="detected" id="thumbStaging" style="display:none">
                   <img id="thumbStagingImg" src="" alt="">
@@ -179,13 +173,8 @@ function renderAddPane() {
               <input id="plCast" placeholder="Actors, comma separated">
             </div>
           </div>
-          <div class="field full" style="margin-top:12px">
-            <label for="plAiCorrections">AI got something wrong? Tell it what to correct</label>
-            <textarea id="plAiCorrections" rows="3" placeholder="Example: Writer is Haseena Moin. Director is Sahira Kazmi. Do not guess the year."></textarea>
-            <button class="btn btn-quiet btn-sm" type="button" id="plRetryAiBtn" onclick="retryPlaylistAiDetails()">Try again with my correction</button>
-          </div>
           <p class="hint" style="font-size:11.5px; color:var(--dim); margin-top:10px">
-            AI details are suggestions, not verified facts. Check them before importing. Videos already in the vault are skipped.
+            The AI read the first video for these details — check them, then import. Videos already in the vault are skipped.
           </p>
 
           <div class="sheet-foot">
@@ -310,7 +299,7 @@ async function handleAddFetch() {
     const res = await fetch("/api/ai-autofill", {
       method: "POST",
       headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
-      body: JSON.stringify({ url, skipCache: true })
+      body: JSON.stringify({ url })
     });
     const data = await res.json();
     if (!res.ok || data.error) throw new Error(data.error || "AI auto-fill failed.");
@@ -353,7 +342,7 @@ async function handleAddFetch() {
 
     $("videoFlow").style.display = "block";
     status.className = "status show ok";
-    status.textContent = "AI suggestions loaded. Credits and year are not independently verified — review before saving.";
+    status.textContent = data.cached ? "Filled from a cached record of this drama — no AI lookup needed." : "AI filled the details. Review and save.";
   } catch (err) {
     status.className = "status show err";
     status.textContent = err.message;
@@ -376,7 +365,7 @@ async function autoFillPlaylistDetails(firstItem) {
     const res = await fetch("/api/ai-autofill", {
       method: "POST",
       headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") },
-      body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${firstItem.id}`, skipCache: true })
+      body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${firstItem.id}` })
     });
     const data = await res.json();
     if (!res.ok || data.error) throw new Error(data.error || "AI lookup failed.");
@@ -399,7 +388,9 @@ async function autoFillPlaylistDetails(firstItem) {
 
     if (status) {
       status.className = "status show ok";
-      status.textContent = `Found ${plItems.length} videos. AI suggestions loaded — review credits and year before importing.`;
+      status.textContent = data.cached
+        ? `Found ${plItems.length} videos. Series details filled from a saved record — review and import.`
+        : `Found ${plItems.length} videos. AI filled the shared series details — review and import.`;
     }
   } catch (err) {
     // Non-blocking: the admin can still fill details by hand.
@@ -408,43 +399,6 @@ async function autoFillPlaylistDetails(firstItem) {
       status.textContent = `Found ${plItems.length} videos. AI details unavailable (${err.message}) — fill them in by hand, then import.`;
     }
   }
-}
-
-async function retryAiAutofill() {
-  const url = $("addUrlInput").value.trim(), corrections = $("f_aiCorrections").value.trim();
-  const btn = $("retryAiBtn"), status = $("aiRetryStatus");
-  if (!url || !corrections) { status.className = "status show err"; status.textContent = !url ? "Paste a YouTube video link first." : "Tell the AI what is incorrect or what it should check."; return; }
-  btn.disabled = true; status.className = "status show info"; status.textContent = "Trying again with your correction…";
-  try {
-    const res = await fetch("/api/ai-autofill", { method: "POST", headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") }, body: JSON.stringify({ url, skipCache: true, corrections }) });
-    const data = await res.json(); if (!res.ok || data.error) throw new Error(data.error || "AI retry failed.");
-    const f = data.fields || {};
-    $("f_title").value = f.title || ""; $("f_urdu").value = f.urdu_title || ""; $("f_year").value = f.year || "";
-    $("f_writer").value = f.writer || ""; $("f_director").value = f.director || ""; $("f_produced").value = f.produced || "";
-    $("f_cast").value = f.cast || ""; $("f_description").value = f.description || "";
-    if (f.type) { const m = configuredCategories.find(c => c.toLowerCase() === f.type.toLowerCase()); if (m) $("f_type").value = m; }
-    const ep = !!(f.episode_number && f.series_name); $("f_series").value = ep ? f.series_name : ""; $("f_episode").value = ep ? f.episode_number : "";
-    setAddMode(ep ? "episode" : "single"); status.className = "status show ok"; status.textContent = "Fresh AI suggestion returned using your correction. Verify it before saving.";
-  } catch (err) { status.className = "status show err"; status.textContent = err.message; }
-  finally { btn.disabled = false; }
-}
-
-async function retryPlaylistAiDetails() {
-  const first = plItems[0], corrections = $("plAiCorrections").value.trim(), btn = $("plRetryAiBtn"), status = $("addFetchStatus");
-  if (!first || !first.id) return;
-  if (!corrections) { status.className = "status show err"; status.textContent = "Tell the AI what is incorrect or what it should check."; return; }
-  btn.disabled = true; status.className = "status show info"; status.textContent = "Trying the playlist details again with your correction…";
-  try {
-    const res = await fetch("/api/ai-autofill", { method: "POST", headers: { "content-type": "application/json", "authorization": "Bearer " + (authSession ? authSession.access_token : "") }, body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${first.id}`, skipCache: true, corrections }) });
-    const data = await res.json(); if (!res.ok || data.error) throw new Error(data.error || "AI retry failed.");
-    const f = data.fields || {};
-    $("plUrdu").value = f.urdu_title || ""; $("plYear").value = f.year || ""; $("plWriter").value = f.writer || "";
-    $("plDirector").value = f.director || ""; $("plCast").value = f.cast || "";
-    if (f.type) { const m = configuredCategories.find(c => c.toLowerCase() === String(f.type).toLowerCase()); if (m) $("plCategory").value = m; }
-    if (!$("plSeriesName").dataset.touched && f.series_name) $("plSeriesName").value = f.series_name;
-    status.className = "status show ok"; status.textContent = "Fresh AI suggestion returned using your correction. Verify shared details before importing.";
-  } catch (err) { status.className = "status show err"; status.textContent = err.message; }
-  finally { btn.disabled = false; }
 }
 
 function updatePlCount() {
@@ -583,7 +537,6 @@ async function runPlaylistImport() {
         seriesName,
         category: $("plCategory").value,
         videoIds: selectedIds,
-        aiCorrections: $("plAiCorrections").value.trim(),
         credits: {
           urdu_title: $("plUrdu").value.trim(),
           year: $("plYear").value.trim(),
