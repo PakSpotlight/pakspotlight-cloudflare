@@ -276,16 +276,16 @@ async function aiAutofill(video, env, opts = {}) {
   const epHint = parseEpisodeNumber(video.title, video.description);
 
   var prompt =
-    "You are researching classic Pakistani PTV drama metadata for an archive. Accuracy is more important than completeness.\\n" +
-    "Use only details supported by the supplied YouTube information and the fresh web research requested below. Do not guess credits, Urdu titles, release years, production companies, cast, or plot details. If a field cannot be verified, return an empty string.\\n" +
-    (sharedCredits ? "The playlist context may help identify the series, but do not invent or change its credits.\\n" : "") +
-    "Clean the title by removing episode/part numbers and channel suffixes. Do not use the YouTube upload date as the original drama release year. Do not use the upload description as a substitute for a verified synopsis.\\n" +
+    "You are researching classic Pakistani PTV drama metadata for an archive. Accuracy is more important than completeness.\n" +
+    "Use only details supported by the supplied YouTube information and the fresh web research requested below. Do not guess credits, Urdu titles, release years, production companies, cast, or plot details. If a field cannot be verified, return an empty string.\n" +
+    (sharedCredits ? "The playlist context may help identify the series, but do not invent or change its credits.\n" : "") +
+    "Clean the title by removing episode/part numbers and channel suffixes. Do not use the YouTube upload date as the original drama release year. Do not use the upload description as a substitute for a verified synopsis.\n" +
     "Episode hint: \"" + (epHint || "none seen") + "\". Series name: the actual serial name, or empty for a standalone long play. " +
-    "Category must be exactly one of: " + categoriesListStr + ".\\n" +
-    (sharedCredits ? "Previously supplied playlist credits for context: " + JSON.stringify(sharedCredits) + "\\n" : "") +
-    "Return ONLY a JSON object with keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. Use empty strings for unsupported fields.\\n\\n" +
-    "YouTube title: " + video.title + "\\n" +
-    "YouTube description (clue only, not proof):\\n" + desc.slice(0, 4000) + "\\n" +
+    "Category must be exactly one of: " + categoriesListStr + ".\n" +
+    (sharedCredits ? "Previously supplied playlist credits for context: " + JSON.stringify(sharedCredits) + "\n" : "") +
+    "Return ONLY a JSON object with keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. Use empty strings for unsupported fields.\n\n" +
+    "YouTube title: " + video.title + "\n" +
+    "YouTube description (clue only, not proof):\n" + desc.slice(0, 4000) + "\n" +
     "YouTube upload date (not the original release year): " + video.publishedAt;
 
   var rawContent = "";
@@ -346,7 +346,7 @@ async function aiAutofill(video, env, opts = {}) {
       const text = String(data.output_text || outputParts
         .filter(part => part && typeof part.text === "string")
         .map(part => part.text)
-        .join("\\n")).trim();
+        .join("\n")).trim();
 
       if (!searchSteps.length || !queries.length) {
         throw new Error("Google Search did not run in this verification pass. Please retry; no unverified details were accepted.");
@@ -356,16 +356,16 @@ async function aiAutofill(video, env, opts = {}) {
     };
 
     const context = opts.researchContext
-      ? "\\nPlaylist context: " + String(opts.researchContext).slice(0, 1500)
+      ? "\nPlaylist context: " + String(opts.researchContext).slice(0, 1500)
       : "";
     const first = await runGroundedPass(
       prompt + context +
-      "\\nRESEARCH PASS 1: Search Google for the exact drama/serial title, Urdu title variants, and reliable Pakistani PTV/archive sources. Verify each field independently. Do not treat upload date as release year. Return only the requested JSON."
+      "\nRESEARCH PASS 1: Search Google for the exact drama/serial title, Urdu title variants, and reliable Pakistani PTV/archive sources. Verify each field independently. Do not treat upload date as release year. Return only the requested JSON."
     );
     const secondPrompt =
       "Perform a SECOND, independent Google Search verification for this Pakistani PTV drama. This is a new research pass, not a rewrite of the first answer. Search using different wording and look for corroboration from sources independent of the first pass. Re-check the year, Urdu title, writer, director, producer, cast, and synopsis. Do not blindly copy candidate details. If a field cannot be supported by reliable evidence, return an empty string for that field. Return ONLY JSON with keys title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description. The type must be exactly one of: " + categoriesListStr + "." +
-      "\\nYouTube title: " + video.title +
-      "\\nFirst-pass candidate (verify, do not assume correct): " + first.text.slice(0, 5000) + context;
+      "\nYouTube title: " + video.title +
+      "\nFirst-pass candidate (verify, do not assume correct): " + first.text.slice(0, 5000) + context;
     const second = await runGroundedPass(secondPrompt);
     groundingQueries = [...first.queries, ...second.queries];
     rawContent = second.text;
@@ -395,7 +395,7 @@ async function aiAutofill(video, env, opts = {}) {
       rawContent = String(data.output_text || outputParts
         .filter(part => part && typeof part.text === "string")
         .map(part => part.text)
-        .join("\\n")).trim();
+        .join("\n")).trim();
       if (rawContent) aiProvider = "gemini:" + DEFAULT_AI_MODEL + ":interactions";
     }
   }
