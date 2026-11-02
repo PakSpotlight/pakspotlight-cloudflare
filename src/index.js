@@ -893,7 +893,7 @@ var index_default = {
 
         const added = results.filter(r => r.status === "added").length;
         const skipped = results.filter(r => r.status === "skipped").length;
-        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: 0, verificationPasses: 2, webSearchUsed: false, provider: first.provider }, results });
+        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: 0, verificationPasses: 1, webSearchUsed: false, provider: first.provider }, results });
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
       }
