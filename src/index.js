@@ -235,7 +235,7 @@ async function aiAutofill(video, env, opts = {}) {
     try {
       const cache = await getAiCache();
       const hit = cache[key];
-      if (hit && hit.title) {
+      if (hit && hit.title && hit.urdu_title) {
         const ep = parseEpisodeNumber(video.title, video.description);
         return {
           video,
@@ -276,11 +276,11 @@ async function aiAutofill(video, env, opts = {}) {
   var prompt = [
     "You are filling metadata for Classic TV Pakistan, an archive of classic Pakistani television programmes.",
     "Use ONLY the YouTube title, YouTube description, and explicitly supplied admin credits below. This workflow has no web-search capability.",
-    "Never claim to have searched the web. Never invent historical facts, credits, release years, cast members, Urdu titles, or production details.",
-    "If a fact is not explicitly supported by the supplied source text, return an empty string for that field.",
+    "Never claim to have searched the web. Never invent historical facts, credits, release years, cast members, or production details.",
+    "For urdu_title, if no Urdu title is supplied, write a natural Urdu-script transliteration of the English programme title. Preserve names and meaning; do not leave it blank merely because the description has no Urdu text. This is a transliteration, not a claim that it is the official Urdu title.",
+    "For year and credits (writer, director, producer, cast), use only explicit evidence in the supplied source text or admin-provided credits; otherwise return an empty string.",
     "Clean the title by removing episode/part numbers and channel suffixes such as PTV, HD, or Classic.",
     "Do not use the YouTube upload date as the original broadcast/release year.",
-    "Copy an Urdu title only if it appears in the supplied YouTube description; otherwise leave urdu_title empty.",
     "Episode: " + (epHint || "none seen") + ". Series name: identify only when clear from the title/description; otherwise leave empty.",
     "Description: write 2-3 concise sentences using only information in the supplied source text.",
     "Category must be exactly one of: " + categoriesListStr + ". If uncertain, return an empty string.",
@@ -305,7 +305,7 @@ async function aiAutofill(video, env, opts = {}) {
   try {
     const cfResp = await env.AI.run("@cf/zai-org/glm-4.7-flash", {
       messages: [
-        { role: "system", content: "Return ONLY one valid JSON object. Use only the supplied source text. Leave unsupported facts blank. Do not claim to have searched the web." },
+        { role: "system", content: "Return ONLY one valid JSON object. Use only supplied source text for historical facts and credits. Always provide an Urdu-script transliteration of the programme title when an Urdu title is not supplied. Do not claim to have searched the web." },
         { role: "user", content: prompt }
       ],
       temperature: 0.1,
@@ -358,12 +358,11 @@ async function aiAutofill(video, env, opts = {}) {
 
   const epFallback = parseEpisodeNumber(video.title, video.description);
   const sourceYears = desc.match(/\b(?:19|20)\d{2}\b/g) || [];
-  const sourceHasUrdu = /[\u0600-\u06FF]/.test(desc);
   const baseTitle = cleanDramaTitle(out.title || video.title);
 
   const fields = {
     title: baseTitle || video.title,
-    urdu_title: sourceHasUrdu ? (out.urdu_title || "") : "",
+    urdu_title: /[\u0600-\u06FF]/.test(String(out.urdu_title || "")) ? String(out.urdu_title).trim() : "",
     year: sourceYears.includes(String(out.year || "")) ? String(out.year) : "",
     type: (allowedCategories.find(c => c.toLowerCase() === String(out.type || "").trim().toLowerCase()) || (allowedCategories.includes(out.type) ? out.type : "")),
     series_name: out.series_name || (epFallback || /serial|series|ep|episode|part/i.test(video.title) ? baseTitle : ""),
