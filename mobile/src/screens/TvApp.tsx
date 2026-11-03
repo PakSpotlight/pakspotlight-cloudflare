@@ -128,7 +128,7 @@ function useTvItem(
   const onFocus = () => {
     tvLastFocusedKey = focusKey;
     opts?.onFocus?.();
-    tvScrollIntoView(ref, opts?.scrollIds, opts?.itemIndex);
+    // Avoid measuring and animating multiple scroll containers on every D-pad move.
   };
   const onBlur = () => {
     opts?.onBlur?.();
@@ -268,7 +268,7 @@ export function TvApp() {
             <Text style={styles.brandText}>CLASSIC TV<Text style={styles.brandPakistan}> PAKISTAN</Text></Text>
           </View>
           <View style={styles.navItems}>
-            <NavButton label="Home" icon="home-outline" active={nav === "home" && page !== "details"} autoFocus onPress={() => openNav("home")} />
+            <NavButton label="Home" icon="home-outline" active={nav === "home" && page !== "details"} onPress={() => openNav("home")} />
             <NavButton label="Browse" icon="grid-outline" active={nav === "browse" || page === "details"} onPress={() => openNav("browse")} showKb={showKb} />
             <NavButton label="My List" icon="bookmark-outline" active={nav === "library"} onPress={() => openNav("library")} showKb={showKb} />
             <NavButton label="Info" icon="information-circle-outline" active={page === "info"} onPress={() => openNav("info")} showKb={showKb} />
@@ -359,7 +359,7 @@ export function TvApp() {
                 contentContainerStyle={styles.chips}
                 ref={(r) => { if (r) tvScrollables.set("chips", { ref: r, kind: "scroll", axis: "x" }); }}
               >
-                <FilterButton label="All" active={!category} autoFocus onPress={() => setCategory(null)} showKb={showKb} />
+                <FilterButton label="All" active={!category} onPress={() => setCategory(null)} showKb={showKb} />
                 {categories.map((cat) => <FilterButton key={cat} label={cat} active={category === cat} onPress={() => setCategory(category === cat ? null : cat)} showKb={showKb} />)}
               </ScrollView>
               <FlatList
@@ -607,7 +607,7 @@ function TvPress({
       {...tvFocusProps(autoFocus && !showKb)}
       onLongPress={undefined}
       onPress={onPress}
-      onFocus={() => { tvLastFocusedKey = focusKey; setFocused(true); onFocusCb?.(); tvScrollIntoView(ownRef, scrollIds); }}
+      onFocus={() => { tvLastFocusedKey = focusKey; setFocused(true); onFocusCb?.(); }}
       onBlur={() => { setFocused(false); onBlurCb?.(); }}
       accessibilityRole="button"
       style={[typeof style === "function" ? null : style, focused ? (focusedStyle ?? styles.focusOutlineOn) : styles.focusOutline]}
@@ -649,8 +649,8 @@ function ActionButton({ label, icon, primary = false, onPress, autoFocus, showKb
       focusable
       disabled={showKb}
       {...tvFocusProps(!!autoFocus && !showKb)}
-      onFocus={tv.onFocus}
-      onBlur={() => tv.onBlur()}
+      onFocus={() => { tv.onFocus(); setFocused(true); }}
+      onBlur={() => { tv.onBlur(); setFocused(false); }}
       onPress={onPress}
       style={({ pressed }) => [styles.actionButton, primary && styles.actionPrimary, focused && styles.focused, pressed && styles.pressed]}
     >
