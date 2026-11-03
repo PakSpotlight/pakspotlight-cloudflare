@@ -342,7 +342,9 @@ async function handleAddFetch() {
 
     $("videoFlow").style.display = "block";
     status.className = "status show ok";
-    status.textContent = data.cached ? "Filled from a cached record of this drama — no AI lookup needed." : "AI filled the details. Review and save.";
+    status.textContent = data.cached
+      ? "Filled from a cached record of this drama — no AI lookup needed."
+      : "AI filled the details (" + (data.provider || "unknown provider") + (data.searched ? ", web search" : "") + "). Review and save.";
   } catch (err) {
     status.className = "status show err";
     status.textContent = err.message;

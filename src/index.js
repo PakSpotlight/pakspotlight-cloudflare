@@ -281,16 +281,17 @@ async function aiAutofill(video, env, opts = {}) {
   const epHint = parseEpisodeNumber(video.title, video.description);
 
   var prompt =
-    "Classic TV Pakistan = archive of classic Pakistani PTV dramas.\n" +
-    "Fill EVERY field below with your best answer from the YouTube info"
-    + (useTools ? " + one web search" : "")
-    + (sharedCredits ? ". Credits already known, reuse them" : "")
-    + ". Never leave a field empty when you can infer it. Clean the title (remove EPISODE/PART numbers, | PTV, HD, etc). " +
-    "Urdu title: always give the Urdu script title (you know these classic dramas). " +
-    "Year: use the drama's real release year; if unsure use " + (yearHint || "the upload year") + ". " +
-    "Episode: \"" + (epHint || "none seen") + "\". Series name: the drama serial name (same as title for serials, empty for standalone long plays). " +
-    "Description: 2-3 warm sentences for viewers, always filled. " +
-    "Category: exactly one of: " + categoriesListStr + ".\n" +
+    "Classic TV Pakistan = archive of classic Pakistani PTV dramas (broadcast era 1960s-2005).\n" +
+    "Fill every field from the YouTube info" + (useTools ? " + one web search" : "") + (sharedCredits ? ". Credits already known, reuse them" : "") + ".\n" +
+    "ACCURACY RULES:\n" +
+    "- The web search may return similarly named productions (later remakes, Indian serials, stage plays). Only accept facts that clearly belong to THIS classic Pakistani PTV production.\n" +
+    "- writer, director, cast, year: fill ONLY if confirmed by the search results or supplied text. If you cannot confirm, return an empty string for that field - a blank field is correct, a guessed one is a bug.\n" +
+    "- urdu_title: always give the Urdu script title when you know this classic drama; otherwise empty.\n" +
+    "- Year: the original broadcast year of the drama, not the YouTube upload year (" + (yearHint || "") + ").\n" +
+    "- Title: clean it (remove EPISODE/PART numbers, | PTV, HD etc).\n" +
+    "- Episode: \"" + (epHint || "none seen") + "\". Series name: the drama serial name (same as title for serials, empty for standalone long plays).\n" +
+    "- Description: 2-3 warm sentences for viewers, always filled (you may summarise the confirmed info).\n" +
+    "- Category: exactly one of " + categoriesListStr + ".\n" +
     (sharedCredits ? "Known credits: " + JSON.stringify(sharedCredits) + "\n" : "") +
     "Return ONLY a JSON object, no markdown. Keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description.\n\n" +
     "YouTube title: " + video.title + "\n" +
@@ -317,7 +318,7 @@ async function aiAutofill(video, env, opts = {}) {
         temperature: 0.2
       };
       if (useTools) {
-        requestBody.tools = [{ type: "openrouter:web_search", max_results: 3, max_total_results: 3 }];
+        requestBody.tools = [{ type: "openrouter:web_search", max_results: 5, max_total_results: 5 }];
       }
 
       const callOpenRouter = body => fetch(OPENROUTER_API_URL, {
