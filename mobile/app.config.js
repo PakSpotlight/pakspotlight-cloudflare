@@ -4,18 +4,37 @@ module.exports = ({ config }) => {
   const plugins = [...(config.plugins || [])];
 
   if (isTv) {
+    // Android TV uses API 24+; keep the phone app's API 23 setting unchanged.
+    const buildProperties = plugins.findIndex(
+      (plugin) => Array.isArray(plugin) && plugin[0] === "expo-build-properties"
+    );
+    if (buildProperties >= 0) {
+      const [name, options = {}] = plugins[buildProperties];
+      plugins[buildProperties] = [
+        name,
+        {
+          ...options,
+          android: {
+            ...(options.android || {}),
+            minSdkVersion: 24,
+            compileSdkVersion: 36,
+            targetSdkVersion: 34,
+          },
+        },
+      ];
+    }
     plugins.push("./plugins/withAndroidTv");
   }
 
   return {
     ...config,
     name: isTv ? "Classic TV Pakistan TV" : config.name,
-    version: isTv ? "1.0.5" : config.version,
+    version: isTv ? "1.0.7" : config.version,
     orientation: isTv ? "landscape" : config.orientation,
     android: {
       ...config.android,
       package: isTv ? "com.classictvpakistan.tv" : config.android.package,
-      versionCode: isTv ? 6 : config.android.versionCode,
+      versionCode: isTv ? 8 : config.android.versionCode,
     },
     extra: {
       ...(config.extra || {}),
