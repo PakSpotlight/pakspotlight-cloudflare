@@ -1,9 +1,12 @@
 name: Android TV APK
 
-# Manual-only build for the separate TV package. This workflow never publishes a release,
+# Manual build plus automatic validation on the TV fix branch. This workflow never publishes a release,
 # never updates public/app/latest.json, and never deploys the website.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - fix/android-tv-package-id
 
 permissions:
   contents: read
@@ -49,6 +52,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Type-check the app
+        run: npm run typecheck
+
       - name: Read TV app version
         id: version
         run: |
@@ -82,10 +88,20 @@ jobs:
         working-directory: mobile/android
         run: ./gradlew assembleRelease --no-daemon
 
+      - name: Name the TV APK clearly
+        working-directory: mobile
+        run: |
+          APK="android/app/build/outputs/apk/release/app-release.apk"
+          if [ ! -f "$APK" ]; then
+            APK=$(find android/app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)
+          fi
+          test -n "$APK" && test -f "$APK"
+          cp "$APK" "android/app/build/outputs/apk/release/ClassicTVPakistanTV-${{ steps.version.outputs.name }}.apk"
+
       - name: Upload TV APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: classic-tv-pakistan-tv-${{ steps.version.outputs.name }}
-          path: mobile/android/app/build/outputs/apk/release/*.apk
+          name: ClassicTVPakistanTV-${{ steps.version.outputs.name }}
+          path: mobile/android/app/build/outputs/apk/release/ClassicTVPakistanTV-*.apk
           if-no-files-found: error
           retention-days: 14
