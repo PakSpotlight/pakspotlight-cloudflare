@@ -256,7 +256,7 @@ async function researchDramaWithGroq(video, env, playlistContext = "") {
   if (!response.ok) throw new Error(data.error?.message || "Groq browser search failed (" + response.status + ").");
   const research = String(data.choices?.[0]?.message?.content || "").trim();
   if (!research) throw new Error("Groq browser search returned no research notes. No metadata was guessed.");
-  const urls = [...new Set(research.match(/https?:\\/\\/[^\\s)\\]}>]+/g) || [])].slice(0, 12);
+  const urls = [...new Set(research.match(/https?:\/\/[^\s)\]}>]+/g) || [])].slice(0, 12);
   return { research, urls };
 }
 
@@ -398,7 +398,7 @@ async function aiAutofill(video, env, opts = {}) {
   }
 
   const epFallback = parseEpisodeNumber(video.title, video.description);
-  const sourceYears = desc.match(/\b(?:19|20)\d{2}\b/g) || [];
+  const sourceYears = (desc + " " + fullResearchContext).match(/\b(?:19|20)\d{2}\b/g) || [];
   const baseTitle = cleanDramaTitle(out.title || video.title);
 
   const fields = {
