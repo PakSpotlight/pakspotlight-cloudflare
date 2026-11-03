@@ -1,15 +1,16 @@
 name: Android TV APK
 
-# Manual build plus automatic validation on the TV fix branch. This workflow never publishes a release,
-# never updates public/app/latest.json, and never deploys the website.
+# Manual build from any branch (usually main). Publishes a signed TV APK as the
+# tv-v<version> GitHub release when publish=true and the signing secrets exist.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - fix/android-tv-package-id
-
+    inputs:
+      publish:
+        description: "Publish a GitHub release for the TV APK"
+        type: boolean
+        default: true
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-tv:
@@ -105,3 +106,19 @@ jobs:
           path: mobile/android/app/build/outputs/apk/release/ClassicTVPakistanTV-*.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish tv-v${{ steps.version.outputs.name }} release
+        if: inputs.publish && env.KEYSTORE_B64 != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APK_NAME: ClassicTVPakistanTV-${{ steps.version.outputs.name }}
+        run: |
+          set -euo pipefail
+          APK="mobile/android/app/build/outputs/apk/release/${APK_NAME}.apk"
+          test -f "$APK"
+          SHA=$(sha256sum "$APK" | awk '{print $1}')
+          gh release delete "tv-v${{ steps.version.outputs.name }}" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "tv-v${{ steps.version.outputs.name }}" "$APK" \
+            --title "Classic TV Pakistan TV v${{ steps.version.outputs.name }}" \
+            --notes "Android TV build (com.classictvpakistan.tv). Install on your TV box, open from the launcher.
+            - sha256: $SHA"

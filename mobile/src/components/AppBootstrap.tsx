@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { getExpoPushToken } from "../src/lib/notifications";
+import { getExpoPushToken } from "../lib/notifications";
 
 export default function AppBootstrap() {
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BackHandler,
   FlatList,
@@ -8,10 +8,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
+  findNodeHandle,
 } from "react-native";
+import type { ColorValue } from "react-native";
 import { Player } from "../components/Player";
 import { useCatalog } from "../lib/catalog";
 import {
@@ -30,6 +31,116 @@ type NavItem = "home" | "browse" | "library" | "info";
 
 const TV_SAFE = 34;
 const TV_GOLD = "#D8B15A";
+
+/* ============================================================
+   Android TV focus plumbing (no TV fork APIs — everything this
+   app needs ships in the stock react-native package):
+   1. Every focusable Pressable hooks `onFocus`:
+      • records which element is focused (for the search-trap logic)
+      • scrolls its ancestor scroll container so the focused card
+        is always visible (RN does NOT do this automatically).
+   2. Android's native D-pad focus engine moves focus between
+     focusable views; we seed it with `hasTVPreferredFocus` on one
+     element per screen so the remote can never be "dead".
+   ============================================================ */
+
+type TvScrollable = {
+  ref: any;
+  kind: "scroll" | "flatlist";
+  axis?: "x" | "y";
+  cols?: number;
+  rowStride?: number;
+};
+
+const tvScrollables = new Map<string, TvScrollable>();
+let tvLastFocusedKey = "";
+
+function measureWithin(itemRef: any, ancestorRef: any): Promise<{ x: number; y: number } | null> {
+  return new Promise((resolve) => {
+    const node = itemRef && itemRef.current;
+    const ancestor = ancestorRef && ancestorRef.current;
+    if (!node || !ancestor) {
+      resolve(null);
+      return;
+    }
+    let handle: number | null = null;
+    try {
+      handle = findNodeHandle(ancestor);
+    } catch {
+      handle = null;
+    }
+    if (handle == null) {
+      resolve(null);
+      return;
+    }
+    try {
+      node.measureLayout(handle, (x: number, y: number) => resolve({ x, y }), () => resolve(null));
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+function tvRequestFocus(ref: any): boolean {
+  const el = ref && ref.current;
+  if (!el) return false;
+  try {
+    if (typeof el.requestTVFocus === "function") {
+      el.requestTVFocus();
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+function tvScrollIntoView(itemRef: any, scrollIds: string | string[] | undefined, index?: number) {
+  if (!scrollIds) return;
+  const ids = typeof scrollIds === "string" ? [scrollIds] : scrollIds;
+  setImmediate(() => {
+    void (async () => {
+      for (const id of ids) {
+        const entry = tvScrollables.get(id);
+        if (!entry) continue;
+        if (entry.kind === "flatlist") {
+          const ref: any = entry.ref;
+          if (typeof index === "number" && ref && typeof ref.scrollToOffset === "function") {
+            const row = Math.floor(index / Math.max(1, entry.cols ?? 1));
+            ref.scrollToOffset({ offset: Math.max(0, row * (entry.rowStride ?? 0)), animated: true });
+          }
+          continue;
+        }
+        const pos = await measureWithin(itemRef, entry.ref);
+        if (!pos) continue;
+        try {
+          if (entry.axis === "y") entry.ref.scrollTo({ y: Math.max(0, pos.y - 110), animated: true });
+          else entry.ref.scrollTo({ x: Math.max(0, pos.x - 250), animated: true });
+        } catch {}
+      }
+    })();
+  });
+}
+
+function useTvItem(
+  focusKey: string,
+  opts?: { scrollIds?: string | string[]; itemIndex?: number; onFocus?: () => void; onBlur?: () => void },
+) {
+  const ref = useRef<any>(null);
+  const onFocus = () => {
+    tvLastFocusedKey = focusKey;
+    opts?.onFocus?.();
+    tvScrollIntoView(ref, opts?.scrollIds, opts?.itemIndex);
+  };
+  const onBlur = () => {
+    opts?.onBlur?.();
+  };
+  return { ref, onFocus, onBlur };
+}
+
+// Extra props Android TV accepts on the native element that typescript's
+// PressableProps definition does not declare.
+const tvFocusProps = (autoFocus: boolean) => (autoFocus ? ({ hasTVPreferredFocus: true } as any) : {});
+
+/* ============================ component ============================ */
 
 export function TvApp() {
   const { width, height } = useWindowDimensions();
@@ -56,12 +167,16 @@ export function TvApp() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [playerFailed, setPlayerFailed] = useState(false);
-  const [clearFocused, setClearFocused] = useState(false);
-  const [playerBackFocused, setPlayerBackFocused] = useState(false);
+  const [showKb, setShowKb] = useState(false);
+  const searchRef = useRef<any>(null);
 
   // Android TV's hardware Back key must follow the same screen stack as the on-screen Back button.
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (showKb) {
+        closeKb();
+        return true;
+      }
       if (page === "player") {
         setPage("details");
         return true;
@@ -77,7 +192,8 @@ export function TvApp() {
       return false;
     });
     return () => subscription.remove();
-  }, [page, detailsFrom, nav]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, detailsFrom, nav, showKb]);
 
   const hero = heroCandidates[0] ?? series[0]?.[0] ?? null;
   const featured = useMemo(() => {
@@ -125,6 +241,7 @@ export function TvApp() {
     setPage(next);
     setSelected(null);
     setEpisode(null);
+    setShowKb(false);
   };
 
   const backFromDetails = () => {
@@ -132,206 +249,537 @@ export function TvApp() {
     setNav(detailsFrom);
   };
 
+  const closeKb = () => {
+    setShowKb(false);
+    tvRequestFocus(searchRef);
+  };
+
   const currentGroup = selected ? groupFor(selected) : [];
   const videoId = episode ? extractYouTubeId(episode.youtube) : null;
   const cardWidth = Math.max(142, Math.min(194, Math.round((width - 300) / 6)));
+  const gridCols = Math.max(1, Math.floor((width - 210) / (cardWidth + 14)));
+  const gridRowStride = Math.round(cardWidth * 1.36) + 84;
 
   return (
     <View style={[styles.screen, page === "player" && styles.fullscreenScreen]}>
       {page !== "player" ? <View style={styles.sidebar}>
-        <View style={styles.brandMark}>
-          <View style={styles.brandGlyph}><Ionicons name="tv-outline" size={20} color="#000" /><View style={styles.brandPlay}><Ionicons name="play" size={9} color="#000" /></View></View>
-          <Text style={styles.brandText}>CLASSIC TV<Text style={styles.brandPakistan}> PAKISTAN</Text></Text>
-        </View>
-        <View style={styles.navItems}>
-          <NavButton label="Home" icon="home-outline" active={nav === "home" && page !== "details"} onPress={() => openNav("home")} />
-          <NavButton label="Browse" icon="grid-outline" active={nav === "browse" || page === "details"} onPress={() => openNav("browse")} />
-          <NavButton label="My List" icon="bookmark-outline" active={nav === "library"} onPress={() => openNav("library")} />
-          <NavButton label="Info" icon="information-circle-outline" active={page === "info"} onPress={() => openNav("info")} />
-          <NavButton label="Update" icon="refresh-outline" active={false} onPress={() => { void refresh(); setNav("home"); setPage("home"); }} />
-        </View>
-        <View style={styles.sidebarFooter}>
-          <Text style={styles.sidebarCaption}>THE ARCHIVE</Text>
-          <Text style={styles.sidebarSmall}>Classic Pakistani television, all in one place.</Text>
-          {catalog?.stale ? <Text style={styles.offline}>Offline catalogue</Text> : null}
-        </View>
-      </View> : null}
-
-      <View style={[styles.main, page === "player" && styles.fullscreenMain]}>
-        {page !== "player" ? <View style={styles.topline}>
-          <Text style={styles.pageLabel}>{page === "details" ? "TITLE DETAILS" : page === "browse" ? "EXPLORE THE ARCHIVE" : page === "library" ? "YOUR SAVED TITLES" : page === "info" ? "ABOUT CLASSIC TV PAKISTAN" : "CLASSIC TV PAKISTAN"}</Text>
-          <View style={styles.topRight}>
-            <Text style={styles.countText}>{rows.length.toLocaleString()} archive entries</Text>
-            <View style={styles.statusDot} />
+          <View style={styles.brandMark}>
+            <View style={styles.brandGlyph}><Ionicons name="tv-outline" size={20} color="#000" /><View style={styles.brandPlay}><Ionicons name="play" size={9} color="#000" /></View></View>
+            <Text style={styles.brandText}>CLASSIC TV<Text style={styles.brandPakistan}> PAKISTAN</Text></Text>
+          </View>
+          <View style={styles.navItems}>
+            <NavButton label="Home" icon="home-outline" active={nav === "home" && page !== "details"} autoFocus onPress={() => openNav("home")} />
+            <NavButton label="Browse" icon="grid-outline" active={nav === "browse" || page === "details"} onPress={() => openNav("browse")} showKb={showKb} />
+            <NavButton label="My List" icon="bookmark-outline" active={nav === "library"} onPress={() => openNav("library")} showKb={showKb} />
+            <NavButton label="Info" icon="information-circle-outline" active={page === "info"} onPress={() => openNav("info")} showKb={showKb} />
+            <NavButton label="Update" icon="refresh-outline" active={false} onPress={() => { void refresh(); setNav("home"); setPage("home"); }} showKb={showKb} />
+          </View>
+          <View style={styles.sidebarFooter}>
+            <Text style={styles.sidebarCaption}>THE ARCHIVE</Text>
+            <Text style={styles.sidebarSmall}>Classic Pakistani television, all in one place.</Text>
+            {catalog?.stale ? <Text style={styles.offline}>Offline catalogue</Text> : null}
           </View>
         </View> : null}
 
-        {page === "home" ? (
-          <ScrollView style={styles.pageScroll} contentContainerStyle={styles.homeContent} showsVerticalScrollIndicator={false}>
-            {hero ? (
-              <View style={[styles.hero, { minHeight: Math.min(320, height * 0.46) }]}>
-                {hero.image ? <Image source={{ uri: hero.image }} style={styles.heroImage} resizeMode="cover" /> : null}
-                <View style={styles.heroScrim} />
-                <View style={styles.heroCopy}>
-                  <Text style={styles.eyebrow}>FROM THE CLASSIC ARCHIVE</Text>
-                  {hero.urdu ? <Text style={styles.urduTitle}>{hero.urdu}</Text> : null}
-                  <Text style={styles.heroTitle} numberOfLines={2}>{displayTitle(hero)}</Text>
-                  <Text style={styles.heroMeta}>{[hero.year, hero.type, episodeCounts[hero.id] ? `${episodeCounts[hero.id]} episodes` : ""].filter(Boolean).join("  •  ")}</Text>
+        <View style={[styles.main, page === "player" && styles.fullscreenMain]}>
+          {page !== "player" ? <View style={styles.topline}>
+            <Text style={styles.pageLabel}>{page === "details" ? "TITLE DETAILS" : page === "browse" ? "EXPLORE THE ARCHIVE" : page === "library" ? "YOUR SAVED TITLES" : page === "info" ? "ABOUT CLASSIC TV PAKISTAN" : "CLASSIC TV PAKISTAN"}</Text>
+            <View style={styles.topRight}>
+              <Text style={styles.countText}>{rows.length.toLocaleString()} archive entries</Text>
+              <View style={styles.statusDot} />
+            </View>
+          </View> : null}
+
+          {page === "home" ? (
+            <ScrollView
+              ref={(r) => { if (r) tvScrollables.set("homeScroll", { ref: r, kind: "scroll", axis: "y" }); }}
+              style={styles.pageScroll}
+              contentContainerStyle={styles.homeContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {hero ? (
+                <View style={[styles.hero, { minHeight: Math.min(320, height * 0.46) }]}>
+                  {hero.image ? <Image source={{ uri: hero.image }} style={styles.heroImage} resizeMode="cover" /> : null}
+                  <View style={styles.heroScrim} />
+                  <View style={styles.heroCopy}>
+                    <Text style={styles.eyebrow}>FROM THE CLASSIC ARCHIVE</Text>
+                    {hero.urdu ? <Text style={styles.urduTitle}>{hero.urdu}</Text> : null}
+                    <Text style={styles.heroTitle} numberOfLines={2}>{displayTitle(hero)}</Text>
+                    <Text style={styles.heroMeta}>{[hero.year, hero.type, episodeCounts[hero.id] ? `${episodeCounts[hero.id]} episodes` : ""].filter(Boolean).join("  •  ")}</Text>
+                    <View style={styles.actions}>
+                      <ActionButton label="Play" icon="play" primary autoFocus onPress={() => playDrama(hero)} />
+                      <ActionButton label="Details" icon="information-circle-outline" onPress={() => openDetails(hero)} showKb={showKb} />
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.emptyHero}><Text style={styles.heroTitle}>{loading ? "Loading the archive…" : "Classic TV Pakistan"}</Text><Text style={styles.bodyText}>{error ?? "Browse the collection of classic Pakistani television."}</Text></View>
+              )}
+              {loading && !catalog ? <Text style={styles.bodyText}>Connecting to the archive…</Text> : null}
+              <Shelf title="Featured classics" subtitle="A selection from the archive" scrollId="rail:featured" items={featured} cardWidth={cardWidth} episodeCounts={episodeCounts} pageScrollId="homeScroll" onSelect={openDetails} onPlay={playDrama} />
+              {categories.map((cat) => {
+                const items = series.filter((group) => group[0]?.type === cat).slice(0, 14).map((group) => group[0]);
+                return items.length ? <Shelf key={cat} title={cat} scrollId={`rail:${cat}`} items={items} cardWidth={cardWidth} episodeCounts={episodeCounts} pageScrollId="homeScroll" onSelect={openDetails} onPlay={playDrama} /> : null;
+              })}
+              {error && !catalog ? <ActionButton label="Retry loading archive" icon="refresh" onPress={refresh} showKb={showKb} /> : null}
+            </ScrollView>
+          ) : null}
+
+          {page === "browse" ? (
+            <View style={styles.fill}>
+              <View style={styles.searchBox}>
+                <Ionicons name="search" size={22} color={color.muted} />
+                <TvPress
+                  focusKey="search"
+                  innerRef={searchRef}
+                  autoFocus
+                  showKb={showKb}
+                  onPress={() => setShowKb(true)}
+                  style={styles.searchZone}
+                  focusedStyle={styles.focused}
+                >
+                  <Text numberOfLines={1} style={[styles.searchZoneText, !query && styles.searchPlaceholder]}>{query || "Search dramas, actors, years…"}</Text>
+                  {!query ? <Ionicons name="pencil" size={17} color={color.dim} /> : <Ionicons name="close" size={18} color={color.muted} />}
+                </TvPress>
+                {query ? (
+                  <TvPress
+                    focusKey="clearSearch"
+                    showKb={showKb}
+                    onPress={() => setQuery("")}
+                    style={styles.clearButton}
+                    focusedStyle={styles.focused}
+                  >
+                    <Ionicons name="close" size={20} color={color.text} />
+                  </TvPress>
+                ) : null}
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chips}
+                ref={(r) => { if (r) tvScrollables.set("chips", { ref: r, kind: "scroll", axis: "x" }); }}
+              >
+                <FilterButton label="All" active={!category} autoFocus onPress={() => setCategory(null)} showKb={showKb} />
+                {categories.map((cat) => <FilterButton key={cat} label={cat} active={category === cat} onPress={() => setCategory(category === cat ? null : cat)} showKb={showKb} />)}
+              </ScrollView>
+              <FlatList
+                ref={(r: any) => {
+                  if (r) tvScrollables.set("browseGrid", { ref: r, kind: "flatlist", cols: gridCols, rowStride: gridRowStride });
+                }}
+                style={styles.pageScroll}
+                contentContainerStyle={styles.browseGridContent}
+                data={filtered}
+                keyExtractor={(drama) => String(drama.id)}
+                numColumns={gridCols}
+                key={gridCols}
+                renderItem={({ index, item: drama }) => (
+                  <PosterTile
+                    drama={drama}
+                    width={cardWidth}
+                    episodeCount={episodeCounts[drama.id] ?? 1}
+                    index={index}
+                    scrollId="browseGrid"
+                    onPress={() => openDetails(drama)}
+                    onPlay={() => playDrama(drama)}
+                  />
+                )}
+                removeClippedSubviews={false}
+                initialNumToRender={gridCols * 5}
+                maxToRenderPerBatch={gridCols * 2}
+                windowSize={9}
+                updateCellsBatchingPeriod={50}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={<Text style={styles.bodyText}>{loading ? "Loading titles…" : "No titles match this search."}</Text>}
+              />
+            </View>
+          ) : null}
+
+          {page === "info" ? (
+            <View style={styles.infoPage}>
+              <View style={styles.infoMark}><Ionicons name="play" size={30} color="#000" /></View>
+              <Text style={styles.infoTitle}>Classic TV Pakistan</Text>
+              <Text style={styles.infoSubtitle}>Your archive of classic Pakistani television</Text>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoCardTitle}>About this app</Text>
+                <Text style={styles.bodyText}>Browse classic dramas, explore programme details, save titles to My List, and watch episodes through their available YouTube playback links.</Text>
+              </View>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoCardTitle}>Archive status</Text>
+                <Text style={styles.bodyText}>{loading ? "Checking catalogue…" : error ? `Catalogue message: ${error}` : `${rows.length.toLocaleString()} archive entries available`}</Text>
+                {catalog?.stale ? <Text style={styles.offline}>Showing saved catalogue data while offline.</Text> : null}
+              </View>
+              {showKb ? null : <ActionButton label={loading ? "Updating…" : "Update catalogue"} icon="refresh" primary onPress={() => { void refresh(); }} autoFocus />}
+            </View>
+          ) : null}
+
+          {page === "library" ? (
+            <ScrollView
+              ref={(r) => { if (r) tvScrollables.set("libraryScroll", { ref: r, kind: "scroll", axis: "y" }); }}
+              style={styles.pageScroll}
+              contentContainerStyle={styles.grid}
+            >
+              {library.map((drama, i) => (
+                <PosterTile key={drama.id} drama={drama} width={cardWidth} episodeCount={episodeCounts[drama.id] ?? 1} scrollId="libraryScroll" index={i} autoFocus={i === 0 && library.length > 0} onPress={() => openDetails(drama)} onPlay={() => playDrama(drama)} />
+              ))}
+              {!library.length ? <View style={styles.emptyState}><Ionicons name="bookmark-outline" size={38} color={color.muted} /><Text style={styles.sectionTitle}>Your list is empty</Text><Text style={styles.bodyText}>Open a title and choose “My List” to save it here.</Text><ActionButton label="Browse archive" icon="grid-outline" autoFocus onPress={() => openNav("browse")} showKb={showKb} /></View> : null}
+            </ScrollView>
+          ) : null}
+
+          {page === "details" && selected ? (
+            <ScrollView
+              ref={(r) => { if (r) tvScrollables.set("detailsScroll", { ref: r, kind: "scroll", axis: "y" }); }}
+              style={styles.pageScroll}
+              contentContainerStyle={styles.detailContent}
+            >
+              <View style={styles.detailHero}>
+                {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMode="cover" /> : <View style={styles.detailImage} />}
+                <View style={styles.detailCopy}>
+                  <Text style={styles.eyebrow}>{selected.type.toUpperCase()}</Text>
+                  {selected.urdu ? <Text style={styles.urduTitle}>{selected.urdu}</Text> : null}
+                  <Text style={styles.detailTitle}>{displayTitle(selected)}</Text>
+                  <Text style={styles.heroMeta}>{[selected.year, currentGroup.length > 1 ? `${currentGroup.length} episodes` : "Classic archive"].filter(Boolean).join("  •  ")}</Text>
+                  <Text style={styles.description} numberOfLines={5}>{selected.description || "A title from the Classic TV Pakistan archive."}</Text>
                   <View style={styles.actions}>
-                    <ActionButton label="Play" icon="play" primary onPress={() => playDrama(hero)} />
-                    <ActionButton label="Details" icon="information-circle-outline" onPress={() => openDetails(hero)} />
+                    <ActionButton label="Play" icon="play" primary onPress={() => playDrama(selected)} autoFocus showKb={showKb} />
+                    <ActionButton label={isSaved(selected) ? "In My List" : "My List"} icon={isSaved(selected) ? "bookmark" : "bookmark-outline"} onPress={() => void toggleSaved(selected)} showKb={showKb} />
+                    <ActionButton label="Back" icon="arrow-back" onPress={backFromDetails} showKb={showKb} />
                   </View>
                 </View>
               </View>
-            ) : (
-              <View style={styles.emptyHero}><Text style={styles.heroTitle}>{loading ? "Loading the archive…" : "Classic TV Pakistan"}</Text><Text style={styles.bodyText}>{error ?? "Browse the collection of classic Pakistani television."}</Text></View>
-            )}
-            {loading && !catalog ? <Text style={styles.bodyText}>Connecting to the archive…</Text> : null}
-            <Shelf title="Featured classics" subtitle="A selection from the archive" items={featured} cardWidth={cardWidth} episodeCounts={episodeCounts} onSelect={openDetails} onPlay={playDrama} />
-            {categories.map((cat) => {
-              const items = series.filter((group) => group[0]?.type === cat).slice(0, 14).map((group) => group[0]);
-              return items.length ? <Shelf key={cat} title={cat} items={items} cardWidth={cardWidth} episodeCounts={episodeCounts} onSelect={openDetails} onPlay={playDrama} /> : null;
-            })}
-            {error && !catalog ? <ActionButton label="Retry loading archive" icon="refresh" onPress={refresh} /> : null}
-          </ScrollView>
-        ) : null}
-
-        {page === "browse" ? (
-          <View style={styles.fill}>
-            <View style={styles.searchBox}>
-              <Ionicons name="search" size={22} color={color.muted} />
-              <TextInput value={query} onChangeText={setQuery} placeholder="Search dramas, actors, years…" placeholderTextColor={color.dim} style={styles.searchInput} returnKeyType="search" />
-              {query ? <Pressable focusable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setQuery("")} onFocus={() => setClearFocused(true)} onBlur={() => setClearFocused(false)} style={[styles.clearButton, clearFocused && styles.focused]}><Ionicons name="close" size={20} color={color.text} /></Pressable> : null}
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-              <FilterButton label="All" active={!category} onPress={() => setCategory(null)} />
-              {categories.map((cat) => <FilterButton key={cat} label={cat} active={category === cat} onPress={() => setCategory(category === cat ? null : cat)} />)}
+              {currentGroup.length > 1 ? <Shelf title="Episodes" scrollId="rail:episodes" items={currentGroup} cardWidth={cardWidth} pageScrollId="detailsScroll" episodeCounts={episodeCounts} onSelect={(ep) => { setEpisode(ep); setPlayerFailed(false); setPage("player"); }} onPlay={(ep) => { setEpisode(ep); setPlayerFailed(false); setPage("player"); }} compact /> : null}
             </ScrollView>
-            <FlatList
-              style={styles.pageScroll}
-              contentContainerStyle={styles.browseGridContent}
-              data={filtered}
-              keyExtractor={(drama) => String(drama.id)}
-              numColumns={Math.max(1, Math.floor((width - 210) / (cardWidth + 14)))}
-              key={Math.max(1, Math.floor((width - 210) / (cardWidth + 14)))}
-              renderItem={({ item: drama }) => (
-                <PosterTile
-                  drama={drama}
-                  width={cardWidth}
-                  episodeCount={episodeCounts[drama.id] ?? 1}
-                  onPress={() => openDetails(drama)}
-                  onPlay={() => playDrama(drama)}
-                />
-              )}
-              removeClippedSubviews
-              initialNumToRender={12}
-              maxToRenderPerBatch={8}
-              windowSize={5}
-              updateCellsBatchingPeriod={50}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={<Text style={styles.bodyText}>{loading ? "Loading titles…" : "No titles match this search."}</Text>}
-            />
-          </View>
-        ) : null}
+          ) : null}
 
-        {page === "info" ? (
-          <View style={styles.infoPage}>
-            <View style={styles.infoMark}><Ionicons name="play" size={30} color="#000" /></View>
-            <Text style={styles.infoTitle}>Classic TV Pakistan</Text>
-            <Text style={styles.infoSubtitle}>Your archive of classic Pakistani television</Text>
-            <View style={styles.infoCard}>
-              <Text style={styles.infoCardTitle}>About this app</Text>
-              <Text style={styles.bodyText}>Browse classic dramas, explore programme details, save titles to My List, and watch episodes through their available YouTube playback links.</Text>
-            </View>
-            <View style={styles.infoCard}>
-              <Text style={styles.infoCardTitle}>Archive status</Text>
-              <Text style={styles.bodyText}>{loading ? "Checking catalogue…" : error ? `Catalogue message: ${error}` : `${rows.length.toLocaleString()} archive entries available`}</Text>
-              {catalog?.stale ? <Text style={styles.offline}>Showing saved catalogue data while offline.</Text> : null}
-            </View>
-            <ActionButton label={loading ? "Updating…" : "Update catalogue"} icon="refresh" primary onPress={() => { void refresh(); }} />
-          </View>
-        ) : null}
-
-        {page === "library" ? (
-          <ScrollView style={styles.pageScroll} contentContainerStyle={styles.grid}>
-            {library.map((drama) => <PosterTile key={drama.id} drama={drama} width={cardWidth} episodeCount={episodeCounts[drama.id] ?? 1} onPress={() => openDetails(drama)} onPlay={() => playDrama(drama)} />)}
-            {!library.length ? <View style={styles.emptyState}><Ionicons name="bookmark-outline" size={38} color={color.muted} /><Text style={styles.sectionTitle}>Your list is empty</Text><Text style={styles.bodyText}>Open a title and choose “My List” to save it here.</Text><ActionButton label="Browse archive" icon="grid-outline" onPress={() => openNav("browse")} /></View> : null}
-          </ScrollView>
-        ) : null}
-
-        {page === "details" && selected ? (
-          <ScrollView style={styles.pageScroll} contentContainerStyle={styles.detailContent}>
-            <View style={styles.detailHero}>
-              {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMode="cover" /> : <View style={styles.detailImage} />}
-              <View style={styles.detailCopy}>
-                <Text style={styles.eyebrow}>{selected.type.toUpperCase()}</Text>
-                {selected.urdu ? <Text style={styles.urduTitle}>{selected.urdu}</Text> : null}
-                <Text style={styles.detailTitle}>{displayTitle(selected)}</Text>
-                <Text style={styles.heroMeta}>{[selected.year, currentGroup.length > 1 ? `${currentGroup.length} episodes` : "Classic archive"].filter(Boolean).join("  •  ")}</Text>
-                <Text style={styles.description} numberOfLines={5}>{selected.description || "A title from the Classic TV Pakistan archive."}</Text>
-                <View style={styles.actions}>
-                  <ActionButton label="Play" icon="play" primary onPress={() => playDrama(selected)} />
-                  <ActionButton label={isSaved(selected) ? "In My List" : "My List"} icon={isSaved(selected) ? "bookmark" : "bookmark-outline"} onPress={() => void toggleSaved(selected)} />
-                  <ActionButton label="Back" icon="arrow-back" onPress={backFromDetails} />
-                </View>
+          {page === "player" && selected && episode ? (
+            <View style={styles.playerPage}>
+              <View style={styles.playerTop}>
+                <TvPress
+                  focusKey="playerBack"
+                  autoFocus
+                  showKb={showKb}
+                  onPress={() => setPage("details")}
+                  style={styles.backButton}
+                  focusedStyle={styles.focused}
+                >
+                  <Ionicons name="arrow-back" size={20} color={color.text} />
+                  <Text style={styles.actionText}>Back</Text>
+                </TvPress>
+                <Text style={styles.playerHeading} numberOfLines={1}>{displayTitle(selected)}{episode.episode ? ` · Episode ${episode.episode}` : ""}</Text>
               </View>
+              <View style={styles.playerFrame}>
+                {videoId && !playerFailed ? <Player key={videoId} videoId={videoId} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={44} color="#FF5252" /><Text style={styles.sectionTitle}>Playback unavailable here</Text><Text style={styles.bodyText}>Try another episode or check the YouTube link.</Text><ActionButton label="Back to episodes" icon="arrow-back" onPress={() => setPage("details")} autoFocus showKb={showKb} />{videoId ? <ActionButton label="Watch on YouTube" icon="logo-youtube" onPress={() => void openInYouTube(videoId)} showKb={showKb} /> : null}</View>}
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.episodeRail}
+                ref={(r) => { if (r) tvScrollables.set("playerRail", { ref: r, kind: "scroll", axis: "x" }); }}
+              >
+                {currentGroup.map((ep, i) => <EpisodeButton key={ep.id} episode={ep} number={i + 1} index={i} selected={episode.id === ep.id} onPress={() => { setEpisode(ep); setPlayerFailed(false); }} showKb={showKb} />)}
+              </ScrollView>
             </View>
-            {currentGroup.length > 1 ? <Shelf title="Episodes" items={currentGroup} cardWidth={cardWidth} episodeCounts={episodeCounts} onSelect={(ep) => { setEpisode(ep); setPlayerFailed(false); setPage("player"); }} onPlay={(ep) => { setEpisode(ep); setPlayerFailed(false); setPage("player"); }} compact /> : null}
-          </ScrollView>
-        ) : null}
+          ) : null}
+        </View>
 
-        {page === "player" && selected && episode ? (
-          <View style={styles.playerPage}>
-            <View style={styles.playerTop}>
-              <Pressable focusable onPress={() => setPage("details")} onFocus={() => setPlayerBackFocused(true)} onBlur={() => setPlayerBackFocused(false)} style={[styles.backButton, playerBackFocused && styles.focused]}><Ionicons name="arrow-back" size={20} color={color.text} /><Text style={styles.actionText}>Back</Text></Pressable>
-              <Text style={styles.playerHeading} numberOfLines={1}>{displayTitle(selected)}{episode.episode ? ` · Episode ${episode.episode}` : ""}</Text>
-            </View>
-            <View style={styles.playerFrame}>
-              {videoId && !playerFailed ? <Player key={videoId} videoId={videoId} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={44} color="#FF5252" /><Text style={styles.sectionTitle}>Playback unavailable here</Text><Text style={styles.bodyText}>Try another episode or check the YouTube link.</Text><ActionButton label="Back to episodes" icon="arrow-back" onPress={() => setPage("details")} />{videoId ? <ActionButton label="Watch on YouTube" icon="logo-youtube" onPress={() => void openInYouTube(videoId)} /> : null}</View>}
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.episodeRail}>
-              {currentGroup.map((ep, i) => <EpisodeButton key={ep.id} episode={ep} number={i + 1} selected={episode.id === ep.id} onPress={() => { setEpisode(ep); setPlayerFailed(false); }} />)}
-            </ScrollView>
-          </View>
+        {showKb ? (
+          <RemoteKeyboard
+            query={query}
+            onChar={(c) => setQuery((prev) => prev + c)}
+            onBackspace={() => setQuery((prev) => prev.slice(0, -1))}
+            onClear={() => setQuery("")}
+            onDone={closeKb}
+            onClose={closeKb}
+          />
         ) : null}
       </View>
+  );
+}
+
+/* ============== search-zone & on-screen keyboard for the TV remote ============== */
+
+const KB_ROWS = ["ABCDEFGH", "IJKLMNO", "PQRSTUV", "WXYZ012", "3456789"];
+
+function RemoteKeyboard({ onChar, onBackspace, onClear, onDone, onClose }: {
+  query?: string;
+  onChar: (c: string) => void;
+  onBackspace: () => void;
+  onClear: () => void;
+  onDone: () => void;
+  onClose: () => void;
+}) {
+  const [focused, setFocused] = useState("");
+  const firstKeyRef = useRef<any>(null);
+  useEffect(() => {
+    setImmediate(() => { if (!tvRequestFocus(firstKeyRef) && firstKeyRef.current) firstKeyRef.current.focus?.(); });
+  }, []);
+
+  const Row = ({ chars }: { chars: string }) => (
+    <View style={styles.kbRow}>
+      {chars.split("").map((c, i) => (
+        <TvPress
+          key={c}
+          focusKey={`kb:${c}`}
+          showKb={false}
+          autoFocus={i === 0 && chars === KB_ROWS[0]}
+          innerRef={i === 0 && chars === KB_ROWS[0] ? firstKeyRef : undefined}
+          onPress={() => onChar(c)}
+          onFocusCb={() => setFocused(c)}
+          onBlurCb={() => setFocused("")}
+        >
+          <View style={[styles.kbKey, focused === c && styles.kbKeyFocused]}>
+            <Text style={styles.kbKeyText}>{c}</Text>
+          </View>
+        </TvPress>
+      ))}
     </View>
   );
 
+  return (
+    <View style={styles.kbWrap} pointerEvents="box-none">
+      <View style={styles.kbSheet}>
+        <Text style={styles.kbTitle}>CHANNEL SEARCH</Text>
+        <View style={styles.kbGrid}>
+          {KB_ROWS.map((chars) => <Row key={chars} chars={chars} />)}
+          <View style={styles.kbRow}>
+            <TvPress focusKey="kb:Backspace" showKb={false} onPress={onBackspace} onFocusCb={() => setFocused("⌫")} onBlurCb={() => setFocused("")}>
+              <View style={[styles.kbKey, styles.kbKeyWide, focused === "⌫" && styles.kbKeyFocused]}><Text style={styles.kbKeyText}>⌫</Text></View>
+            </TvPress>
+            <TvPress focusKey="kb:Space" showKb={false} onPress={() => onChar(" ")} onFocusCb={() => setFocused("␣")} onBlurCb={() => setFocused("")}>
+              <View style={[styles.kbKey, styles.kbKeyWide2, focused === "␣" && styles.kbKeyFocused]}><Text style={styles.kbKeyText}>SPACE</Text></View>
+            </TvPress>
+            <TvPress focusKey="kb:Clear" showKb={false} onPress={onClear} onFocusCb={() => setFocused("CLR")} onBlurCb={() => setFocused("")}>
+              <View style={[styles.kbKey, styles.kbKeyWide, focused === "CLR" && styles.kbKeyFocused]}><Text style={styles.kbKeyText}>CLEAR</Text></View>
+            </TvPress>
+            <TvPress focusKey="kb:Done" showKb={false} onPress={onDone} onFocusCb={() => setFocused("OK")} onBlurCb={() => setFocused("")}>
+              <View style={[styles.kbKey, styles.kbKeyWide, styles.kbKeyGold, focused === "OK" && styles.kbKeyFocused]}><Text style={styles.kbKeyTextDark}>DONE</Text></View>
+            </TvPress>
+            <TvPress focusKey="kb:Close" showKb={false} onPress={onClose} onFocusCb={() => setFocused("X")} onBlurCb={() => setFocused("")}>
+              <View style={[styles.kbKey, focused === "X" && styles.kbKeyFocused]}><Ionicons name="close" size={18} color={color.text} /></View>
+            </TvPress>
+          </View>
+        </View>
+        <Text style={styles.kbHint}>Arrow keys move · center OK types · Back closes the keyboard</Text>
+      </View>
+    </View>
+  );
 }
 
+/* ============== reusable pressable with default focus styling ============== */
 
-function NavButton({ label, icon, active, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; active: boolean; onPress: () => void }) {
+function TvPress({
+  focusKey,
+  onPress,
+  children,
+  style,
+  focusedStyle,
+  autoFocus = false,
+  showKb = false,
+  innerRef,
+  scrollIds,
+  onFocusCb,
+  onBlurCb,
+}: {
+  focusKey: string;
+  onPress: () => void;
+  children?: React.ReactNode;
+  style?: any;
+  focusedStyle?: any;
+  autoFocus?: boolean;
+  showKb?: boolean;
+  innerRef?: any;
+  scrollIds?: string | string[];
+  onFocusCb?: () => void;
+  onBlurCb?: () => void;
+}) {
   const [focused, setFocused] = useState(false);
-  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} style={[styles.navButton, active && styles.navActive, focused && styles.focused]}><Ionicons name={icon} size={22} color={active ? TV_GOLD : color.muted} /><Text style={[styles.navText, active && styles.navTextActive]}>{label}</Text></Pressable>;
+  const ownRef = useRef<any>(null);
+  return (
+    <Pressable
+      ref={(r: any) => {
+        ownRef.current = r;
+        if (innerRef) {
+          if (typeof innerRef === "function") innerRef(r);
+          else innerRef.current = r;
+        }
+      }}
+      focusable
+      disabled={showKb}
+      {...tvFocusProps(autoFocus && !showKb)}
+      onLongPress={undefined}
+      onPress={onPress}
+      onFocus={() => { tvLastFocusedKey = focusKey; setFocused(true); onFocusCb?.(); tvScrollIntoView(ownRef, scrollIds); }}
+      onBlur={() => { setFocused(false); onBlurCb?.(); }}
+      accessibilityRole="button"
+      style={[typeof style === "function" ? null : style, focused ? (focusedStyle ?? styles.focusOutlineOn) : styles.focusOutline]}
+    >
+      {children}
+    </Pressable>
+  );
 }
 
-function ActionButton({ label, icon, primary = false, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; primary?: boolean; onPress: () => void }) {
+/* ============== nav/sidebar/buttons/tiles ============== */
+
+function NavButton({ label, icon, active, autoFocus, onPress, showKb }: { label: string; icon: keyof typeof Ionicons.glyphMap; active: boolean; autoFocus?: boolean; onPress: () => void; showKb?: boolean }) {
   const [focused, setFocused] = useState(false);
-  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} style={({ pressed }) => [styles.actionButton, primary && styles.actionPrimary, focused && styles.focused, pressed && styles.pressed]}><Ionicons name={icon} size={18} color={primary ? "#000" : color.text} /><Text style={[styles.actionText, primary && styles.actionTextPrimary]}>{label}</Text></Pressable>;
+  const tv = useTvItem(`nav:${label}`);
+  return (
+    <Pressable
+      ref={tv.ref}
+      focusable
+      disabled={showKb}
+      {...tvFocusProps(!!autoFocus && !showKb)}
+      onFocus={tv.onFocus}
+      onBlur={() => tv.onBlur()}
+      onPress={onPress}
+      style={[styles.navButton, active && styles.navActive, focused && styles.navFocused]}
+    >
+      <Ionicons name={icon} size={22} color={active ? TV_GOLD : color.muted} />
+      <Text style={[styles.navText, active && styles.navTextActive]}>{label}</Text>
+    </Pressable>
+  );
 }
 
-function FilterButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+function ActionButton({ label, icon, primary = false, onPress, autoFocus, showKb }: { label: string; icon: keyof typeof Ionicons.glyphMap; primary?: boolean; onPress: () => void; autoFocus?: boolean; showKb?: boolean }) {
   const [focused, setFocused] = useState(false);
-  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} style={[styles.filter, active && styles.filterActive, focused && styles.focused]}><Text style={[styles.filterText, active && styles.filterTextActive]}>{label}</Text></Pressable>;
+  const iconColor: ColorValue = primary ? "#000" : color.text;
+  const tv = useTvItem(`action:${label}`);
+  return (
+    <Pressable
+      ref={tv.ref}
+      focusable
+      disabled={showKb}
+      {...tvFocusProps(!!autoFocus && !showKb)}
+      onFocus={tv.onFocus}
+      onBlur={() => tv.onBlur()}
+      onPress={onPress}
+      style={({ pressed }) => [styles.actionButton, primary && styles.actionPrimary, focused && styles.focused, pressed && styles.pressed]}
+    >
+      <Ionicons name={icon} size={18} color={iconColor} />
+      <Text style={[styles.actionText, primary && styles.actionTextPrimary]}>{label}</Text>
+    </Pressable>
+  );
 }
 
-function EpisodeButton({ episode, number, selected, onPress }: { episode: Drama; number: number; selected: boolean; onPress: () => void }) {
+function FilterButton({ label, active, autoFocus, onPress, showKb }: { label: string; active: boolean; autoFocus?: boolean; onPress: () => void; showKb?: boolean }) {
   const [focused, setFocused] = useState(false);
-  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} style={[styles.episodeChip, selected && styles.episodeSelected, focused && styles.focused]}><Text style={styles.episodeNumber}>{episode.episode ?? number}</Text><Text style={styles.episodeTitle} numberOfLines={1}>{episode.title}</Text></Pressable>;
+  const tv = useTvItem(`chip:${label}`, { scrollIds: "chips" });
+  return (
+    <Pressable
+      ref={tv.ref}
+      focusable
+      disabled={showKb}
+      {...tvFocusProps(!!autoFocus && !showKb)}
+      onFocus={tv.onFocus}
+      onBlur={() => tv.onBlur()}
+      onPress={onPress}
+      style={[styles.filter, active && styles.filterActive, focused && styles.focused]}
+    >
+      <Text style={[styles.filterText, active && styles.filterTextActive]}>{label}</Text>
+    </Pressable>
+  );
 }
 
-function Shelf({ title, subtitle, items, cardWidth, episodeCounts, onSelect, onPlay, compact = false }: { title: string; subtitle?: string; items: Drama[]; cardWidth: number; episodeCounts: Record<number, number>; onSelect: (drama: Drama) => void; onPlay: (drama: Drama) => void; compact?: boolean }) {
+function EpisodeButton({ episode, number, index, selected, onPress, showKb }: { episode: Drama; number: number; index: number; selected: boolean; onPress: () => void; showKb?: boolean }) {
+  const [focused, setFocused] = useState(false);
+  const tv = useTvItem(`ep:${episode.id}`, { scrollIds: ["playerRail"], itemIndex: index });
+  return (
+    <Pressable
+      ref={tv.ref}
+      focusable
+      disabled={showKb}
+      {...tvFocusProps(index === 0 && !showKb)}
+      onFocus={tv.onFocus}
+      onBlur={() => tv.onBlur()}
+      onPress={onPress}
+      style={[styles.episodeChip, selected && styles.episodeSelected, focused && styles.focused]}
+    >
+      <Text style={styles.episodeNumber}>{episode.episode ?? number}</Text>
+      <Text style={styles.episodeTitle} numberOfLines={1}>{episode.title}</Text>
+    </Pressable>
+  );
+}
+
+function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pageScrollId, onSelect, onPlay, compact = false }: {
+  title: string;
+  subtitle?: string;
+  scrollId: string;
+  items: Drama[];
+  cardWidth: number;
+  episodeCounts: Record<number, number>;
+  pageScrollId?: string;
+  onSelect: (drama: Drama) => void;
+  onPlay: (drama: Drama) => void;
+  compact?: boolean;
+}) {
   if (!items.length) return null;
-  return <View style={styles.shelf}><View style={styles.shelfHeading}><View><Text style={styles.sectionTitle}>{title}</Text>{subtitle ? <Text style={styles.shelfSubtitle}>{subtitle}</Text> : null}</View><Text style={styles.shelfCount}>{items.length} TITLES</Text></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>{items.map((drama) => <PosterTile key={drama.id} drama={drama} width={compact ? Math.round(cardWidth * 0.8) : cardWidth} episodeCount={episodeCounts[drama.id] ?? 1} onPress={() => onSelect(drama)} onPlay={() => onPlay(drama)} compact={compact} />)}</ScrollView></View>;
+  return (
+    <View style={styles.shelf}>
+      <View style={styles.shelfHeading}>
+        <View><Text style={styles.sectionTitle}>{title}</Text>{subtitle ? <Text style={styles.shelfSubtitle}>{subtitle}</Text> : null}</View>
+        <Text style={styles.shelfCount}>{items.length} TITLES</Text>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.rail}
+        ref={(r) => { if (r) tvScrollables.set(scrollId, { ref: r, kind: "scroll", axis: "x" }); }}
+      >
+        {items.map((drama) => (
+          <PosterTile
+            key={drama.id}
+            drama={drama}
+            width={compact ? Math.round(cardWidth * 0.8) : cardWidth}
+            episodeCount={episodeCounts[drama.id] ?? 1}
+            scrollIds={[scrollId, pageScrollId].filter(Boolean) as string[]}
+            onPress={() => onSelect(drama)}
+            onPlay={() => onPlay(drama)}
+            compact={compact}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
 }
 
-function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = false }: { drama: Drama; width: number; episodeCount: number; onPress: () => void; onPlay: () => void; compact?: boolean }) {
+function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = false, scrollId, scrollIds, index, autoFocus }: {
+  drama: Drama;
+  width: number;
+  episodeCount: number;
+  onPress: () => void;
+  onPlay: () => void;
+  compact?: boolean;
+  scrollId?: string;
+  scrollIds?: string[];
+  index?: number;
+  autoFocus?: boolean;
+}) {
   const [focused, setFocused] = useState(false);
-  return <Pressable focusable onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onPress={onPress} onLongPress={onPlay} accessibilityRole="button" accessibilityLabel={displayTitle(drama)} style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}><View style={[styles.posterFrame, { height: Math.round(width * 1.36) }]}>{drama.image ? <Image source={{ uri: drama.image }} style={styles.poster} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={30} color={color.dim} /></View>}{episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}</View><Text style={styles.posterTitle} numberOfLines={2}>{displayTitle(drama)}</Text>{!compact && drama.year ? <Text style={styles.posterYear}>{drama.year}</Text> : null}</Pressable>;
+  const tv = useTvItem(`poster:${drama.id}`, { scrollIds: scrollIds ?? scrollId, itemIndex: index });
+  return (
+    <Pressable
+      ref={tv.ref}
+      focusable
+      {...tvFocusProps(!!autoFocus)}
+      onFocus={tv.onFocus}
+      onBlur={() => tv.onBlur()}
+      onPress={onPress}
+      onLongPress={onPlay}
+      accessibilityRole="button"
+      accessibilityLabel={displayTitle(drama)}
+      style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
+    >
+      <View style={[styles.posterFrame, { height: Math.round(width * 1.36) }]}>
+        {drama.image ? <Image source={{ uri: drama.image }} style={styles.poster} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={30} color={color.dim} /></View>}
+        {episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}
+      </View>
+      <Text style={styles.posterTitle} numberOfLines={2}>{displayTitle(drama)}</Text>
+      {!compact && drama.year ? <Text style={styles.posterYear}>{drama.year}</Text> : null}
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({
+  /* source of truth for the layout stays identical to the shipped TV UI — see git. */
   screen: { flex: 1, flexDirection: "row", backgroundColor: "#050606" },
   fullscreenScreen: { flexDirection: "column", padding: 0 },
   sidebar: { width: 148, paddingTop: 22, paddingHorizontal: 10, paddingBottom: 16, borderRightWidth: 1, borderRightColor: color.line, backgroundColor: "#080A09" },
@@ -375,6 +823,8 @@ const styles = StyleSheet.create({
   focused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.18)" },
   posterFocused: { transform: [{ scale: 1.045 }], borderColor: TV_GOLD, borderWidth: 4, borderRadius: 14, backgroundColor: "#211B10", shadowColor: TV_GOLD, shadowOpacity: 0.65, shadowRadius: 12, elevation: 12, zIndex: 10 },
   pressed: { opacity: 0.78 },
+  focusOutline: { borderWidth: 1, borderColor: "transparent" },
+  focusOutlineOn: { borderColor: TV_GOLD },
   shelf: { gap: 12 },
   shelfHeading: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", paddingRight: 4 },
   sectionTitle: { color: color.text, fontFamily: font.bold, fontSize: 21 },
@@ -393,7 +843,9 @@ const styles = StyleSheet.create({
   bodyText: { color: color.muted, fontFamily: font.body, fontSize: 14, lineHeight: 21 },
   fill: { flex: 1 },
   searchBox: { height: 56, borderRadius: 12, borderWidth: 1, borderColor: color.line, backgroundColor: "#101311", flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, marginBottom: 12 },
-  searchInput: { flex: 1, color: color.text, fontFamily: font.body, fontSize: 17, paddingVertical: 8 },
+  searchZone: { flex: 1, minHeight: 44, borderRadius: 10, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 10 },
+  searchZoneText: { color: color.text, fontFamily: font.body, fontSize: 17, flex: 1 },
+  searchPlaceholder: { color: color.dim },
   clearButton: { width: 38, height: 38, alignItems: "center", justifyContent: "center", borderRadius: 8 },
   chips: { gap: 10, paddingBottom: 14, paddingTop: 2 },
   filter: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 9, backgroundColor: "#171B18", borderWidth: 1, borderColor: color.line },
@@ -416,15 +868,28 @@ const styles = StyleSheet.create({
   detailTitle: { color: "#fff", fontFamily: font.black, fontSize: 34, lineHeight: 40 },
   description: { color: color.muted, fontSize: 15, lineHeight: 23, maxWidth: 650 },
   playerPage: { flex: 1, gap: 0, backgroundColor: "#000" },
-  playerTop: { flexDirection: "row", alignItems: "center", gap: 16, minHeight: 42 },
+  playerTop: { flexDirection: "row", alignItems: "center", gap: 16, minHeight: 42, paddingHorizontal: 18, paddingTop: 10 },
   playerHeading: { color: color.text, fontFamily: font.bold, fontSize: 17, flex: 1 },
   playerHint: { color: color.dim, fontSize: 11 },
   playerFrame: { flex: 1, minHeight: 0, backgroundColor: "#000", borderRadius: 0, overflow: "hidden" },
   playerError: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  episodeRail: { gap: 10, paddingVertical: 4 },
+  episodeRail: { gap: 10, paddingVertical: 10, paddingHorizontal: 18 },
   episodeChip: { width: 170, minHeight: 52, borderRadius: 9, padding: 9, backgroundColor: "#171B18", borderWidth: 1, borderColor: color.line },
   episodeSelected: { borderColor: TV_GOLD },
   episodeNumber: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11 },
   episodeTitle: { color: color.text, fontSize: 12, marginTop: 3 },
   backButton: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  kbWrap: { position: "absolute", left: 0, right: 0, bottom: 0, top: 0, backgroundColor: "rgba(0,0,0,0.72)", alignItems: "center", justifyContent: "flex-end" },
+  kbSheet: { width: "100%", maxWidth: 780, marginBottom: 24, borderRadius: 16, borderWidth: 1, borderColor: color.line, backgroundColor: "#0B0E0C", padding: 20, alignItems: "center" },
+  kbTitle: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11, letterSpacing: 1.6, marginBottom: 12 },
+  kbGrid: { gap: 8 },
+  kbRow: { flexDirection: "row", justifyContent: "center", gap: 8 },
+  kbKey: { minWidth: 62, height: 56, borderRadius: 10, backgroundColor: "#171B18", borderWidth: 1, borderColor: color.line, alignItems: "center", justifyContent: "center" },
+  kbKeyFocused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.18)", transform: [{ scale: 1.05 }] },
+  kbKeyText: { color: color.text, fontFamily: font.bold, fontSize: 18 },
+  kbKeyTextDark: { color: "#000", fontFamily: font.bold, fontSize: 14 },
+  kbKeyWide: { minWidth: 96 },
+  kbKeyWide2: { minWidth: 130 },
+  kbKeyGold: { backgroundColor: TV_GOLD, borderColor: TV_GOLD },
+  kbHint: { color: color.dim, fontSize: 11, marginTop: 10 },
 });
