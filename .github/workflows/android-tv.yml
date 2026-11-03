@@ -114,7 +114,8 @@ jobs:
           APK_NAME: ClassicTVPakistanTV-${{ steps.version.outputs.name }}
         run: |
           set -euo pipefail
-          APK="mobile/android/app/build/outputs/apk/release/${APK_NAME}.apk"
+          # This step runs in mobile/ (job defaults), so the path is mobile-relative.
+          APK="android/app/build/outputs/apk/release/${APK_NAME}.apk"
           test -f "$APK"
           SHA=$(sha256sum "$APK" | awk '{print $1}')
           gh release delete "tv-v${{ steps.version.outputs.name }}" --yes --cleanup-tag 2>/dev/null || true

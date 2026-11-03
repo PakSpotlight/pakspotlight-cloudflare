@@ -633,8 +633,8 @@ function NavButton({ label, icon, active, autoFocus, onPress, showKb }: { label:
       onPress={onPress}
       style={[styles.navButton, active && styles.navActive, focused && styles.navFocused]}
     >
-      <Ionicons name={icon} size={22} color={active ? TV_GOLD : color.muted} />
-      <Text style={[styles.navText, active && styles.navTextActive]}>{label}</Text>
+      <Ionicons name={icon} size={22} color={active || focused ? TV_GOLD : color.muted} />
+      <Text style={[styles.navText, (active || focused) && styles.navTextLit]}>{label}</Text>
     </Pressable>
   );
 }
@@ -654,8 +654,8 @@ function ActionButton({ label, icon, primary = false, onPress, autoFocus, showKb
       onPress={onPress}
       style={({ pressed }) => [styles.actionButton, primary && styles.actionPrimary, focused && styles.focused, pressed && styles.pressed]}
     >
-      <Ionicons name={icon} size={18} color={iconColor} />
-      <Text style={[styles.actionText, primary && styles.actionTextPrimary]}>{label}</Text>
+      <Ionicons name={icon} size={18} color={focused && !primary ? TV_GOLD : iconColor} />
+      <Text style={[styles.actionText, primary && styles.actionTextPrimary, focused && !primary && styles.actionTextLit]}>{label}</Text>
     </Pressable>
   );
 }
@@ -674,7 +674,7 @@ function FilterButton({ label, active, autoFocus, onPress, showKb }: { label: st
       onPress={onPress}
       style={[styles.filter, active && styles.filterActive, focused && styles.focused]}
     >
-      <Text style={[styles.filterText, active && styles.filterTextActive]}>{label}</Text>
+      <Text style={[styles.filterText, active && styles.filterTextActive, focused && !active && styles.filterTextLit]}>{label}</Text>
     </Pressable>
   );
 }
@@ -693,8 +693,8 @@ function EpisodeButton({ episode, number, index, selected, onPress, showKb }: { 
       onPress={onPress}
       style={[styles.episodeChip, selected && styles.episodeSelected, focused && styles.focused]}
     >
-      <Text style={styles.episodeNumber}>{episode.episode ?? number}</Text>
-      <Text style={styles.episodeTitle} numberOfLines={1}>{episode.title}</Text>
+      <Text style={[styles.episodeNumber, focused && styles.episodeNumberLit]}>{episode.episode ?? number}</Text>
+      <Text style={[styles.episodeTitle, focused && styles.episodeTitleLit]} numberOfLines={1}>{episode.title}</Text>
     </Pressable>
   );
 }
@@ -768,12 +768,12 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       accessibilityLabel={displayTitle(drama)}
       style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
     >
-      <View style={[styles.posterFrame, { height: Math.round(width * 1.36) }]}>
-        {drama.image ? <Image source={{ uri: drama.image }} style={styles.poster} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={30} color={color.dim} /></View>}
+      <View style={[styles.posterFrame, { height: Math.round(width * 1.36) }, !focused && styles.posterDimmed]}>
+        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={30} color={focused ? TV_GOLD : color.dim} /></View>}
         {episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}
       </View>
-      <Text style={styles.posterTitle} numberOfLines={2}>{displayTitle(drama)}</Text>
-      {!compact && drama.year ? <Text style={styles.posterYear}>{drama.year}</Text> : null}
+      <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
+      {!compact && drama.year ? <Text style={[styles.posterYear, focused && styles.posterYearLit]}>{drama.year}</Text> : null}
     </Pressable>
   );
 }
@@ -794,6 +794,7 @@ const styles = StyleSheet.create({
   navFocused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.24)", elevation: 7, transform: [{ scale: 1.04 }] },
   navText: { color: color.muted, fontFamily: font.medium, fontSize: 13 },
   navTextActive: { color: color.text, fontFamily: font.bold },
+  navTextLit: { color: color.text, fontFamily: font.bold },
   sidebarFooter: { marginTop: "auto", paddingHorizontal: 2, gap: 5 },
   sidebarCaption: { color: TV_GOLD, fontFamily: font.bold, fontSize: 9, letterSpacing: 1.1 },
   sidebarSmall: { color: color.dim, fontFamily: font.body, fontSize: 10, lineHeight: 14 },
@@ -820,8 +821,11 @@ const styles = StyleSheet.create({
   actionPrimary: { backgroundColor: "#fff", borderColor: "#fff" },
   actionText: { color: color.text, fontFamily: font.bold, fontSize: 15 },
   actionTextPrimary: { color: "#000" },
+  actionTextLit: { color: TV_GOLD },
   focused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.18)" },
   posterFocused: { transform: [{ scale: 1.045 }], borderColor: TV_GOLD, borderWidth: 4, borderRadius: 14, backgroundColor: "#211B10", shadowColor: TV_GOLD, shadowOpacity: 0.65, shadowRadius: 12, elevation: 12, zIndex: 10 },
+  posterLit: { opacity: 1 },
+  posterDimmed: { opacity: 0.62 },
   pressed: { opacity: 0.78 },
   focusOutline: { borderWidth: 1, borderColor: "transparent" },
   focusOutlineOn: { borderColor: TV_GOLD },
@@ -838,7 +842,9 @@ const styles = StyleSheet.create({
   posterBadge: { position: "absolute", left: 8, top: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5, backgroundColor: "rgba(0,0,0,0.82)" },
   badgeText: { color: "#fff", fontFamily: font.bold, fontSize: 10 },
   posterTitle: { color: color.text, fontFamily: font.bold, fontSize: 14, lineHeight: 18 },
+  posterTitleLit: { color: "#FFF3D6" },
   posterYear: { color: color.dim, fontSize: 12 },
+  posterYearLit: { color: TV_GOLD },
   emptyHero: { minHeight: 180, padding: 28, justifyContent: "center", gap: 10 },
   bodyText: { color: color.muted, fontFamily: font.body, fontSize: 14, lineHeight: 21 },
   fill: { flex: 1 },
@@ -852,6 +858,7 @@ const styles = StyleSheet.create({
   filterActive: { backgroundColor: TV_GOLD, borderColor: TV_GOLD },
   filterText: { color: color.text, fontFamily: font.medium, fontSize: 14 },
   filterTextActive: { color: "#000", fontFamily: font.bold },
+  filterTextLit: { color: "#fff", fontFamily: font.bold },
   grid: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", gap: 14, paddingBottom: 40 },
   browseGridContent: { paddingBottom: 40, gap: 14 },
   emptyState: { width: "100%", minHeight: 280, alignItems: "center", justifyContent: "center", gap: 12 },
@@ -877,7 +884,9 @@ const styles = StyleSheet.create({
   episodeChip: { width: 170, minHeight: 52, borderRadius: 9, padding: 9, backgroundColor: "#171B18", borderWidth: 1, borderColor: color.line },
   episodeSelected: { borderColor: TV_GOLD },
   episodeNumber: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11 },
+  episodeNumberLit: { color: "#FFD98A", fontSize: 13 },
   episodeTitle: { color: color.text, fontSize: 12, marginTop: 3 },
+  episodeTitleLit: { color: "#FFFFFF", fontFamily: font.bold },
   backButton: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
   kbWrap: { position: "absolute", left: 0, right: 0, bottom: 0, top: 0, backgroundColor: "rgba(0,0,0,0.72)", alignItems: "center", justifyContent: "flex-end" },
   kbSheet: { width: "100%", maxWidth: 780, marginBottom: 24, borderRadius: 16, borderWidth: 1, borderColor: color.line, backgroundColor: "#0B0E0C", padding: 20, alignItems: "center" },
