@@ -669,8 +669,8 @@ function FilterButton({ label, active, autoFocus, onPress, showKb }: { label: st
       focusable
       disabled={showKb}
       {...tvFocusProps(!!autoFocus && !showKb)}
-      onFocus={tv.onFocus}
-      onBlur={() => tv.onBlur()}
+      onFocus={() => { tv.onFocus(); setFocused(true); }}
+      onBlur={() => { tv.onBlur(); setFocused(false); }}
       onPress={onPress}
       style={[styles.filter, active && styles.filterActive, focused && styles.focused]}
     >
@@ -688,8 +688,8 @@ function EpisodeButton({ episode, number, index, selected, onPress, showKb }: { 
       focusable
       disabled={showKb}
       {...tvFocusProps(index === 0 && !showKb)}
-      onFocus={tv.onFocus}
-      onBlur={() => tv.onBlur()}
+      onFocus={() => { tv.onFocus(); setFocused(true); }}
+      onBlur={() => { tv.onBlur(); setFocused(false); }}
       onPress={onPress}
       style={[styles.episodeChip, selected && styles.episodeSelected, focused && styles.focused]}
     >
@@ -760,8 +760,8 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       ref={tv.ref}
       focusable
       {...tvFocusProps(!!autoFocus)}
-      onFocus={tv.onFocus}
-      onBlur={() => tv.onBlur()}
+      onFocus={() => { tv.onFocus(); setFocused(true); }}
+      onBlur={() => { tv.onBlur(); setFocused(false); }}
       onPress={onPress}
       onLongPress={onPlay}
       accessibilityRole="button"
