@@ -121,6 +121,56 @@ function cleanDramaTitle(title) {
 
 function escHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 
+// Free budget web search: DuckDuckGo's HTML endpoint returns result titles and
+// snippets without any API key or billing. The snippets are injected into the
+// AI prompt as evidence so even the no-tool fallback providers can use real,
+// verified credits (e.g. "written by Shahid Kazmi, directed by Zakia Khanam").
+async function ddgWebSnippets(query, limit = 6) {
+  try {
+    const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9"
+      },
+      cf: { cacheTtl: 3600 }
+    });
+    if (!res.ok) return [];
+    const html = await res.text();
+    if (!html || html.length < 200) return [];
+
+    const strip = txt => String(txt || "")
+      .replace(/<b>/g, "").replace(/<\/b>/g, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&#x27;|&#39;/g, "'").replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const titles = [];
+    const titleRe = /<a[^>]+class="result__a"[^>]*>([\s\S]*?)<\/a>/g;
+    let m;
+    while ((m = titleRe.exec(html)) && titles.length < limit) {
+      const t = strip(m[1]);
+      if (t) titles.push(t);
+    }
+
+    const snippets = [];
+    const snipRe = /<a[^>]+class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
+    while ((m = snipRe.exec(html)) && snippets.length < titles.length) {
+      snippets.push(strip(m[1]));
+    }
+
+    const out = [];
+    for (let i = 0; i < titles.length; i++) {
+      out.push({ title: titles[i], snippet: snippets[i] || "" });
+    }
+    return out;
+  } catch (ddgErr) {
+    console.warn("DDG snippet search failed (non-fatal):", ddgErr?.message || ddgErr);
+    return [];
+  }
+}
+
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, OPTIONS",
@@ -275,7 +325,26 @@ async function aiAutofill(video, env, opts = {}) {
   const sharedCredits = opts.sharedCredits || null;
 
   // Web search only when the description doesn't already carry writer/director/cast credits.
-  const useTools = needsSearch && !sharedCredits;
+  const wantSearch = needsSearch && !sharedCredits;
+
+  // Budget evidence pass: free DDG snippets are fetched for the cleaned drama
+  // title and injected into the prompt, so credits are verifiable no matter
+  // which provider answers.
+  let webSnippets = [];
+  if (wantSearch) {
+    webSnippets = await ddgWebSnippets(cleanedTitle + " Pakistani drama writer director cast year");
+  }
+  const creditsFoundByDdg = webSnippets.some(s =>
+    /(writ(en)?|direct(ed|or)|cast|starr?ing|aired|broadcast)/i.test(s.snippet + " " + s.title)
+  );
+  // Pay for OpenRouter's richer search only if DDG didn't already surface credits.
+  const useTools = wantSearch && !creditsFoundByDdg;
+
+  const webEvidence = webSnippets.length
+    ? "Web search results (evidence - only trust entries clearly about THIS production, ignore remakes/Indian serials/stage plays):\n" +
+      webSnippets.map(s => "- " + s.title + (s.snippet ? " — " + s.snippet : "")).join("\n") + "\n\n"
+    : "";
+
   const yearHint = String(video.publishedAt || "").slice(0, 4);
   const yearFallback = String(video.publishedAt || "").slice(0, 4);
   const epHint = parseEpisodeNumber(video.title, video.description);
@@ -294,6 +363,7 @@ async function aiAutofill(video, env, opts = {}) {
     "- Category: exactly one of " + categoriesListStr + ".\n" +
     (sharedCredits ? "Known credits: " + JSON.stringify(sharedCredits) + "\n" : "") +
     "Return ONLY a JSON object, no markdown. Keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description.\n\n" +
+    webEvidence +
     "YouTube title: " + video.title + "\n" +
     "YouTube description:\n" + desc.slice(0, 4000) + "\n" +
     "Playlist context:\n" + String(opts.researchContext || "").slice(0, 1500) + "\n" +
@@ -385,7 +455,7 @@ async function aiAutofill(video, env, opts = {}) {
       if (orContent) {
         rawContent = orContent;
         aiProvider = "openrouter:" + (env.OPENROUTER_DEFAULT_MODEL || DEFAULT_AI_MODEL);
-        sharedSearchState.searched = useTools;
+        sharedSearchState.searched = useTools || webSnippets.length > 0;
       }
     } catch (orErr) {
       console.warn("OpenRouter failed, falling back:", orErr?.message || orErr);
