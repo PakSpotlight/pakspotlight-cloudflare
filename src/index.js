@@ -309,7 +309,8 @@ async function aiAutofill(video, env, opts = {}) {
         { role: "user", content: prompt }
       ],
       temperature: 0.1,
-      max_tokens: 1200
+      max_completion_tokens: 1600,
+      chat_template_kwargs: { enable_thinking: false }
     });
     const candidates = [
       cfResp?.result?.response,
