@@ -1,8 +1,12 @@
-// Classic TV Pakistan Worker — Cloudflare Workers AI only
+// Classic TV Pakistan Worker — OpenRouter (primary, web search) → Cloudflare AI → Gemini (fallbacks)
 
 var SUPABASE_URL = "https://whcseoasnaswlhnzduix.supabase.co";
 var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
 var YOUTUBE_HANDLE = "@pkspotlight";
+var OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+var DEFAULT_AI_MODEL = "deepseek/deepseek-v4-flash-0731";
+var GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
+var DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite";
 
 const DEFAULT_CATEGORIES = ["Serial / Series", "Long Play", "Comedy", "Shorts"];
 
@@ -270,67 +274,198 @@ async function aiAutofill(video, env, opts = {}) {
       : !(hasCredits && desc.length > 250);
   const sharedCredits = opts.sharedCredits || null;
 
+  // Web search only when the description doesn't already carry writer/director/cast credits.
+  const useTools = needsSearch && !sharedCredits;
   const yearHint = String(video.publishedAt || "").slice(0, 4);
+  const yearFallback = String(video.publishedAt || "").slice(0, 4);
   const epHint = parseEpisodeNumber(video.title, video.description);
 
-  var prompt = [
-    "You are filling metadata for Classic TV Pakistan, an archive of classic Pakistani television programmes.",
-    "Use ONLY the YouTube title, YouTube description, and explicitly supplied admin credits below. This workflow has no web-search capability.",
-    "Never claim to have searched the web. Never invent historical facts, credits, release years, cast members, Urdu titles, or production details.",
-    "If a fact is not explicitly supported by the supplied source text, return an empty string for that field.",
-    "Clean the title by removing episode/part numbers and channel suffixes such as PTV, HD, or Classic.",
-    "Do not use the YouTube upload date as the original broadcast/release year.",
-    "Copy an Urdu title only if it appears in the supplied YouTube description; otherwise leave urdu_title empty.",
-    "Episode: " + (epHint || "none seen") + ". Series name: identify only when clear from the title/description; otherwise leave empty.",
-    "Description: write 2-3 concise sentences using only information in the supplied source text.",
-    "Category must be exactly one of: " + categoriesListStr + ". If uncertain, return an empty string.",
-    (sharedCredits ? "Admin-provided credits (preserve these): " + JSON.stringify(sharedCredits) : ""),
-    "Return ONLY valid JSON, no markdown. Keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description.",
-    "YouTube title: " + video.title,
-    "YouTube description:",
-    desc.slice(0, 4000),
-    "Playlist context:",
-    String(opts.researchContext || "").slice(0, 1500)
-  ].filter(Boolean).join("\n");
+  var prompt =
+    "Classic TV Pakistan = archive of classic Pakistani PTV dramas.\n" +
+    "Fill EVERY field below with your best answer from the YouTube info"
+    + (useTools ? " + one web search" : "")
+    + (sharedCredits ? ". Credits already known, reuse them" : "")
+    + ". Never leave a field empty when you can infer it. Clean the title (remove EPISODE/PART numbers, | PTV, HD, etc). " +
+    "Urdu title: always give the Urdu script title (you know these classic dramas). " +
+    "Year: use the drama's real release year; if unsure use " + (yearHint || "the upload year") + ". " +
+    "Episode: \"" + (epHint || "none seen") + "\". Series name: the drama serial name (same as title for serials, empty for standalone long plays). " +
+    "Description: 2-3 warm sentences for viewers, always filled. " +
+    "Category: exactly one of: " + categoriesListStr + ".\n" +
+    (sharedCredits ? "Known credits: " + JSON.stringify(sharedCredits) + "\n" : "") +
+    "Return ONLY a JSON object, no markdown. Keys: title, urdu_title, year, type, series_name, episode_number, writer, director, produced, cast, description.\n\n" +
+    "YouTube title: " + video.title + "\n" +
+    "YouTube description:\n" + desc.slice(0, 4000) + "\n" +
+    "Playlist context:\n" + String(opts.researchContext || "").slice(0, 1500) + "\n" +
+    "Uploaded: " + video.publishedAt;
 
   var rawContent = "";
-  var aiProvider = "cloudflare";
+  var aiProvider = "";
+  const sharedSearchState = { searched: false };
 
-  // Always use Cloudflare Workers AI, including forced-refresh Admin Studio requests.
-  // No external AI provider is used as a fallback.
-  if (!env.AI || typeof env.AI.run !== "function") {
-    throw new Error("Cloudflare Workers AI binding (env.AI) is missing from this Worker deployment.");
+  // ── PRIMARY: OpenRouter (web search tools) ──
+  // deepseek-flash + openrouter:web_search is what historically fetched the full
+  // details (writer / director / cast / Urdu title) for every drama.
+  const openrouterKey = env.OPENROUTER_API_KEY;
+  if (openrouterKey) {
+    try {
+      var requestBody = {
+        model: env.OPENROUTER_DEFAULT_MODEL || DEFAULT_AI_MODEL,
+        messages: [
+          { role: "system", content: "Return ONLY valid JSON with ALL keys filled, best effort. Never add explanations." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.2
+      };
+      if (useTools) {
+        requestBody.tools = [{ type: "openrouter:web_search", max_results: 3, max_total_results: 3 }];
+      }
+
+      const callOpenRouter = body => fetch(OPENROUTER_API_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + openrouterKey,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://classictvpakistan.com",
+          "X-Title": "Classic TV Pakistan"
+        },
+        body: JSON.stringify(body)
+      });
+
+      var orResp = await callOpenRouter(requestBody);
+      if (!orResp.ok) {
+        var orErrData = {};
+        try { orErrData = await orResp.json(); } catch {}
+        throw new Error(orErrData.error?.message || "OpenRouter API request failed (" + orResp.status + ").");
+      }
+
+      var orData = await orResp.json();
+      var orContent = "";
+
+      if (orData.choices) {
+        for (var i = orData.choices.length - 1; i >= 0; i--) {
+          var choice = orData.choices[i];
+          var msg = choice?.message;
+          if (!msg) continue;
+
+          if (msg.content && msg.content.trim()) {
+            orContent = msg.content;
+            break;
+          }
+
+          if (msg.tool_calls) {
+            for (var tc of msg.tool_calls) {
+              var arg = tc?.function?.arguments;
+              if (arg && arg.trim().startsWith("{")) {
+                orContent = arg;
+                break;
+              }
+            }
+            if (orContent) break;
+          }
+        }
+      }
+
+      if (!orContent && orData.choices?.length === 1) {
+        orContent = orData.choices[0]?.message?.content || "";
+      }
+
+      // Empty output (e.g. the web-search plugin swallowed the answer): retry once without tools.
+      if (!orContent) {
+        const retryBody = { ...requestBody };
+        delete retryBody.tools;
+        const retryResp = await callOpenRouter(retryBody);
+        if (retryResp.ok) {
+          var retryData = await retryResp.json();
+          orContent = retryData.choices?.[0]?.message?.content || "";
+        }
+      }
+
+      orContent = (orContent || "").trim();
+      if (orContent) {
+        rawContent = orContent;
+        aiProvider = "openrouter:" + (env.OPENROUTER_DEFAULT_MODEL || DEFAULT_AI_MODEL);
+        sharedSearchState.searched = useTools;
+      }
+    } catch (orErr) {
+      console.warn("OpenRouter failed, falling back:", orErr?.message || orErr);
+    }
   }
 
-  try {
-    const cfResp = await env.AI.run("@cf/zai-org/glm-4.7-flash", {
-      messages: [
-        { role: "system", content: "Return ONLY one valid JSON object. Use only the supplied source text. Leave unsupported facts blank. Do not claim to have searched the web." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.1,
-      max_completion_tokens: 1600,
-      chat_template_kwargs: { enable_thinking: false }
-    });
-    const candidates = [
-      cfResp?.result?.response,
-      cfResp?.response,
-      cfResp?.result?.choices?.[0]?.message?.content,
-      cfResp?.choices?.[0]?.message?.content,
-      cfResp?.result?.output_text,
-      cfResp?.output_text,
-      cfResp?.result
-    ];
-    let content = candidates.find(value => typeof value === "string" && value.trim());
-    if (content === undefined) {
-      const structured = candidates.find(value => value && typeof value === "object");
-      if (structured !== undefined) content = JSON.stringify(structured);
+  // ── SECONDARY: Cloudflare Workers AI (GLM) ──
+  if (!rawContent) {
+    if (!env.AI || typeof env.AI.run !== "function") {
+      console.warn("Cloudflare Workers AI binding (env.AI) is missing; skipping to Gemini fallback.");
+    } else {
+      try {
+        const cfResp = await env.AI.run("@cf/zai-org/glm-4.7-flash", {
+          messages: [
+            { role: "system", content: "Return ONLY one valid JSON object. Use only the supplied source text. Leave unsupported facts blank. Do not claim to have searched the web." },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.1,
+          max_completion_tokens: 1600,
+          chat_template_kwargs: { enable_thinking: false }
+        });
+        const candidates = [
+          cfResp?.result?.response,
+          cfResp?.response,
+          cfResp?.result?.choices?.[0]?.message?.content,
+          cfResp?.choices?.[0]?.message?.content,
+          cfResp?.result?.output_text,
+          cfResp?.output_text,
+          cfResp?.result
+        ];
+        let content = candidates.find(value => typeof value === "string" && value.trim());
+        if (content === undefined) {
+          const structured = candidates.find(value => value && typeof value === "object");
+          if (structured !== undefined) content = JSON.stringify(structured);
+        }
+        rawContent = typeof content === "string" ? content.trim() : "";
+        if (rawContent) aiProvider = "cloudflare";
+      } catch (cfErr) {
+        console.warn("Cloudflare Workers AI failed, falling back to Gemini:", cfErr?.message || cfErr);
+      }
     }
-    rawContent = typeof content === "string" ? content.trim() : "";
-    if (!rawContent) throw new Error("Cloudflare Workers AI returned an empty response. Please retry.");
-  } catch (cfErr) {
-    console.error("Cloudflare Workers AI metadata autofill failed:", cfErr?.message || cfErr);
-    throw new Error("Cloudflare Workers AI failed: " + (cfErr?.message || "unknown error") + ". No external AI provider was used.");
+  }
+
+  // ── TERTIARY: Google Gemini (multi-model so quota/overload on one never kills the flow) ──
+  if (!rawContent) {
+    const geminiKey = env.GEMINI_API_KEY;
+    if (geminiKey) {
+      const geminiModels = [
+        env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL,
+        DEFAULT_GEMINI_MODEL,
+        "gemini-2.0-flash"
+      ].filter((m, i, arr) => m && arr.indexOf(m) === i);
+      for (const geminiModel of geminiModels) {
+        try {
+          const body = {
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.2, responseMimeType: "application/json" }
+          };
+          const geminiResp = await fetch(`${GEMINI_API_URL}/${geminiModel}:generateContent?key=${geminiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+          if (!geminiResp.ok) {
+            var geminiErr = {};
+            try { geminiErr = await geminiResp.json(); } catch {}
+            console.warn(`Gemini (${geminiModel}) error:`, geminiErr.error?.message || geminiResp.status);
+            continue;
+          }
+          var geminiData = await geminiResp.json();
+          rawContent = (geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
+          if (rawContent) { aiProvider = `gemini:${geminiModel}`; break; }
+        } catch (geminiErr) {
+          console.warn(`Gemini (${geminiModel}) request failed:`, geminiErr?.message || geminiErr);
+        }
+      }
+    }
+  }
+
+  if (!rawContent) {
+    throw new Error("All AI providers failed (OpenRouter, Cloudflare AI, Gemini). Please try again.");
   }
 
   // Parse JSON from response
@@ -357,21 +492,19 @@ async function aiAutofill(video, env, opts = {}) {
   }
 
   const epFallback = parseEpisodeNumber(video.title, video.description);
-  const sourceYears = desc.match(/\b(?:19|20)\d{2}\b/g) || [];
-  const sourceHasUrdu = /[\u0600-\u06FF]/.test(desc);
   const baseTitle = cleanDramaTitle(out.title || video.title);
 
   const fields = {
     title: baseTitle || video.title,
-    urdu_title: sourceHasUrdu ? (out.urdu_title || "") : "",
-    year: sourceYears.includes(String(out.year || "")) ? String(out.year) : "",
-    type: (allowedCategories.find(c => c.toLowerCase() === String(out.type || "").trim().toLowerCase()) || (allowedCategories.includes(out.type) ? out.type : "")),
+    urdu_title: out.urdu_title || "",
+    year: out.year || yearFallback,
+    type: (allowedCategories.find(c => c.toLowerCase() === String(out.type || "").trim().toLowerCase()) || (allowedCategories.includes(out.type) ? out.type : (allowedCategories[0] || "Long Play"))),
     series_name: out.series_name || (epFallback || /serial|series|ep|episode|part/i.test(video.title) ? baseTitle : ""),
     episode_number: out.episode_number || epFallback,
-    writer: sharedCredits?.writer || (/(writer|written by|تحریر|قلم)/i.test(desc) ? (out.writer || "") : ""),
-    director: sharedCredits?.director || (/(director|directed by|ہدایت|ڈائریکٹر)/i.test(desc) ? (out.director || "") : ""),
-    produced: sharedCredits?.produced || (/(producer|produced by|پروڈیوسر|پیشکش)/i.test(desc) ? (out.produced || "") : ""),
-    cast: sharedCredits?.cast || (/(cast|starring|stars|اداکار|فنکار)/i.test(desc) ? (out.cast || "") : ""),
+    writer: out.writer || sharedCredits?.writer || "",
+    director: out.director || sharedCredits?.director || "",
+    produced: out.produced || sharedCredits?.produced || "",
+    cast: out.cast || sharedCredits?.cast || "",
     description: out.description || String(video.description || "").slice(0, 500),
     seo_title: "",
     seo_description: "",
@@ -392,7 +525,7 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  return { video, searched: false, searchPasses: 0, verificationPasses: 0, webSearchUsed: false, provider: aiProvider, fields };
+  return { video, searched: sharedSearchState.searched, searchPasses: sharedSearchState.searched ? 1 : 0, verificationPasses: 0, webSearchUsed: sharedSearchState.searched, provider: aiProvider, fields };
 }
 
 // Set by fetch handler so aiAutofill can background-save the cache.
