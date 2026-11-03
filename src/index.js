@@ -222,6 +222,44 @@ async function identifyVideo(url, env) {
   };
 }
 
+async function researchDramaWithGroq(video, env, playlistContext = "") {
+  if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is not configured. Add it as a Cloudflare Worker secret before using web research.");
+  const title = cleanDramaTitle(video.title) || video.title;
+  const query = [
+    "Research original Pakistani PTV metadata for: " + title,
+    "YouTube title: " + String(video.title || "").slice(0, 250),
+    "YouTube description: " + String(video.description || "").slice(0, 1800),
+    "Playlist context: " + String(playlistContext || "").slice(0, 800),
+    "Find original broadcast/release year, writer, director, producer, and principal cast.",
+    "Prioritize PTV/official archives, reputable Pakistani newspapers, established entertainment databases, and credible interviews.",
+    "Do not confuse YouTube upload date with original broadcast year. Do not guess. Mark facts confirmed, conflicting, or not found.",
+    "Include direct source URLs beside facts. Return concise research notes, not JSON."
+  ].join("\n");
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "authorization": "Bearer " + env.GROQ_API_KEY, "content-type": "application/json" },
+    body: JSON.stringify({
+      model: "openai/gpt-oss-20b",
+      messages: [
+        { role: "system", content: "Research Pakistani television history carefully. Use browser search and cite direct URLs for every factual claim. If evidence is weak or conflicting, say so and do not invent details." },
+        { role: "user", content: query }
+      ],
+      tools: [{ type: "browser_search" }],
+      tool_choice: "required",
+      temperature: 0.2,
+      max_completion_tokens: 1800,
+      reasoning_effort: "low",
+      stream: false
+    })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error?.message || "Groq browser search failed (" + response.status + ").");
+  const research = String(data.choices?.[0]?.message?.content || "").trim();
+  if (!research) throw new Error("Groq browser search returned no research notes. No metadata was guessed.");
+  const urls = [...new Set(research.match(/https?:\/\/[^\s)\]}>]+/g) || [])].slice(0, 12);
+  return { research, urls };
+}
+
 async function aiAutofill(video, env, opts = {}) {
   const allowedCategories = await getCategories(env);
   const categoriesListStr = allowedCategories.join(", ");
@@ -269,16 +307,19 @@ async function aiAutofill(video, env, opts = {}) {
       ? false
       : !(hasCredits && desc.length > 250);
   const sharedCredits = opts.sharedCredits || null;
+  let webResearch = null;
+  if (opts.forceSearch === true) webResearch = await researchDramaWithGroq(video, env, opts.researchContext || "");
+  const fullResearchContext = [String(opts.researchContext || ""), webResearch?.research || ""].filter(Boolean).join("\\n\\n").slice(0, 6500);
 
   const yearHint = String(video.publishedAt || "").slice(0, 4);
   const epHint = parseEpisodeNumber(video.title, video.description);
 
   var prompt = [
     "You are filling metadata for Classic TV Pakistan, an archive of classic Pakistani television programmes.",
-    "Use ONLY the YouTube title, YouTube description, and explicitly supplied admin credits below. This workflow has no web-search capability.",
-    "Never claim to have searched the web. Never invent historical facts, credits, release years, cast members, or production details.",
+    "Use the YouTube title, YouTube description, admin credits, and Groq web-research notes below. Treat research notes as evidence only when they include direct source URLs.",
+    "Never invent historical facts, credits, release years, cast members, or production details. If sources conflict or are weak, leave the affected field blank.",
     "For urdu_title, if no Urdu title is supplied, write a natural Urdu-script transliteration of the English programme title. Preserve names and meaning; do not leave it blank merely because the description has no Urdu text. This is a transliteration, not a claim that it is the official Urdu title.",
-    "For year and credits (writer, director, producer, cast), use only explicit evidence in the supplied source text or admin-provided credits; otherwise return an empty string.",
+    "For year and credits (writer, director, producer, cast), use explicit evidence in the YouTube text, admin credits, or credible Groq research sources; otherwise return an empty string.",
     "Clean the title by removing episode/part numbers and channel suffixes such as PTV, HD, or Classic.",
     "Do not use the YouTube upload date as the original broadcast/release year.",
     "Episode: " + (epHint || "none seen") + ". Series name: identify only when clear from the title/description; otherwise leave empty.",
@@ -290,7 +331,7 @@ async function aiAutofill(video, env, opts = {}) {
     "YouTube description:",
     desc.slice(0, 4000),
     "Playlist context:",
-    String(opts.researchContext || "").slice(0, 1500)
+    fullResearchContext
   ].filter(Boolean).join("\n");
 
   var rawContent = "";
@@ -357,7 +398,7 @@ async function aiAutofill(video, env, opts = {}) {
   }
 
   const epFallback = parseEpisodeNumber(video.title, video.description);
-  const sourceYears = desc.match(/\b(?:19|20)\d{2}\b/g) || [];
+  const sourceYears = (desc + " " + fullResearchContext).match(/\b(?:19|20)\d{2}\b/g) || [];
   const baseTitle = cleanDramaTitle(out.title || video.title);
 
   const fields = {
@@ -367,10 +408,10 @@ async function aiAutofill(video, env, opts = {}) {
     type: (allowedCategories.find(c => c.toLowerCase() === String(out.type || "").trim().toLowerCase()) || (allowedCategories.includes(out.type) ? out.type : "")),
     series_name: out.series_name || (epFallback || /serial|series|ep|episode|part/i.test(video.title) ? baseTitle : ""),
     episode_number: out.episode_number || epFallback,
-    writer: sharedCredits?.writer || (/(writer|written by|تحریر|قلم)/i.test(desc) ? (out.writer || "") : ""),
-    director: sharedCredits?.director || (/(director|directed by|ہدایت|ڈائریکٹر)/i.test(desc) ? (out.director || "") : ""),
-    produced: sharedCredits?.produced || (/(producer|produced by|پروڈیوسر|پیشکش)/i.test(desc) ? (out.produced || "") : ""),
-    cast: sharedCredits?.cast || (/(cast|starring|stars|اداکار|فنکار)/i.test(desc) ? (out.cast || "") : ""),
+    writer: sharedCredits?.writer || (/(writer|written by|تحریر|قلم)/i.test(desc + " " + fullResearchContext) ? (out.writer || "") : ""),
+    director: sharedCredits?.director || (/(director|directed by|ہدایت|ڈائریکٹر)/i.test(desc + " " + fullResearchContext) ? (out.director || "") : ""),
+    produced: sharedCredits?.produced || (/(producer|produced by|پروڈیوسر|پیشکش)/i.test(desc + " " + fullResearchContext) ? (out.produced || "") : ""),
+    cast: sharedCredits?.cast || (/(cast|starring|stars|اداکار|فنکار)/i.test(desc + " " + fullResearchContext) ? (out.cast || "") : ""),
     description: out.description || String(video.description || "").slice(0, 500),
     seo_title: "",
     seo_description: "",
@@ -391,7 +432,7 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
-  return { video, searched: false, searchPasses: 0, verificationPasses: 0, webSearchUsed: false, provider: aiProvider, fields };
+  return { video, searched: Boolean(webResearch), searchPasses: webResearch ? 1 : 0, verificationPasses: 0, webSearchUsed: Boolean(webResearch), provider: webResearch ? "groq-browser-search + cloudflare-glm" : aiProvider, groundingQueries: [], groundingSources: webResearch?.urls || [], researchNotes: webResearch?.research || "", fields };
 }
 
 // Set by fetch handler so aiAutofill can background-save the cache.
