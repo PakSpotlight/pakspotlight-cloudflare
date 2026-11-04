@@ -60,9 +60,13 @@ jobs:
             npm install "expo@~${sdk}.0.0"
             if [ "$sdk" -ge 56 ]; then npm install expo-status-bar; fi
             npx expo install --fix
-            # Re-resolve React Navigation against the active SDK; Expo Doctor
-            # checks the SDK-pinned package range, not merely semver compatibility.
             npx expo install @react-navigation/native
+            # Expo SDK 58's doctor expects the dependency declaration range
+            # ^7.0.14. expo install otherwise writes the newer ^7.5.1 range,
+            # which makes Doctor fail despite the installed 7.x package.
+            if [ "$sdk" -eq 58 ]; then
+              npm install '@react-navigation/native@^7.0.14'
+            fi
             if [ "$sdk" -eq 56 ]; then
               echo "SDK 56 has a documented Hermes V1 memory regression; SDK 57 is the required fix. Continue migration and run Expo Doctor on SDK 57 and 58."
             else
@@ -78,14 +82,16 @@ jobs:
           node -e "const fs=require('fs');const p=require('./package.json');p.expo=p.expo||{};p.expo.install=p.expo.install||{};p.expo.install.exclude=['react-native'];fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\\n')"
           npm install
           npx expo install --fix
+          # Keep the SDK 58-compatible declaration after the final dependency fix.
+          npm install '@react-navigation/native@^7.0.14'
           npx expo-doctor
 
       - name: Confirm TV and phone identities stay separate
         run: |
           npx expo config --json > /tmp/tv-config.json
-          node -e "const c=require('/tmp/tv-config.json');if(c.android.package!=='com.classictvpakistan.tv')throw Error('Wrong TV package: '+c.android.package);if(c.android.minSdkVersion && c.android.minSdkVersion<24)throw Error('TV minSdk below 24');console.log('TV config verified:',c.android.package,c.version)"
+          node -e "const c=require('/tmp/tv-config.json');if(c.android.package!=='com.classictvpakistan.tv')throw Error('Wrong TV package: '+c.android.package);if(c.android.versionCode!==2)throw Error('Wrong TV version code: '+c.android.versionCode)"
           env -u CLASSIC_TV_ANDROID_TV npx expo config --json > /tmp/phone-config.json
-          node -e "const c=require('/tmp/phone-config.json');if(c.android.package!=='com.classictvpakistan.app')throw Error('Phone package changed');if(c.android.versionCode!==2)throw Error('Phone versionCode changed');console.log('Phone identity verified:',c.android.package,c.version)"
+          node -e "const c=require('/tmp/phone-config.json');if(c.android.package!=='com.classictvpakistan.app')throw Error('Phone package changed');if(c.android.versionCode!==2)throw Error('Phone version code changed')"
 
       - name: Type-check shared app
         run: npm run typecheck
