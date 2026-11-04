@@ -32,16 +32,19 @@ module.exports = function withAndroidTv(config) {
     }
 
     manifest["uses-feature"] = manifest["uses-feature"] || [];
-    const touchscreen = manifest["uses-feature"].find(
-      (item) => item.$["android:name"] === "android.hardware.touchscreen"
-    );
-    if (touchscreen) {
-      touchscreen.$["android:required"] = "false";
-    } else {
-      manifest["uses-feature"].push({
-        $: { "android:name": "android.hardware.touchscreen", "android:required": "false" },
-      });
-    }
+    const ensureFeature = (name, required) => {
+      const existing = manifest["uses-feature"].find((item) => item.$["android:name"] === name);
+      if (existing) {
+        existing.$["android:required"] = String(required);
+      } else {
+        manifest["uses-feature"].push({
+          $: { "android:name": name, "android:required": String(required) },
+        });
+      }
+    };
+
+    ensureFeature("android.software.leanback", true);
+    ensureFeature("android.hardware.touchscreen", false);
     return config;
   });
 
