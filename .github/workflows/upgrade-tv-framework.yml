@@ -52,11 +52,10 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Install project dependencies and reconcile lockfile
-        run: npm install
-
-      - name: Align dependencies with the installed Expo SDK
-        run: npx expo install --fix
+      - name: Install project dependencies and align Expo packages
+        run: |
+          npm install
+          npx expo install --fix
 
       - name: Confirm TV and phone identities stay separate
         run: |
@@ -67,6 +66,15 @@ jobs:
 
       - name: Run Expo Doctor
         run: npx expo-doctor
+
+      - name: Fix React Native absolute fill style names
+        run: |
+          # absoluteFill is a StyleSheet style array; object spreads must use absoluteFillObject.
+          sed -i 's/\.\.\.StyleSheet\.absoluteFill\([, }][0m\)/...StyleSheet.absoluteFillObject\1/g' src/screens/TvApp.tsx
+          if grep -n '\.\.\.StyleSheet\.absoluteFill[, }]' src/screens/TvApp.tsx; then
+            echo "Invalid absoluteFill object spread remains in TvApp.tsx" >&2
+            exit 1
+          fi
 
       - name: Type-check shared app
         run: npm run typecheck
