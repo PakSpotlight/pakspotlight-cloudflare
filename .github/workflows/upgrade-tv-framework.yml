@@ -26,6 +26,7 @@ jobs:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
       npm_config_legacy_peer_deps: "true"
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
 
     steps:
       - name: Check out branch
@@ -91,14 +92,40 @@ jobs:
       - name: Generate Android TV native project
         run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Build Android TV APK (unsigned verification build)
+      - name: Write signing keystore
+        if: env.KEYSTORE_B64 != ''
+        run: echo "$KEYSTORE_B64" | base64 -d > "$GITHUB_WORKSPACE/mobile/release.keystore"
+
+      - name: Build signed Android TV APK
+        if: env.KEYSTORE_B64 != ''
+        working-directory: mobile/android
+        run: |
+          ./gradlew assembleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/mobile/release.keystore" \
+            -Pandroid.injected.signing.store.password="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.ANDROID_KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.ANDROID_KEY_PASSWORD }}"
+
+      - name: Build unsigned APK only if signing secrets are unavailable
+        if: env.KEYSTORE_B64 == ''
         working-directory: mobile/android
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Upload verification APK
+      - name: Verify APK signature
+        working-directory: mobile
+        run: |
+          APK="android/app/build/outputs/apk/release/app-release.apk"
+          test -f "$APK"
+          if [ -n "$KEYSTORE_B64" ]; then
+            "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose "$APK"
+          else
+            echo "::warning::Signing secrets unavailable; this APK is unsigned."
+          fi
+
+      - name: Upload Android TV test APK
         uses: actions/upload-artifact@v4
         with:
-          name: ClassicTVPakistanTV-framework-verification
-          path: mobile/android/app/build/outputs/apk/release/*.apk
+          name: ClassicTVPakistanTV-1.0.7-signed-test
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
