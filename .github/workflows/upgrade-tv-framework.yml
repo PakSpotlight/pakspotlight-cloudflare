@@ -57,6 +57,24 @@ jobs:
           npm install
           npx expo install --fix
 
+      - name: Patch Expo permissions Kotlin nullability for Android build
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/permissions/PermissionsService.kt';
+          const source = fs.readFileSync(path, 'utf8');
+          const broken = 'return requestedPermissions.contains(permission)';
+          const fixed = 'return requestedPermissions?.contains(permission) == true';
+          if (source.includes(fixed)) {
+            console.log('Expo permissions nullability fix is already present.');
+          } else if (source.includes(broken)) {
+            fs.writeFileSync(path, source.replace(broken, fixed));
+            console.log('Applied null-safe requestedPermissions check in expo-modules-core.');
+          } else {
+            throw new Error(`Could not find expected requestedPermissions check in ${path}; inspect the Expo module version/source.`);
+          }
+          NODE
+
       - name: Confirm TV and phone identities stay separate
         run: |
           npx expo config --json > /tmp/tv-config.json
