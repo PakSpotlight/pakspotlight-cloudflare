@@ -7,7 +7,12 @@ module.exports = ({ config }) => {
     // SDK 56 introduced the expo-status-bar config plugin. Older SDK versions
     // ship a runtime package without that plugin, so do not register it early.
     const expoSdkMajor = Number(require("expo/package.json").version.split(".")[0]);
-    if (expoSdkMajor >= 56 && !plugins.includes("expo-status-bar")) {
+    const statusBarIndex = plugins.findIndex(
+      (plugin) => (Array.isArray(plugin) ? plugin[0] : plugin) === "expo-status-bar"
+    );
+    if (expoSdkMajor < 56 && statusBarIndex >= 0) {
+      plugins.splice(statusBarIndex, 1);
+    } else if (expoSdkMajor >= 56 && statusBarIndex < 0) {
       plugins.push("expo-status-bar");
     }
 
