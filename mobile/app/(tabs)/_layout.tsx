@@ -39,27 +39,48 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color: tint, focused }) => (
-            <Ionicons name={focused ? "home" : "home-outline"} size={21} color={tint} />
-          ),
+          tabBarIcon: ({ color: tint, focused }) => {
+            const iconColor = tint ?? color.accent;
+            return (
+              <Ionicons
+                name={focused ? "home" : "home-outline"}
+                size={21}
+                color={iconColor}
+              />
+            );
+          },
         }}
       />
       <Tabs.Screen
         name="browse"
         options={{
           title: "Browse",
-          tabBarIcon: ({ color: tint, focused }) => (
-            <Ionicons name={focused ? "grid" : "grid-outline"} size={20} color={tint} />
-          ),
+          tabBarIcon: ({ color: tint, focused }) => {
+            const iconColor = tint ?? color.accent;
+            return (
+              <Ionicons
+                name={focused ? "grid" : "grid-outline"}
+                size={20}
+                color={iconColor}
+              />
+            );
+          },
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
           title: "My Library",
-          tabBarIcon: ({ color: tint, focused }) => (
-            <Ionicons name={focused ? "bookmark" : "bookmark-outline"} size={20} color={tint} />
-          ),
+          tabBarIcon: ({ color: tint, focused }) => {
+            const iconColor = tint ?? color.accent;
+            return (
+              <Ionicons
+                name={focused ? "bookmark" : "bookmark-outline"}
+                size={20}
+                color={iconColor}
+              />
+            );
+          },
         }}
       />
     </Tabs>
