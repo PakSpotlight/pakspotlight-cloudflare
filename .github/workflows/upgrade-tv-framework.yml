@@ -59,6 +59,7 @@ jobs:
             echo "::group::Upgrade to Expo SDK $sdk"
             npm install "expo@~${sdk}.0.0"
             npx expo install --fix
+            npx expo install expo-status-bar
             npx expo-doctor
             echo "::endgroup::"
           done
