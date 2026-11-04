@@ -1,4 +1,4 @@
-name: Upgrade Android TV framework
+name: Verify Android TV framework
 
 on:
   push:
@@ -10,12 +10,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: tv-framework-upgrade
+  group: tv-framework-verification
   cancel-in-progress: false
 
 jobs:
-  upgrade-and-verify:
-    name: Upgrade Expo SDK step-by-step and verify TV build
+  verify-tv-build:
+    name: Verify Android TV app compatibility and native build
     if: startsWith(github.ref, 'refs/heads/fix/android-tv-native-tv-framework')
     runs-on: ubuntu-latest
     defaults:
@@ -28,7 +28,7 @@ jobs:
       npm_config_legacy_peer_deps: "true"
 
     steps:
-      - name: Check out isolated TV branch
+      - name: Check out branch
         uses: actions/checkout@v4
         with:
           ref: fix/android-tv-native-tv-framework
@@ -52,34 +52,8 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Upgrade Expo SDK one major version at a time
-        run: |
-          set -euo pipefail
-          for sdk in 52 53 54 55 56 57 58; do
-            echo "::group::Upgrade to Expo SDK $sdk"
-            npm install "expo@~${sdk}.0.0"
-            if [ "$sdk" -ge 56 ]; then npm install expo-status-bar; fi
-            npx expo install --fix
-            # Expo Doctor expects @react-navigation/native to stay in the SDK-pinned range.
-            # If we let expo install resolve it on its own, it can drift to ^7.5.1 and fail.
-            npm install '@react-navigation/native@7.0.14'
-            if [ "$sdk" -eq 56 ]; then
-              echo "SDK 56 has a documented Hermes V1 memory regression; SDK 57 is the required fix. Continue migration and run Expo Doctor on SDK 57 and 58."
-            else
-              npx expo-doctor
-            fi
-            echo "::endgroup::"
-          done
-
-      - name: Switch to the matching React Native TV fork
-        run: |
-          set -euo pipefail
-          npm install "react-native@npm:react-native-tvos@0.88-stable" "react@19.3.0" "react-dom@19.3.0"
-          node -e "const fs=require('fs');const p=require('./package.json');p.expo=p.expo||{};p.expo.install=p.expo.install||{};p.expo.install.exclude=['react-native'];fs.writeFileSync('package.json', JSON.stringify(p,null,2)+'\n');"
-          npm install
-          npx expo install --fix
-          npm install '@react-navigation/native@7.0.14'
-          npx expo-doctor
+      - name: Install project dependencies
+        run: npm ci
 
       - name: Confirm TV and phone identities stay separate
         run: |
@@ -87,6 +61,9 @@ jobs:
           node -e "const c=require('/tmp/tv-config.json');if(c.android.package!=='com.classictvpakistan.tv')throw Error('Wrong TV package: '+c.android.package);if(c.android.versionCode!==8)throw Error('Wrong TV version code: '+c.android.versionCode)"
           env -u CLASSIC_TV_ANDROID_TV npx expo config --json > /tmp/phone-config.json
           node -e "const c=require('/tmp/phone-config.json');if(c.android.package!=='com.classictvpakistan.app')throw Error('Phone package changed');if(c.android.versionCode!==2)throw Error('Phone version code changed')"
+
+      - name: Run Expo Doctor
+        run: npx expo-doctor
 
       - name: Type-check shared app
         run: npm run typecheck
@@ -105,17 +82,3 @@ jobs:
           path: mobile/android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 14
-
-      - name: Commit verified dependency migration to this branch
-        working-directory: .
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add mobile/package.json mobile/package-lock.json
-          if git diff --cached --quiet; then
-            echo "No dependency changes to commit."
-          else
-            git commit -m "build(tv): upgrade Expo and React Native TV framework [skip ci]"
-            git push origin HEAD:fix/android-tv-native-tv-framework
-          fi
