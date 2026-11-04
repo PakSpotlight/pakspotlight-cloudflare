@@ -60,6 +60,9 @@ jobs:
             npm install "expo@~${sdk}.0.0"
             if [ "$sdk" -ge 56 ]; then npm install expo-status-bar; fi
             npx expo install --fix
+            # Re-resolve React Navigation against the active SDK; Expo Doctor
+            # checks the SDK-pinned package range, not merely semver compatibility.
+            npx expo install @react-navigation/native
             if [ "$sdk" -eq 56 ]; then
               echo "SDK 56 has a documented Hermes V1 memory regression; SDK 57 is the required fix. Continue migration and run Expo Doctor on SDK 57 and 58."
             else
