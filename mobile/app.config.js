@@ -4,7 +4,7 @@ module.exports = ({ config }) => {
   const plugins = [...(config.plugins || [])];
 
   if (isTv) {
-    // Android TV uses API 24+; keep the phone app's API 23 setting unchanged.
+    // Expo SDK 58 / React Native 0.88 Android baseline; phone API 23 remains unchanged.
     const buildProperties = plugins.findIndex(
       (plugin) => Array.isArray(plugin) && plugin[0] === "expo-build-properties"
     );
@@ -17,8 +17,9 @@ module.exports = ({ config }) => {
           android: {
             ...(options.android || {}),
             minSdkVersion: 24,
-            compileSdkVersion: 36,
-            targetSdkVersion: 34,
+            compileSdkVersion: 37,
+            targetSdkVersion: 36,
+            buildToolsVersion: "37.0.0",
           },
         },
       ];
