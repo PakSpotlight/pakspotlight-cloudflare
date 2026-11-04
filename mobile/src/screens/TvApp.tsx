@@ -170,7 +170,6 @@ export function TvApp() {
   const [showKb, setShowKb] = useState(false);
   const searchRef = useRef<any>(null);
 
-  // Android TV's hardware Back key must follow the same screen stack as the on-screen Back button.
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
       if (showKb) {
@@ -495,8 +494,6 @@ export function TvApp() {
   );
 }
 
-/* ============== search-zone & on-screen keyboard for the TV remote ============== */
-
 const KB_ROWS = ["ABCDEFGH", "IJKLMNO", "PQRSTUV", "WXYZ012", "3456789"];
 
 function RemoteKeyboard({ onChar, onBackspace, onClear, onDone, onClose }: {
@@ -564,8 +561,6 @@ function RemoteKeyboard({ onChar, onBackspace, onClear, onDone, onClose }: {
   );
 }
 
-/* ============== reusable pressable with default focus styling ============== */
-
 function TvPress({
   focusKey,
   onPress,
@@ -616,8 +611,6 @@ function TvPress({
     </Pressable>
   );
 }
-
-/* ============== nav/sidebar/buttons/tiles ============== */
 
 function NavButton({ label, icon, active, autoFocus, onPress, showKb }: { label: string; icon: keyof typeof Ionicons.glyphMap; active: boolean; autoFocus?: boolean; onPress: () => void; showKb?: boolean }) {
   const [focused, setFocused] = useState(false);
@@ -779,7 +772,6 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
 }
 
 const styles = StyleSheet.create({
-  /* source of truth for the layout stays identical to the shipped TV UI — see git. */
   screen: { flex: 1, flexDirection: "row", backgroundColor: "#050606" },
   fullscreenScreen: { flexDirection: "column", padding: 0 },
   sidebar: { width: 148, paddingTop: 22, paddingHorizontal: 10, paddingBottom: 16, borderRightWidth: 1, borderRightColor: color.line, backgroundColor: "#080A09" },
