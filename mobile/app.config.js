@@ -4,12 +4,11 @@ module.exports = ({ config }) => {
   const plugins = [...(config.plugins || [])];
 
   if (isTv) {
-    // SDK 56+ requires expo-status-bar to be explicitly listed in dynamic configs.
-    try {
-      require.resolve("expo-status-bar/package.json");
-      if (!plugins.includes("expo-status-bar")) plugins.push("expo-status-bar");
-    } catch (_) {
-      // The SDK migration workflow installs this package when SDK 56 requires it.
+    // SDK 56 introduced the expo-status-bar config plugin. Older SDK versions
+    // ship a runtime package without that plugin, so do not register it early.
+    const expoSdkMajor = Number(require("expo/package.json").version.split(".")[0]);
+    if (expoSdkMajor >= 56 && !plugins.includes("expo-status-bar")) {
+      plugins.push("expo-status-bar");
     }
 
     // Expo SDK 58 / React Native 0.88 Android baseline; phone API 23 remains unchanged.
