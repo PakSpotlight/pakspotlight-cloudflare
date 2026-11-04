@@ -4,6 +4,9 @@ module.exports = ({ config }) => {
   const plugins = [...(config.plugins || [])];
 
   if (isTv) {
+    // SDK 56+ requires expo-status-bar to be explicitly listed in dynamic configs.
+    if (!plugins.includes("expo-status-bar")) plugins.push("expo-status-bar");
+
     // Expo SDK 58 / React Native 0.88 Android baseline; phone API 23 remains unchanged.
     const buildProperties = plugins.findIndex(
       (plugin) => Array.isArray(plugin) && plugin[0] === "expo-build-properties"
