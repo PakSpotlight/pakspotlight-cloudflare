@@ -72,7 +72,7 @@ export function Hero({ drama, meta, ctaLabel, onPlay, secondary }: Props) {
         <LinearGradient
           colors={heroScrim}
           locations={[0, 0.55, 1]}
-          style={StyleSheet.absoluteFill}
+          style={StyleSheet.absoluteFillObject}
           pointerEvents="none"
         />
         <View style={styles.fullContent}>
@@ -128,7 +128,7 @@ export function Hero({ drama, meta, ctaLabel, onPlay, secondary }: Props) {
 const styles = StyleSheet.create({
   // Full-bleed variant
   fullWrap: { height: 280, justifyContent: "flex-end" },
-  fullImage: { ...StyleSheet.absoluteFill, width: "100%", height: "100%" },
+  fullImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
   fullContent: { paddingHorizontal: gutter, paddingBottom: space.lg },
   fullTitle: {
     color: color.text,
