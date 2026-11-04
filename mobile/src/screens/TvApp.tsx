@@ -65,7 +65,7 @@ function measureWithin(itemRef: any, ancestorRef: any): Promise<{ x: number; y: 
     }
     let handle: number | null = null;
     try {
-      handle = findNodeHandle(ancestor);
+      handle = findNodeHandle(ancestor) ?? null;
     } catch {
       handle = null;
     }
@@ -809,8 +809,8 @@ const styles = StyleSheet.create({
   pageScroll: { flex: 1 },
   homeContent: { paddingBottom: 40, gap: 22 },
   hero: { overflow: "hidden", borderRadius: 18, backgroundColor: "#141816", justifyContent: "flex-end" },
-  heroImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%", opacity: 0.64 },
-  heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.34)" },
+  heroImage: { ...StyleSheet.absoluteFill, width: "100%", height: "100%", opacity: 0.64 },
+  heroScrim: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.34)" },
   heroCopy: { padding: 28, maxWidth: 650, gap: 9 },
   eyebrow: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11, letterSpacing: 1.7 },
   urduTitle: { color: "#fff", fontSize: 22, lineHeight: 42 },
