@@ -25,6 +25,7 @@ jobs:
       CLASSIC_TV_ANDROID_TV: "1"
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      npm_config_legacy_peer_deps: "true"
 
     steps:
       - name: Check out isolated TV branch
@@ -46,7 +47,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install Android SDK 37
+      - name: Install Android SDK 36
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
