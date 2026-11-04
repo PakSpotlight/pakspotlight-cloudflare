@@ -40,8 +40,8 @@ const TV_GOLD = "#D8B15A";
       • scrolls its ancestor scroll container so the focused card
         is always visible (RN does NOT do this automatically).
    2. Android's native D-pad focus engine moves focus between
-     focusable views; we seed it with `hasTVPreferredFocus` on one
-     element per screen so the remote can never be "dead".
+      focusable views; we seed it with `hasTVPreferredFocus` on one
+      element per screen so the remote can never be "dead".
    ============================================================ */
 
 type TvScrollable = {
@@ -283,7 +283,7 @@ export function TvApp() {
 
         <View style={[styles.main, page === "player" && styles.fullscreenMain]}>
           {page !== "player" ? <View style={styles.topline}>
-            <Text style={styles.pageLabel}>{page === "details" ? "TITLE DETAILS" : page === "browse" ? "EXPLORE THE ARCHIVE" : page === "library" ? "YOUR SAVED TITLES" : page === "info" ? "ABOUT CLASSIC TV PAKISTAN" : "CLASSIC TV PAKISTAN"}</Text>
+            <Text style={styles.pageLabel}>{page === "details" ? "TITLE DETAILS" : page === "browse" ? "EXPLORE THE ARCHIVE" : page === "library" ? "YOUR SAVED TITLES" : page === "info" ? "ABOUT THIS APP" : "HOME"}</Text>
             <View style={styles.topRight}>
               <Text style={styles.countText}>{rows.length.toLocaleString()} archive entries</Text>
               <View style={styles.statusDot} />
@@ -313,7 +313,7 @@ export function TvApp() {
                   </View>
                 </View>
               ) : (
-                <View style={styles.emptyHero}><Text style={styles.heroTitle}>{loading ? "Loading the archive…" : "Classic TV Pakistan"}</Text><Text style={styles.bodyText}>{error ?? "Browse the collection of classic Pakistani television."}</Text></View>
+                <View style={styles.emptyHero}><Text style={styles.heroTitle}>{loading ? "Loading the archive…" : "Classic TV Pakistan"}</Text><Text style={styles.bodyText}>{error ?? "Browse the archive to discover classics."}</Text></View>
               )}
               {loading && !catalog ? <Text style={styles.bodyText}>Connecting to the archive…</Text> : null}
               <Shelf title="Featured classics" subtitle="A selection from the archive" scrollId="rail:featured" items={featured} cardWidth={cardWidth} episodeCounts={episodeCounts} pageScrollId="homeScroll" onSelect={openDetails} onPlay={playDrama} />
@@ -421,7 +421,7 @@ export function TvApp() {
               {library.map((drama, i) => (
                 <PosterTile key={drama.id} drama={drama} width={cardWidth} episodeCount={episodeCounts[drama.id] ?? 1} scrollId="libraryScroll" index={i} autoFocus={i === 0 && library.length > 0} onPress={() => openDetails(drama)} onPlay={() => playDrama(drama)} />
               ))}
-              {!library.length ? <View style={styles.emptyState}><Ionicons name="bookmark-outline" size={38} color={color.muted} /><Text style={styles.sectionTitle}>Your list is empty</Text><Text style={styles.bodyText}>Open a title and choose “My List” to save it here.</Text><ActionButton label="Browse archive" icon="grid-outline" autoFocus onPress={() => openNav("browse")} showKb={showKb} /></View> : null}
+              {!library.length ? <View style={styles.emptyState}><Ionicons name="bookmark-outline" size={38} color={color.muted} /><Text style={styles.sectionTitle}>Your list is empty</Text><Text style={styles.bodyText}>Save titles you want to revisit later.</Text></View> : null}
             </ScrollView>
           ) : null}
 
@@ -446,7 +446,7 @@ export function TvApp() {
                   </View>
                 </View>
               </View>
-              {currentGroup.length > 1 ? <Shelf title="Episodes" scrollId="rail:episodes" items={currentGroup} cardWidth={cardWidth} pageScrollId="detailsScroll" episodeCounts={episodeCounts} onSelect={(ep) => { setEpisode(ep); setPlayerFailed(false); setPage("player"); }} onPlay={(ep) => { setEpisode(ep); setPlayerFailed(false); setPage("player"); }} compact /> : null}
+              {currentGroup.length > 1 ? <Shelf title="Episodes" scrollId="rail:episodes" items={currentGroup} cardWidth={cardWidth} pageScrollId="detailsScroll" episodeCounts={episodeCounts} onSelect={openDetails} onPlay={playDrama} /> : null}
             </ScrollView>
           ) : null}
 
@@ -467,7 +467,7 @@ export function TvApp() {
                 <Text style={styles.playerHeading} numberOfLines={1}>{displayTitle(selected)}{episode.episode ? ` · Episode ${episode.episode}` : ""}</Text>
               </View>
               <View style={styles.playerFrame}>
-                {videoId && !playerFailed ? <Player key={videoId} videoId={videoId} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={44} color="#FF5252" /><Text style={styles.sectionTitle}>Playback unavailable here</Text><Text style={styles.bodyText}>Try another episode or check the YouTube link.</Text><ActionButton label="Back to episodes" icon="arrow-back" onPress={() => setPage("details")} autoFocus showKb={showKb} />{videoId ? <ActionButton label="Watch on YouTube" icon="logo-youtube" onPress={() => void openInYouTube(videoId)} showKb={showKb} /> : null}</View>}
+                {videoId && !playerFailed ? <Player key={videoId} videoId={videoId} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={42} color={color.muted} /><Text style={styles.bodyText}>This episode could not be loaded.</Text></View>}
               </View>
               <ScrollView
                 horizontal
@@ -769,7 +769,7 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
     >
       <View style={[styles.posterFrame, { height: Math.round(width * 1.36) }, !focused && styles.posterDimmed]}>
-        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={30} color={focused ? TV_GOLD : color.dim} /></View>}
+        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
         {episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}
       </View>
       <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
@@ -809,8 +809,8 @@ const styles = StyleSheet.create({
   pageScroll: { flex: 1 },
   homeContent: { paddingBottom: 40, gap: 22 },
   hero: { overflow: "hidden", borderRadius: 18, backgroundColor: "#141816", justifyContent: "flex-end" },
-  heroImage: { ...StyleSheet.absoluteFill, width: "100%", height: "100%", opacity: 0.64 },
-  heroScrim: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.34)" },
+  heroImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%", opacity: 0.64 },
+  heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.34)" },
   heroCopy: { padding: 28, maxWidth: 650, gap: 9 },
   eyebrow: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11, letterSpacing: 1.7 },
   urduTitle: { color: "#fff", fontSize: 22, lineHeight: 42 },
@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
   emptyHero: { minHeight: 180, padding: 28, justifyContent: "center", gap: 10 },
   bodyText: { color: color.muted, fontFamily: font.body, fontSize: 14, lineHeight: 21 },
   fill: { flex: 1 },
-  searchBox: { height: 56, borderRadius: 12, borderWidth: 1, borderColor: color.line, backgroundColor: "#101311", flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, marginBottom: 12 },
+  searchBox: { height: 56, borderRadius: 12, borderWidth: 1, borderColor: color.line, backgroundColor: "#101311", flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, marginBottom: 14 },
   searchZone: { flex: 1, minHeight: 44, borderRadius: 10, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 10 },
   searchZoneText: { color: color.text, fontFamily: font.body, fontSize: 17, flex: 1 },
   searchPlaceholder: { color: color.dim },
