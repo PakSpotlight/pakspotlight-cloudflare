@@ -17,9 +17,9 @@ module.exports = ({ config }) => {
           android: {
             ...(options.android || {}),
             minSdkVersion: 24,
-            compileSdkVersion: 37,
+            compileSdkVersion: 36,
             targetSdkVersion: 36,
-            buildToolsVersion: "37.0.0",
+            buildToolsVersion: "36.0.0",
           },
         },
       ];
