@@ -128,7 +128,7 @@ export function Hero({ drama, meta, ctaLabel, onPlay, secondary }: Props) {
 const styles = StyleSheet.create({
   // Full-bleed variant
   fullWrap: { height: 280, justifyContent: "flex-end" },
-  fullImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
+  fullImage: { ...StyleSheet.absoluteFill, width: "100%", height: "100%" },
   fullContent: { paddingHorizontal: gutter, paddingBottom: space.lg },
   fullTitle: {
     color: color.text,
