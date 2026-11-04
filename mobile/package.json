@@ -41,7 +41,7 @@
     "@expo/vector-icons": "^15.0.3"
   },
   "overrides": {
-    "@react-navigation/native": "7.0.14"
+    "@react-navigation/native": "$@react-navigation/native"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
