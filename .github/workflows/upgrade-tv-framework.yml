@@ -75,7 +75,7 @@ jobs:
         run: |
           set -euo pipefail
           npm install "react-native@npm:react-native-tvos@0.88-stable" "react@19.3.0" "react-dom@19.3.0"
-          node -e "const fs=require('fs');const p=require('./package.json');p.expo=p.expo||{};p.expo.install=p.expo.install||{};p.expo.install.exclude=['react-native'];fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          node -e "const fs=require('fs');const p=require('./package.json');p.expo=p.expo||{};p.expo.install=p.expo.install||{};p.expo.install.exclude=['react-native'];fs.writeFileSync('package.json', JSON.stringify(p,null,2)+'\n');"
           npm install
           npx expo install --fix
           npm install '@react-navigation/native@7.0.14'
@@ -84,7 +84,7 @@ jobs:
       - name: Confirm TV and phone identities stay separate
         run: |
           npx expo config --json > /tmp/tv-config.json
-          node -e "const c=require('/tmp/tv-config.json');if(c.android.package!=='com.classictvpakistan.tv')throw Error('Wrong TV package: '+c.android.package);if(c.android.versionCode!==2)throw Error('Wrong TV version code: '+c.android.versionCode)"
+          node -e "const c=require('/tmp/tv-config.json');if(c.android.package!=='com.classictvpakistan.tv')throw Error('Wrong TV package: '+c.android.package);if(c.android.versionCode!==8)throw Error('Wrong TV version code: '+c.android.versionCode)"
           env -u CLASSIC_TV_ANDROID_TV npx expo config --json > /tmp/phone-config.json
           node -e "const c=require('/tmp/phone-config.json');if(c.android.package!=='com.classictvpakistan.app')throw Error('Phone package changed');if(c.android.versionCode!==2)throw Error('Phone version code changed')"
 
