@@ -1,6 +1,9 @@
 name: Upgrade Android TV framework
 
 on:
+  push:
+    branches:
+      - fix/android-tv-native-tv-framework
   workflow_dispatch:
 
 permissions:
@@ -103,6 +106,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No dependency changes to commit."
           else
-            git commit -m "build(tv): upgrade Expo and React Native TV framework"
+            git commit -m "build(tv): upgrade Expo and React Native TV framework [skip ci]"
             git push origin HEAD:fix/android-tv-native-tv-framework
           fi
