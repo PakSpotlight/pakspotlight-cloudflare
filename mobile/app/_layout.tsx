@@ -53,7 +53,7 @@ export default function RootLayout() {
     <ThemeProvider value={navigationTheme}>
       <CatalogProvider>
         <AppBootstrap />
-        <StatusBar style="light" backgroundColor={color.bg} />
+        <StatusBar style="light" />
         <Stack
           screenOptions={{
             headerShown: false,
