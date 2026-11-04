@@ -60,13 +60,9 @@ jobs:
             npm install "expo@~${sdk}.0.0"
             if [ "$sdk" -ge 56 ]; then npm install expo-status-bar; fi
             npx expo install --fix
-            npx expo install @react-navigation/native
-            # Expo SDK 58's doctor expects the dependency declaration range
-            # ^7.0.14. expo install otherwise writes the newer ^7.5.1 range,
-            # which makes Doctor fail despite the installed 7.x package.
-            if [ "$sdk" -eq 58 ]; then
-              npm install '@react-navigation/native@^7.0.14'
-            fi
+            # Expo Doctor expects @react-navigation/native to stay in the SDK-pinned range.
+            # If we let expo install resolve it on its own, it can drift to ^7.5.1 and fail.
+            npm install '@react-navigation/native@7.0.14'
             if [ "$sdk" -eq 56 ]; then
               echo "SDK 56 has a documented Hermes V1 memory regression; SDK 57 is the required fix. Continue migration and run Expo Doctor on SDK 57 and 58."
             else
@@ -79,11 +75,10 @@ jobs:
         run: |
           set -euo pipefail
           npm install "react-native@npm:react-native-tvos@0.88-stable" "react@19.3.0" "react-dom@19.3.0"
-          node -e "const fs=require('fs');const p=require('./package.json');p.expo=p.expo||{};p.expo.install=p.expo.install||{};p.expo.install.exclude=['react-native'];fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\\n')"
+          node -e "const fs=require('fs');const p=require('./package.json');p.expo=p.expo||{};p.expo.install=p.expo.install||{};p.expo.install.exclude=['react-native'];fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
           npm install
           npx expo install --fix
-          # Keep the SDK 58-compatible declaration after the final dependency fix.
-          npm install '@react-navigation/native@^7.0.14'
+          npm install '@react-navigation/native@7.0.14'
           npx expo-doctor
 
       - name: Confirm TV and phone identities stay separate
