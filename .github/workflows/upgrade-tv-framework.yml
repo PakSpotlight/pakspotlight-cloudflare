@@ -60,7 +60,11 @@ jobs:
             npm install "expo@~${sdk}.0.0"
             if [ "$sdk" -ge 56 ]; then npm install expo-status-bar; fi
             npx expo install --fix
-            npx expo-doctor
+            if [ "$sdk" -eq 56 ]; then
+              echo "SDK 56 has a documented Hermes V1 memory regression; SDK 57 is the required fix. Continue migration and run Expo Doctor on SDK 57 and 58."
+            else
+              npx expo-doctor
+            fi
             echo "::endgroup::"
           done
 
