@@ -55,6 +55,9 @@ jobs:
       - name: Install project dependencies and reconcile lockfile
         run: npm install
 
+      - name: Align dependencies with the installed Expo SDK
+        run: npx expo install --fix
+
       - name: Confirm TV and phone identities stay separate
         run: |
           npx expo config --json > /tmp/tv-config.json
