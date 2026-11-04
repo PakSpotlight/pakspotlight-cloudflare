@@ -70,7 +70,7 @@ jobs:
       - name: Fix React Native absolute fill style names
         run: |
           # absoluteFill is a StyleSheet style array; object spreads must use absoluteFillObject.
-          sed -i 's/\.\.\.StyleSheet\.absoluteFill\([, }][0m\)/...StyleSheet.absoluteFillObject\1/g' src/screens/TvApp.tsx
+          sed -i 's/StyleSheet\.absoluteFill\>/StyleSheet.absoluteFillObject/g' src/screens/TvApp.tsx
           if grep -n '\.\.\.StyleSheet\.absoluteFill[, }]' src/screens/TvApp.tsx; then
             echo "Invalid absoluteFill object spread remains in TvApp.tsx" >&2
             exit 1
