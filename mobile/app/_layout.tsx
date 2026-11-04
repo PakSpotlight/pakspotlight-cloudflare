@@ -1,4 +1,5 @@
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
+import Constants from "expo-constants";
 import {
   Archivo_400Regular,
   Archivo_500Medium,
@@ -49,10 +50,13 @@ export default function RootLayout() {
 
   if (!loaded && !error) return null;
 
+  // Push registration is phone-only; TV builds must not request notification tokens.
+  const isTvBuild = Constants.expoConfig?.extra?.classicTvAndroidTv === true;
+
   return (
     <ThemeProvider value={navigationTheme}>
       <CatalogProvider>
-        <AppBootstrap />
+        {!isTvBuild ? <AppBootstrap /> : null}
         <StatusBar style="light" />
         <Stack
           screenOptions={{
