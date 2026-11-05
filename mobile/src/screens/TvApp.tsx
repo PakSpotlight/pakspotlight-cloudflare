@@ -649,22 +649,18 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               <Text style={styles.exitMessage}>
                 {resumePrompt ? `You stopped at ${formatPlayerTime(resumePrompt.seconds)}. Would you like to continue from there?` : ""}
               </Text>
-              <View style={styles.exitActions}>
-                <Pressable hasTVPreferredFocus focusable onPress={() => {
+              <TVFocusGuideView autoFocus style={styles.exitActions}>
+                <DialogButton preferred label="START OVER" variant="stay" onPress={() => {
                   if (resumePrompt) {
                     const next = resumePrompt.episode;
                     void clearTvPlaybackProgress(extractYouTubeId(next.youtube) || "");
                     launchEpisode(next, 0);
                   }
-                }} style={({ pressed }) => [styles.exitButton, styles.exitStay, pressed && styles.pressed]}>
-                  <Text style={styles.exitStayText}>START OVER</Text>
-                </Pressable>
-                <Pressable focusable onPress={() => {
+                }} />
+                <DialogButton label="RESUME" variant="confirm" onPress={() => {
                   if (resumePrompt) launchEpisode(resumePrompt.episode, resumePrompt.seconds);
-                }} style={({ pressed }) => [styles.exitButton, styles.exitConfirm, pressed && styles.pressed]}>
-                  <Text style={styles.exitConfirmText}>RESUME</Text>
-                </Pressable>
-              </View>
+                }} />
+              </TVFocusGuideView>
             </View>
           </View>
         </Modal>
@@ -675,14 +671,10 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               <Ionicons name="tv-outline" size={34} color={TV_GOLD} />
               <Text style={styles.exitTitle}>Exit Classic TV Pakistan?</Text>
               <Text style={styles.exitMessage}>Are you sure you want to close the app?</Text>
-              <View style={styles.exitActions}>
-                <Pressable hasTVPreferredFocus focusable onPress={() => setExitDialogVisible(false)} style={({ pressed }) => [styles.exitButton, styles.exitStay, pressed && styles.pressed]}>
-                  <Text style={styles.exitStayText}>NO, STAY</Text>
-                </Pressable>
-                <Pressable focusable onPress={() => { setExitDialogVisible(false); BackHandler.exitApp(); }} style={({ pressed }) => [styles.exitButton, styles.exitConfirm, pressed && styles.pressed]}>
-                  <Text style={styles.exitConfirmText}>YES, EXIT</Text>
-                </Pressable>
-              </View>
+              <TVFocusGuideView autoFocus style={styles.exitActions}>
+                <DialogButton preferred label="NO, STAY" variant="stay" onPress={() => setExitDialogVisible(false)} />
+                <DialogButton label="YES, EXIT" variant="confirm" onPress={() => { setExitDialogVisible(false); BackHandler.exitApp(); }} />
+              </TVFocusGuideView>
             </View>
           </View>
         </Modal>
@@ -819,6 +811,33 @@ function TvPress({
   );
 }
 
+function DialogButton({ label, variant, onPress, preferred = false }: {
+  label: string;
+  variant: "stay" | "confirm";
+  onPress: () => void;
+  preferred?: boolean;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <Pressable
+      focusable
+      hasTVPreferredFocus={preferred}
+      accessibilityRole="button"
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.exitButton,
+        variant === "stay" ? styles.exitStay : styles.exitConfirm,
+        focused && styles.exitButtonFocused,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Text style={variant === "stay" ? styles.exitStayText : styles.exitConfirmText}>{label}</Text>
+    </Pressable>
+  );
+}
+
 function NavButton({ label, icon, active, autoFocus, onPress, showKb }: { label: string; icon: keyof typeof Ionicons.glyphMap; active: boolean; autoFocus?: boolean; onPress: () => void; showKb?: boolean }) {
   const [focused, setFocused] = useState(false);
   const tv = useTvItem(`nav:${label}`);
@@ -924,18 +943,40 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
         contentContainerStyle={styles.rail}
         ref={(r) => { if (r) tvScrollables.set(scrollId, { ref: r, kind: "scroll", axis: "x" }); }}
       >
-        {items.map((drama) => (
+        <FlatList
+        horizontal
+        data={items}
+        keyExtractor={(drama) => String(drama.id)}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.rail}
+        removeClippedSubviews
+        initialNumToRender={Math.min(items.length, 5)}
+        maxToRenderPerBatch={4}
+        windowSize={3}
+        updateCellsBatchingPeriod={60}
+        getItemLayout={(_, index) => {
+          const tileWidth = compact ? Math.round(cardWidth * 0.8) : cardWidth;
+          return { length: tileWidth + 14, offset: (tileWidth + 14) * index, index };
+        }}
+        ref={(r: any) => {
+          if (r) {
+            const tileWidth = compact ? Math.round(cardWidth * 0.8) : cardWidth;
+            tvScrollables.set(scrollId, { ref: r, kind: "flatlist", cols: 1, rowStride: tileWidth + 14 });
+          }
+        }}
+        renderItem={({ item: drama, index }) => (
           <PosterTile
-            key={drama.id}
             drama={drama}
             width={compact ? Math.round(cardWidth * 0.8) : cardWidth}
             episodeCount={episodeCounts[drama.id] ?? 1}
             scrollIds={[scrollId, pageScrollId].filter(Boolean) as string[]}
+            index={index}
             onPress={() => onSelect(drama)}
             onPlay={() => onPlay(drama)}
             compact={compact}
           />
-        ))}
+        )}
+      />
       </ScrollView>
     </View>
   );
@@ -969,7 +1010,7 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
     >
       <View style={[styles.posterFrame, { height: Math.round(width * 9 / 16) }, !focused && styles.posterDimmed]}>
-        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
+        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="contain" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
         {episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}
       </View>
       <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
@@ -990,7 +1031,8 @@ const styles = StyleSheet.create({
   exitTitle: { color: "#FFFFFF", fontFamily: font.black, fontSize: 25, textAlign: "center" },
   exitMessage: { color: color.muted, fontFamily: font.body, fontSize: 16, textAlign: "center" },
   exitActions: { flexDirection: "row", gap: 16, marginTop: 10 },
-  exitButton: { minWidth: 140, minHeight: 52, borderRadius: 10, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, borderWidth: 2, borderColor: "transparent" },
+  exitButton: { minWidth: 140, minHeight: 52, borderRadius: 10, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, borderWidth: 2, borderColor: "rgba(255,255,255,0.18)" },
+  exitButtonFocused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.28)" },
   exitStay: { backgroundColor: "#242A26" },
   exitConfirm: { backgroundColor: TV_GOLD },
   exitStayText: { color: "#FFFFFF", fontFamily: font.bold, fontSize: 15 },
@@ -1006,7 +1048,7 @@ const styles = StyleSheet.create({
   navItems: { gap: 5 },
   navButton: { minHeight: 40, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 7, borderWidth: 1, borderColor: "transparent" },
   navActive: { backgroundColor: "rgba(216,177,90,0.12)", borderColor: "rgba(216,177,90,0.35)" },
-  navFocused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.24)", elevation: 7, transform: [{ scale: 1.04 }] },
+  navFocused: { borderColor: TV_GOLD, borderWidth: 2, backgroundColor: "rgba(216,177,90,0.18)" },
   navText: { color: color.muted, fontFamily: font.medium, fontSize: 12 },
   navTextActive: { color: color.text, fontFamily: font.bold },
   navTextLit: { color: color.text, fontFamily: font.bold },
@@ -1041,7 +1083,7 @@ const styles = StyleSheet.create({
   actionTextPrimary: { color: "#000" },
   actionTextLit: { color: TV_GOLD },
   focused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.18)" },
-  posterFocused: { transform: [{ scale: 1.045 }], borderColor: TV_GOLD, borderWidth: 4, borderRadius: 14, backgroundColor: "#211B10", shadowColor: TV_GOLD, shadowOpacity: 0.65, shadowRadius: 12, elevation: 12, zIndex: 10 },
+  posterFocused: { borderColor: TV_GOLD, borderWidth: 3, borderRadius: 12, backgroundColor: "#211B10", zIndex: 2 },
   posterLit: { opacity: 1 },
   posterDimmed: { opacity: 0.62 },
   pressed: { opacity: 0.78 },
