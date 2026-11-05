@@ -1,18 +1,60 @@
+import { forwardRef, useImperativeHandle, useRef } from "react";
 import { StyleSheet } from "react-native";
-import { WebView } from "react-native-webview";
+import { WebView, WebViewMessageEvent } from "react-native-webview";
 import { SITE_ORIGIN } from "../lib/api";
 import { openInYouTube, playerHtml } from "../lib/youtube";
 
-/**
- * Native player: the official YouTube embed inside a WebView.
- *
- * The document's base URL is the site origin so the request carries a real Referer
- * (YouTube refuses playback without one — player error 153), and navigations away from the
- * embed are handed to the YouTube app instead of hijacking the player surface.
- */
-export function Player({ videoId, onError }: { videoId: string; onError?: (message?: string) => void }) {
+export type PlayerProgress = { currentTime: number; duration: number; state: number };
+export type PlayerHandle = {
+  seekBy: (seconds: number) => void;
+  playPause: () => void;
+};
+
+type Props = {
+  videoId: string;
+  onError?: (message?: string) => void;
+  onProgress?: (progress: PlayerProgress) => void;
+  onReady?: () => void;
+};
+
+/** Official YouTube IFrame player with a small React Native playback bridge. */
+export const Player = forwardRef<PlayerHandle, Props>(function Player(
+  { videoId, onError, onProgress, onReady }, forwardedRef
+) {
+  const webViewRef = useRef<WebView>(null);
+
+  const command = (name: string, value?: number) => {
+    const payload = JSON.stringify(name);
+    const amount = value == null ? "undefined" : String(value);
+    webViewRef.current?.injectJavaScript(
+      `window.__ctvPlayerCommand && window.__ctvPlayerCommand(${payload}, ${amount}); true;`
+    );
+  };
+
+  useImperativeHandle(forwardedRef, () => ({
+    seekBy: (seconds) => command("seekBy", seconds),
+    playPause: () => command("playPause"),
+  }), []);
+
+  const handleMessage = (event: WebViewMessageEvent) => {
+    try {
+      const message = JSON.parse(event.nativeEvent.data);
+      if (message.type === "ready") onReady?.();
+      else if (message.type === "progress") {
+        onProgress?.({
+          currentTime: Number(message.currentTime) || 0,
+          duration: Number(message.duration) || 0,
+          state: Number(message.state) || 0,
+        });
+      } else if (message.type === "error") onError?.(`YouTube player error ${message.code}`);
+    } catch {
+      // Ignore unrelated messages from the embedded document.
+    }
+  };
+
   return (
     <WebView
+      ref={webViewRef}
       style={styles.webview}
       source={{ html: playerHtml(videoId), baseUrl: SITE_ORIGIN }}
       originWhitelist={["https://*", "http://*"]}
@@ -22,6 +64,7 @@ export function Player({ videoId, onError }: { videoId: string; onError?: (messa
       allowsInlineMediaPlayback
       mediaPlaybackRequiresUserAction={false}
       setSupportMultipleWindows={false}
+      onMessage={handleMessage}
       onError={() => onError?.()}
       onHttpError={() => onError?.()}
       onShouldStartLoadWithRequest={(request) => {
@@ -34,7 +77,7 @@ export function Player({ videoId, onError }: { videoId: string; onError?: (messa
       }}
     />
   );
-}
+});
 
 const styles = StyleSheet.create({
   webview: { flex: 1, backgroundColor: "#000" },
