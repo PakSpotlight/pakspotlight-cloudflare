@@ -287,7 +287,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
             <NavButton label="My List" icon="bookmark-outline" active={nav === "library"} onPress={() => openNav("library")} showKb={showKb} />
             <NavButton label="Info" icon="information-circle-outline" active={page === "info"} onPress={() => openNav("info")} showKb={showKb} />
             <NavButton label="Update" icon="refresh-outline" active={false} onPress={() => { void refresh(); setNav("home"); setPage("home"); }} showKb={showKb} />
-          </View>
+          </TVFocusGuideView>
           <View style={styles.sidebarFooter}>
             <Text style={styles.sidebarCaption}>THE ARCHIVE</Text>
             <Text style={styles.sidebarSmall}>Classic Pakistani television, all in one place.</Text>
@@ -495,7 +495,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               {playerFullscreen && playerControlsVisible ? <TVFocusGuideView autoFocus style={styles.playerOverlayControls}>
                 <TvPress focusKey="playerExitFullscreen" autoFocus showKb={showKb} onPress={() => setPlayerFullscreen(false)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="contract" size={19} color={color.text} /><Text style={styles.playerControlText}>Episodes / Exit full screen</Text></TvPress>
                 <TvPress focusKey="playerOverlayBack" showKb={showKb} onPress={() => { setPlayerFullscreen(false); setPage("details"); }} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="arrow-back" size={19} color={color.text} /><Text style={styles.playerControlText}>Back</Text></TvPress>
-              </View> : null}
+              </TVFocusGuideView> : null}
             </View>
           ) : null}
         </View>
