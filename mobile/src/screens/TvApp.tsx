@@ -142,7 +142,7 @@ const tvFocusProps = (autoFocus: boolean) => (autoFocus ? ({ hasTVPreferredFocus
 
 /* ============================ component ============================ */
 
-export function TvApp() {
+export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const { width, height } = useWindowDimensions();
   const {
     catalog,
@@ -159,9 +159,9 @@ export function TvApp() {
     toggleSaved,
     myList,
   } = useCatalog();
-  const [page, setPage] = useState<TvPage>("home");
-  const [detailsFrom, setDetailsFrom] = useState<NavItem>("home");
-  const [nav, setNav] = useState<NavItem>("home");
+  const [page, setPage] = useState<TvPage>(initialPage);
+  const [detailsFrom, setDetailsFrom] = useState<NavItem>(initialPage === "browse" ? "browse" : "home");
+  const [nav, setNav] = useState<NavItem>(initialPage === "browse" ? "browse" : "home");
   const [selected, setSelected] = useState<Drama | null>(null);
   const [episode, setEpisode] = useState<Drama | null>(null);
   const [query, setQuery] = useState("");
@@ -255,9 +255,9 @@ export function TvApp() {
 
   const currentGroup = selected ? groupFor(selected) : [];
   const videoId = episode ? extractYouTubeId(episode.youtube) : null;
-  const cardWidth = Math.max(142, Math.min(194, Math.round((width - 300) / 6)));
-  const gridCols = Math.max(1, Math.floor((width - 210) / (cardWidth + 14)));
-  const gridRowStride = Math.round(cardWidth * 1.36) + 84;
+  const cardWidth = Math.max(150, Math.min(210, Math.round((width - 260) / 5)));
+  const gridCols = Math.max(1, Math.floor((width - 150) / (cardWidth + 14)));
+  const gridRowStride = Math.round(cardWidth * 9 / 16) + 84;
 
   return (
     <View style={[styles.screen, page === "player" && styles.fullscreenScreen]}>
@@ -621,8 +621,8 @@ function NavButton({ label, icon, active, autoFocus, onPress, showKb }: { label:
       focusable
       disabled={showKb}
       {...tvFocusProps(!!autoFocus && !showKb)}
-      onFocus={tv.onFocus}
-      onBlur={() => tv.onBlur()}
+      onFocus={() => { tv.onFocus(); setFocused(true); }}
+      onBlur={() => { tv.onBlur(); setFocused(false); }}
       onPress={onPress}
       style={[styles.navButton, active && styles.navActive, focused && styles.navFocused]}
     >
@@ -761,8 +761,8 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       accessibilityLabel={displayTitle(drama)}
       style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
     >
-      <View style={[styles.posterFrame, { height: Math.round(width * 1.36) }, !focused && styles.posterDimmed]}>
-        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
+      <View style={[styles.posterFrame, { height: Math.round(width * 9 / 16) }, !focused && styles.posterDimmed]}>
+        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="contain" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
         {episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}
       </View>
       <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
@@ -774,17 +774,17 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
 const styles = StyleSheet.create({
   screen: { flex: 1, flexDirection: "row", backgroundColor: "#050606" },
   fullscreenScreen: { flexDirection: "column", padding: 0 },
-  sidebar: { width: 148, paddingTop: 22, paddingHorizontal: 10, paddingBottom: 16, borderRightWidth: 1, borderRightColor: color.line, backgroundColor: "#080A09" },
-  brandMark: { flexDirection: "row", alignItems: "center", gap: 7, paddingBottom: 24, paddingHorizontal: 2 },
-  brandGlyph: { width: 30, height: 30, borderRadius: 8, backgroundColor: TV_GOLD, alignItems: "center", justifyContent: "center" },
+  sidebar: { width: 118, paddingTop: 18, paddingHorizontal: 8, paddingBottom: 14, borderRightWidth: 1, borderRightColor: color.line, backgroundColor: "#080A09" },
+  brandMark: { flexDirection: "row", alignItems: "center", gap: 6, paddingBottom: 20, paddingHorizontal: 1 },
+  brandGlyph: { width: 27, height: 27, borderRadius: 8, backgroundColor: TV_GOLD, alignItems: "center", justifyContent: "center" },
   brandPlay: { position: "absolute", right: 2, bottom: 2, width: 12, height: 12, borderRadius: 6, backgroundColor: "#fff", alignItems: "center", justifyContent: "center" },
   brandText: { color: color.text, fontFamily: font.black, fontSize: 9, letterSpacing: 0.1 },
   brandPakistan: { color: color.muted, fontFamily: font.medium },
   navItems: { gap: 5 },
-  navButton: { minHeight: 44, borderRadius: 9, flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 10, borderWidth: 1, borderColor: "transparent" },
+  navButton: { minHeight: 40, borderRadius: 8, flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 7, borderWidth: 1, borderColor: "transparent" },
   navActive: { backgroundColor: "rgba(216,177,90,0.12)", borderColor: "rgba(216,177,90,0.35)" },
   navFocused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.24)", elevation: 7, transform: [{ scale: 1.04 }] },
-  navText: { color: color.muted, fontFamily: font.medium, fontSize: 13 },
+  navText: { color: color.muted, fontFamily: font.medium, fontSize: 12 },
   navTextActive: { color: color.text, fontFamily: font.bold },
   navTextLit: { color: color.text, fontFamily: font.bold },
   sidebarFooter: { marginTop: "auto", paddingHorizontal: 2, gap: 5 },
@@ -827,8 +827,8 @@ const styles = StyleSheet.create({
   shelfSubtitle: { color: color.dim, fontSize: 12, marginTop: 3 },
   shelfCount: { color: color.dim, fontFamily: font.bold, fontSize: 10, letterSpacing: 1 },
   rail: { gap: 14, paddingVertical: 8, paddingRight: 8 },
-  posterTile: { borderRadius: 12, padding: 4, gap: 7, borderWidth: 2, borderColor: "transparent" },
-  posterFrame: { borderRadius: 9, overflow: "hidden", backgroundColor: color.surfaceAlt },
+  posterTile: { borderRadius: 10, padding: 4, gap: 6, borderWidth: 2, borderColor: "transparent" },
+  posterFrame: { borderRadius: 8, overflow: "hidden", backgroundColor: "#000", aspectRatio: 16 / 9 },
   poster: { width: "100%", height: "100%" },
   posterFallback: { flex: 1, alignItems: "center", justifyContent: "center" },
   posterBadge: { position: "absolute", left: 8, top: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5, backgroundColor: "rgba(0,0,0,0.82)" },
