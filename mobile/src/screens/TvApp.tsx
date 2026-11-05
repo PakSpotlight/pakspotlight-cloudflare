@@ -167,6 +167,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [playerFailed, setPlayerFailed] = useState(false);
+  const [playerFullscreen, setPlayerFullscreen] = useState(true);
   const [showKb, setShowKb] = useState(false);
   const searchRef = useRef<any>(null);
 
@@ -177,6 +178,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
         return true;
       }
       if (page === "player") {
+        setPlayerFullscreen(false);
         setPage("details");
         return true;
       }
@@ -232,6 +234,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     setSelected(drama);
     setEpisode(first);
     setPlayerFailed(false);
+    setPlayerFullscreen(true);
     setPage("player");
   };
 
@@ -450,8 +453,8 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
           ) : null}
 
           {page === "player" && selected && episode ? (
-            <View style={styles.playerPage}>
-              <View style={styles.playerTop}>
+            <View style={[styles.playerPage, playerFullscreen && styles.playerPageFullscreen]}>
+              {!playerFullscreen ? <View style={styles.playerTop}>
                 <TvPress
                   focusKey="playerBack"
                   autoFocus
@@ -464,18 +467,23 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                   <Text style={styles.actionText}>Back</Text>
                 </TvPress>
                 <Text style={styles.playerHeading} numberOfLines={1}>{displayTitle(selected)}{episode.episode ? ` · Episode ${episode.episode}` : ""}</Text>
-              </View>
-              <View style={styles.playerFrame}>
+                <TvPress focusKey="playerExpand" showKb={showKb} onPress={() => setPlayerFullscreen(true)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="expand" size={19} color={color.text} /><Text style={styles.playerControlText}>Full screen</Text></TvPress>
+              </View> : null}
+              <View style={[styles.playerFrame, playerFullscreen && styles.playerFrameFullscreen]}>
                 {videoId && !playerFailed ? <Player key={videoId} videoId={videoId} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={42} color={color.muted} /><Text style={styles.bodyText}>This episode could not be loaded.</Text></View>}
               </View>
-              <ScrollView
+              {!playerFullscreen ? <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.episodeRail}
                 ref={(r) => { if (r) tvScrollables.set("playerRail", { ref: r, kind: "scroll", axis: "x" }); }}
               >
                 {currentGroup.map((ep, i) => <EpisodeButton key={ep.id} episode={ep} number={i + 1} index={i} selected={episode.id === ep.id} onPress={() => { setEpisode(ep); setPlayerFailed(false); }} showKb={showKb} />)}
-              </ScrollView>
+              </ScrollView> : null}
+              {playerFullscreen ? <View style={styles.playerOverlayControls}>
+                <TvPress focusKey="playerExitFullscreen" autoFocus showKb={showKb} onPress={() => setPlayerFullscreen(false)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="contract" size={19} color={color.text} /><Text style={styles.playerControlText}>Episodes / Exit full screen</Text></TvPress>
+                <TvPress focusKey="playerOverlayBack" showKb={showKb} onPress={() => { setPlayerFullscreen(false); setPage("details"); }} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="arrow-back" size={19} color={color.text} /><Text style={styles.playerControlText}>Back</Text></TvPress>
+              </View> : null}
             </View>
           ) : null}
         </View>
@@ -866,11 +874,16 @@ const styles = StyleSheet.create({
   detailCopy: { flex: 1, gap: 12, maxWidth: 720 },
   detailTitle: { color: "#fff", fontFamily: font.black, fontSize: 34, lineHeight: 40 },
   description: { color: color.muted, fontSize: 15, lineHeight: 23, maxWidth: 650 },
-  playerPage: { flex: 1, gap: 0, backgroundColor: "#000" },
+  playerPage: { flex: 1, minHeight: 0, gap: 0, backgroundColor: "#000" },
+  playerPageFullscreen: { ...StyleSheet.absoluteFillObject, zIndex: 50, elevation: 50 },
   playerTop: { flexDirection: "row", alignItems: "center", gap: 16, minHeight: 42, paddingHorizontal: 18, paddingTop: 10 },
   playerHeading: { color: color.text, fontFamily: font.bold, fontSize: 17, flex: 1 },
   playerHint: { color: color.dim, fontSize: 11 },
-  playerFrame: { flex: 1, minHeight: 0, backgroundColor: "#000", borderRadius: 0, overflow: "hidden" },
+  playerFrame: { flex: 1, minHeight: 0, width: "100%", backgroundColor: "#000", borderRadius: 0, overflow: "hidden" },
+  playerFrameFullscreen: { ...StyleSheet.absoluteFillObject, zIndex: 1 },
+  playerOverlayControls: { position: "absolute", zIndex: 5, top: 18, left: 18, right: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  playerControl: { minHeight: 42, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 14, borderRadius: 9, borderWidth: 1, borderColor: "rgba(255,255,255,0.35)", backgroundColor: "rgba(0,0,0,0.78)" },
+  playerControlText: { color: "#fff", fontFamily: font.bold, fontSize: 13 },
   playerError: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   episodeRail: { gap: 10, paddingVertical: 10, paddingHorizontal: 18 },
   episodeChip: { width: 170, minHeight: 52, borderRadius: 9, padding: 9, backgroundColor: "#171B18", borderWidth: 1, borderColor: color.line },
