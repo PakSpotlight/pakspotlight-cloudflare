@@ -58,6 +58,19 @@ jobs:
           npm install
           npx expo install --fix
 
+
+      - name: Verify Expo SDK 51 dependency compatibility
+        run: |
+          node - <<'NODE'
+          const expo = require('expo/package.json').version;
+          const nav = require('@react-navigation/native/package.json').version;
+          const icons = require('@expo/vector-icons/package.json').version;
+          if (!expo.startsWith('51.')) throw new Error('Expected Expo SDK 51, got ' + expo);
+          if (!nav.startsWith('6.')) throw new Error('Expo Router 3 requires the SDK 51 navigation baseline; got ' + nav);
+          if (!icons.startsWith('14.')) throw new Error('Expo SDK 51 requires vector-icons 14.x; got ' + icons);
+          console.log({ expo, navigation: nav, vectorIcons: icons });
+          NODE
+
       - name: Patch Expo permissions Kotlin nullability for Android build
         run: |
           node <<'NODE'
@@ -79,7 +92,7 @@ jobs:
       - name: Confirm TV and phone identities stay separate
         run: |
           npx expo config --json > /tmp/tv-config.json
-          node -e "const c=require('/tmp/tv-config.json');if(c.android.package!=='com.classictvpakistan.tv')throw Error('Wrong TV package: '+c.android.package);if(c.android.versionCode!==8)throw Error('Wrong TV version code: '+c.android.versionCode)"
+          node -e "const c=require('/tmp/tv-config.json');if(c.android.package!=='com.classictvpakistan.tv')throw Error('Wrong TV package: '+c.android.package);if(c.android.versionCode!==9)throw Error('Wrong TV version code: '+c.android.versionCode)"
           env -u CLASSIC_TV_ANDROID_TV npx expo config --json > /tmp/phone-config.json
           node -e "const c=require('/tmp/phone-config.json');if(c.android.package!=='com.classictvpakistan.app')throw Error('Phone package changed');if(c.android.versionCode!==2)throw Error('Phone version code changed')"
 
@@ -125,7 +138,7 @@ jobs:
       - name: Upload Android TV test APK
         uses: actions/upload-artifact@v4
         with:
-          name: ClassicTVPakistanTV-1.0.7-signed-test
+          name: ClassicTVPakistanTV-1.0.8-signed-test
           path: mobile/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14

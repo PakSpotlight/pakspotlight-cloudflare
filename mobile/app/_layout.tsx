@@ -14,11 +14,16 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import AppBootstrap from "../src/components/AppBootstrap";
 import { CatalogProvider } from "../src/lib/catalog";
 import { color } from "../src/theme";
 
+declare const require: (path: string) => { default: React.ComponentType };
+
 void SplashScreen.preventAutoHideAsync();
+
+// Do not even load the notifications module in TV builds. It is phone-only.
+const isTvBuild = Constants.expoConfig?.extra?.classicTvAndroidTv === true;
+const AppBootstrap = isTvBuild ? null : require("../src/components/AppBootstrap").default;
 
 const navigationTheme = {
   ...DarkTheme,
@@ -50,14 +55,11 @@ export default function RootLayout() {
 
   if (!loaded && !error) return null;
 
-  // Push registration is phone-only; TV builds must not request notification tokens.
-  const isTvBuild = Constants.expoConfig?.extra?.classicTvAndroidTv === true;
-
   return (
     <ThemeProvider value={navigationTheme}>
       <CatalogProvider>
-        {!isTvBuild ? <AppBootstrap /> : null}
-        <StatusBar style="light" />
+        {AppBootstrap ? <AppBootstrap /> : null}
+        <StatusBar style="light" backgroundColor={color.bg} />
         <Stack
           screenOptions={{
             headerShown: false,
