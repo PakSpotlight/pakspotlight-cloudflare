@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from "react";
 import { StyleSheet } from "react-native";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import { SITE_ORIGIN } from "../lib/api";
@@ -22,19 +22,20 @@ export const Player = forwardRef<PlayerHandle, Props>(function Player(
   { videoId, onError, onProgress, onReady }, forwardedRef
 ) {
   const webViewRef = useRef<WebView>(null);
+  const source = useMemo(() => ({ html: playerHtml(videoId), baseUrl: SITE_ORIGIN }), [videoId]);
 
-  const command = (name: string, value?: number) => {
+  const command = useCallback((name: string, value?: number) => {
     const payload = JSON.stringify(name);
     const amount = value == null ? "undefined" : String(value);
     webViewRef.current?.injectJavaScript(
       `window.__ctvPlayerCommand && window.__ctvPlayerCommand(${payload}, ${amount}); true;`
     );
-  };
+  }, []);
 
   useImperativeHandle(forwardedRef, () => ({
     seekBy: (seconds) => command("seekBy", seconds),
     playPause: () => command("playPause"),
-  }), []);
+  }), [command]);
 
   const handleMessage = (event: WebViewMessageEvent) => {
     try {
@@ -56,7 +57,7 @@ export const Player = forwardRef<PlayerHandle, Props>(function Player(
     <WebView
       ref={webViewRef}
       style={styles.webview}
-      source={{ html: playerHtml(videoId), baseUrl: SITE_ORIGIN }}
+      source={source}
       originWhitelist={["https://*", "http://*"]}
       javaScriptEnabled
       domStorageEnabled
