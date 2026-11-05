@@ -21,6 +21,8 @@ export function embedUrl(videoId: string, opts?: { autoplay?: boolean; origin?: 
     rel: "0",
     playsinline: "1",
     enablejsapi: "1",
+    controls: "1",
+    fs: "1",
     origin: opts?.origin ?? ORIGIN,
   });
   if (opts?.autoplay) params.set("autoplay", "1");
@@ -47,18 +49,62 @@ export function playerHtml(videoId: string): string {
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <style>
       html, body { margin: 0; padding: 0; height: 100%; background: #000; overflow: hidden; }
-      iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+      #player { position: absolute; inset: 0; width: 100%; height: 100%; }
+      iframe { width: 100%; height: 100%; border: 0; }
     </style>
   </head>
   <body>
-    <iframe
-      src="${src}"
-      title="Episode player"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowfullscreen
-      referrerpolicy="strict-origin-when-cross-origin"
-      frameborder="0"
-    ></iframe>
+    <div id="player"></div>
+    <script>
+      (function () {
+        var player = null;
+        var ready = false;
+        function send(type, extra) {
+          try {
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(JSON.stringify(Object.assign({ type: type }, extra || {})));
+            }
+          } catch (_) {}
+        }
+        window.__ctvPlayerCommand = function (command, value) {
+          if (!ready || !player) return;
+          try {
+            if (command === "seekBy") player.seekTo(Math.max(0, player.getCurrentTime() + Number(value || 0)), true);
+            if (command === "playPause") {
+              if (player.getPlayerState() === YT.PlayerState.PLAYING) player.pauseVideo();
+              else player.playVideo();
+            }
+          } catch (_) {}
+        };
+        window.onYouTubeIframeAPIReady = function () {
+          player = new YT.Player("player", {
+            videoId: ${JSON.stringify(videoId)},
+            playerVars: { autoplay: 1, controls: 1, rel: 0, playsinline: 1, fs: 1, enablejsapi: 1, origin: ${JSON.stringify(ORIGIN)} },
+            events: {
+              onReady: function () {
+                ready = true;
+                send("ready");
+                setInterval(function () {
+                  if (!ready || !player) return;
+                  try {
+                    send("progress", {
+                      currentTime: player.getCurrentTime() || 0,
+                      duration: player.getDuration() || 0,
+                      state: player.getPlayerState()
+                    });
+                  } catch (_) {}
+                }, 1000);
+              },
+              onStateChange: function (event) { send("state", { state: event.data }); },
+              onError: function (event) { send("error", { code: event.data }); }
+            }
+          });
+        };
+        var tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(tag);
+      })();
+    </script>
   </body>
 </html>`;
 }
