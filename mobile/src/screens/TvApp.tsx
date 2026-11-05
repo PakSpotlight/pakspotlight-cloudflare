@@ -605,7 +605,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                 <TvPress focusKey="playerExitFullscreen" autoFocus showKb={showKb} onPress={() => setPlayerFullscreen(false)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="contract" size={19} color={color.text} /><Text style={styles.playerControlText}>Episodes / Exit full screen</Text></TvPress>
                 <TvPress focusKey="playerOverlayBack" showKb={showKb} onPress={() => { setPlayerFullscreen(false); setPage("details"); }} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="arrow-back" size={19} color={color.text} /><Text style={styles.playerControlText}>Back</Text></TvPress>
               </TVFocusGuideView> : null}
-              {playerFullscreen && playerControlsVisible ? <TVFocusGuideView autoFocus style={styles.playerBottomControls}>
+              {playerFullscreen && playerControlsVisible ? <TVFocusGuideView style={styles.playerBottomControls}>
                 <View style={styles.playerProgressRow}>
                   <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.currentTime)}</Text>
                   <View style={styles.playerProgressTrack}>
