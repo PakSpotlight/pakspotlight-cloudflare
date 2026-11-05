@@ -11,6 +11,8 @@ import {
   useWindowDimensions,
   View,
   findNodeHandle,
+  TVFocusGuideView,
+  useTVEventHandler,
 } from "react-native";
 import type { ColorValue } from "react-native";
 import { Player } from "../components/Player";
@@ -168,8 +170,17 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [category, setCategory] = useState<string | null>(null);
   const [playerFailed, setPlayerFailed] = useState(false);
   const [playerFullscreen, setPlayerFullscreen] = useState(true);
+  const [playerControlsVisible, setPlayerControlsVisible] = useState(false);
   const [showKb, setShowKb] = useState(false);
   const searchRef = useRef<any>(null);
+
+  // Native TV remote events: the first OK/select press while video is immersive
+  // reveals the app controls; subsequent OK presses activate the focused control.
+  useTVEventHandler((event) => {
+    if (page === "player" && playerFullscreen && event.eventType === "select") {
+      setPlayerControlsVisible(true);
+    }
+  });
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -235,6 +246,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     setEpisode(first);
     setPlayerFailed(false);
     setPlayerFullscreen(true);
+    setPlayerControlsVisible(false);
     setPage("player");
   };
 
@@ -258,7 +270,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
 
   const currentGroup = selected ? groupFor(selected) : [];
   const videoId = episode ? extractYouTubeId(episode.youtube) : null;
-  const cardWidth = Math.max(150, Math.min(210, Math.round((width - 260) / 5)));
+  const cardWidth = Math.max(220, Math.min(290, Math.round((width - 260) / 4)));
   const gridCols = Math.max(1, Math.floor((width - 150) / (cardWidth + 14)));
   const gridRowStride = Math.round(cardWidth * 9 / 16) + 84;
 
@@ -269,7 +281,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
             <View style={styles.brandGlyph}><Ionicons name="tv-outline" size={20} color="#000" /><View style={styles.brandPlay}><Ionicons name="play" size={9} color="#000" /></View></View>
             <Text style={styles.brandText}>CLASSIC TV<Text style={styles.brandPakistan}> PAKISTAN</Text></Text>
           </View>
-          <View style={styles.navItems}>
+          <TVFocusGuideView autoFocus style={styles.navItems}>
             <NavButton label="Home" icon="home-outline" active={nav === "home" && page !== "details"} autoFocus onPress={() => openNav("home")} />
             <NavButton label="Browse" icon="grid-outline" active={nav === "browse" || page === "details"} onPress={() => openNav("browse")} showKb={showKb} />
             <NavButton label="My List" icon="bookmark-outline" active={nav === "library"} onPress={() => openNav("library")} showKb={showKb} />
@@ -480,7 +492,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               >
                 {currentGroup.map((ep, i) => <EpisodeButton key={ep.id} episode={ep} number={i + 1} index={i} selected={episode.id === ep.id} onPress={() => { setEpisode(ep); setPlayerFailed(false); }} showKb={showKb} />)}
               </ScrollView> : null}
-              {playerFullscreen ? <View style={styles.playerOverlayControls}>
+              {playerFullscreen && playerControlsVisible ? <TVFocusGuideView autoFocus style={styles.playerOverlayControls}>
                 <TvPress focusKey="playerExitFullscreen" autoFocus showKb={showKb} onPress={() => setPlayerFullscreen(false)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="contract" size={19} color={color.text} /><Text style={styles.playerControlText}>Episodes / Exit full screen</Text></TvPress>
                 <TvPress focusKey="playerOverlayBack" showKb={showKb} onPress={() => { setPlayerFullscreen(false); setPage("details"); }} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="arrow-back" size={19} color={color.text} /><Text style={styles.playerControlText}>Back</Text></TvPress>
               </View> : null}
@@ -870,7 +882,7 @@ const styles = StyleSheet.create({
   infoCardTitle: { color: color.text, fontFamily: font.bold, fontSize: 18 },
   detailContent: { paddingBottom: 32, gap: 22 },
   detailHero: { flexDirection: "row", gap: 28, minHeight: 280, alignItems: "center" },
-  detailImage: { width: 210, height: 290, borderRadius: 12, backgroundColor: color.surfaceAlt },
+  detailImage: { width: 340, height: 191, borderRadius: 12, backgroundColor: color.surfaceAlt },
   detailCopy: { flex: 1, gap: 12, maxWidth: 720 },
   detailTitle: { color: "#fff", fontFamily: font.black, fontSize: 34, lineHeight: 40 },
   description: { color: color.muted, fontSize: 15, lineHeight: 23, maxWidth: 650 },
