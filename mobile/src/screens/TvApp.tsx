@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import type { ColorValue } from "react-native";
 import { Player } from "../components/Player";
+import type { PlayerHandle, PlayerProgress } from "../components/Player";
 import { useCatalog } from "../lib/catalog";
 import {
   displayTitle,
@@ -34,6 +35,16 @@ type NavItem = "home" | "browse" | "library" | "info";
 
 const TV_SAFE = 34;
 const TV_GOLD = "#D8B15A";
+
+function formatPlayerTime(seconds: number): string {
+  const safe = Math.max(0, Math.floor(seconds || 0));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const secs = safe % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
+    : `${minutes}:${String(secs).padStart(2, "0")}`;
+}
 
 /* ============================================================
    Android TV focus plumbing (no TV fork APIs — everything this
@@ -179,6 +190,8 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [playerFailed, setPlayerFailed] = useState(false);
   const [playerFullscreen, setPlayerFullscreen] = useState(true);
   const [playerControlsVisible, setPlayerControlsVisible] = useState(false);
+  const [playerProgress, setPlayerProgress] = useState<PlayerProgress>({ currentTime: 0, duration: 0, state: -1 });
+  const playerRef = useRef<PlayerHandle>(null);
   const [showKb, setShowKb] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
   const [exitDialogVisible, setExitDialogVisible] = useState(false);
@@ -192,7 +205,16 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   // Native TV remote events: the first OK/select press while video is immersive
   // reveals the app controls; subsequent OK presses activate the focused control.
   useTVEventHandler((event) => {
-    if (page === "player" && playerFullscreen && event.eventType === "select") {
+    if (page !== "player" || !playerFullscreen) return;
+    if (event.eventType === "select") setPlayerControlsVisible(true);
+    else if (event.eventType === "left") {
+      playerRef.current?.seekBy(-10);
+      setPlayerControlsVisible(true);
+    } else if (event.eventType === "right") {
+      playerRef.current?.seekBy(10);
+      setPlayerControlsVisible(true);
+    } else if (event.eventType === "playPause") {
+      playerRef.current?.playPause();
       setPlayerControlsVisible(true);
     }
   });
@@ -265,6 +287,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     setSelected(drama);
     setEpisode(first);
     setPlayerFailed(false);
+    setPlayerProgress({ currentTime: 0, duration: 0, state: -1 });
     setPlayerFullscreen(true);
     setPlayerControlsVisible(false);
     setPage("player");
@@ -502,7 +525,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                 <TvPress focusKey="playerExpand" showKb={showKb} onPress={() => setPlayerFullscreen(true)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="expand" size={19} color={color.text} /><Text style={styles.playerControlText}>Full screen</Text></TvPress>
               </View> : null}
               <View style={[styles.playerFrame, playerFullscreen && styles.playerFrameFullscreen]}>
-                {videoId && !playerFailed ? <Player key={videoId} videoId={videoId} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={42} color={color.muted} /><Text style={styles.bodyText}>This episode could not be loaded.</Text></View>}
+                {videoId && !playerFailed ? <Player ref={playerRef} key={videoId} videoId={videoId} onProgress={setPlayerProgress} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={42} color={color.muted} /><Text style={styles.bodyText}>This episode could not be loaded.</Text></View>}
               </View>
               {!playerFullscreen ? <ScrollView
                 horizontal
@@ -515,6 +538,26 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               {playerFullscreen && playerControlsVisible ? <TVFocusGuideView autoFocus style={styles.playerOverlayControls}>
                 <TvPress focusKey="playerExitFullscreen" autoFocus showKb={showKb} onPress={() => setPlayerFullscreen(false)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="contract" size={19} color={color.text} /><Text style={styles.playerControlText}>Episodes / Exit full screen</Text></TvPress>
                 <TvPress focusKey="playerOverlayBack" showKb={showKb} onPress={() => { setPlayerFullscreen(false); setPage("details"); }} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="arrow-back" size={19} color={color.text} /><Text style={styles.playerControlText}>Back</Text></TvPress>
+              </TVFocusGuideView> : null}
+              {playerFullscreen && playerControlsVisible ? <TVFocusGuideView autoFocus style={styles.playerBottomControls}>
+                <View style={styles.playerProgressRow}>
+                  <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.currentTime)}</Text>
+                  <View style={styles.playerProgressTrack}>
+                    <View style={[styles.playerProgressFill, { width: `${Math.max(0, Math.min(100, playerProgress.duration > 0 ? playerProgress.currentTime / playerProgress.duration * 100 : 0))}%` }]} />
+                  </View>
+                  <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.duration)}</Text>
+                </View>
+                <View style={styles.playerActionsRow}>
+                  <TvPress focusKey="playerRewind" showKb={showKb} onPress={() => playerRef.current?.seekBy(-10)} style={styles.playerControl} focusedStyle={styles.focused}>
+                    <Ionicons name="play-back" size={20} color={color.text} /><Text style={styles.playerControlText}>10 sec</Text>
+                  </TvPress>
+                  <TvPress focusKey="playerToggle" showKb={showKb} onPress={() => playerRef.current?.playPause()} style={styles.playerControl} focusedStyle={styles.focused}>
+                    <Ionicons name={playerProgress.state === 1 ? "pause" : "play"} size={20} color={color.text} /><Text style={styles.playerControlText}>{playerProgress.state === 1 ? "Pause" : "Play"}</Text>
+                  </TvPress>
+                  <TvPress focusKey="playerForward" showKb={showKb} onPress={() => playerRef.current?.seekBy(10)} style={styles.playerControl} focusedStyle={styles.focused}>
+                    <Ionicons name="play-forward" size={20} color={color.text} /><Text style={styles.playerControlText}>10 sec</Text>
+                  </TvPress>
+                </View>
               </TVFocusGuideView> : null}
             </View>
           ) : null}
@@ -960,6 +1003,12 @@ const styles = StyleSheet.create({
   playerFrame: { flex: 1, minHeight: 0, width: "100%", backgroundColor: "#000", borderRadius: 0, overflow: "hidden" },
   playerFrameFullscreen: { ...StyleSheet.absoluteFillObject, zIndex: 1 },
   playerOverlayControls: { position: "absolute", zIndex: 5, top: 18, left: 18, right: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  playerBottomControls: { position: "absolute", zIndex: 6, left: 28, right: 28, bottom: 24, padding: 16, gap: 12, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.82)", borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" },
+  playerProgressRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  playerProgressTrack: { flex: 1, height: 5, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.35)", overflow: "hidden" },
+  playerProgressFill: { height: 5, backgroundColor: "#F00", borderRadius: 3 },
+  playerTime: { color: "#FFF", fontFamily: font.medium, fontSize: 12, minWidth: 48, textAlign: "center" },
+  playerActionsRow: { flexDirection: "row", justifyContent: "center", gap: 16 },
   playerControl: { minHeight: 42, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 14, borderRadius: 9, borderWidth: 1, borderColor: "rgba(255,255,255,0.35)", backgroundColor: "rgba(0,0,0,0.78)" },
   playerControlText: { color: "#fff", fontFamily: font.bold, fontSize: 13 },
   playerError: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
