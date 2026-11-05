@@ -4,6 +4,7 @@ import {
   BackHandler,
   FlatList,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -172,7 +173,14 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [playerFullscreen, setPlayerFullscreen] = useState(true);
   const [playerControlsVisible, setPlayerControlsVisible] = useState(false);
   const [showKb, setShowKb] = useState(false);
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [exitDialogVisible, setExitDialogVisible] = useState(false);
   const searchRef = useRef<any>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashVisible(false), 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Native TV remote events: the first OK/select press while video is immersive
   // reveals the app controls; subsequent OK presses activate the focused control.
@@ -184,6 +192,10 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (exitDialogVisible) {
+        setExitDialogVisible(false);
+        return true;
+      }
       if (showKb) {
         closeKb();
         return true;
@@ -201,11 +213,12 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
         openNav("home");
         return true;
       }
-      return false;
+      setExitDialogVisible(true);
+      return true;
     });
     return () => subscription.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, detailsFrom, nav, showKb]);
+  }, [page, detailsFrom, nav, showKb, exitDialogVisible]);
 
   const hero = heroCandidates[0] ?? series[0]?.[0] ?? null;
   const featured = useMemo(() => {
@@ -500,6 +513,36 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
           ) : null}
         </View>
 
+        <Modal visible={splashVisible} transparent={false} animationType="fade" statusBarTranslucent>
+          <View style={styles.splashScreen}>
+            <View style={styles.splashMark}>
+              <Ionicons name="play" size={34} color="#050606" />
+            </View>
+            <Text style={styles.splashTitle}>CLASSIC TV</Text>
+            <Text style={styles.splashSubtitle}>PAKISTAN</Text>
+            <View style={styles.splashRule} />
+            <Text style={styles.splashTagline}>YOUR CLASSIC TELEVISION ARCHIVE</Text>
+          </View>
+        </Modal>
+
+        <Modal visible={exitDialogVisible} transparent animationType="fade" onRequestClose={() => setExitDialogVisible(false)}>
+          <View style={styles.exitBackdrop}>
+            <View style={styles.exitCard}>
+              <Ionicons name="tv-outline" size={34} color={TV_GOLD} />
+              <Text style={styles.exitTitle}>Exit Classic TV Pakistan?</Text>
+              <Text style={styles.exitMessage}>Are you sure you want to close the app?</Text>
+              <View style={styles.exitActions}>
+                <Pressable hasTVPreferredFocus focusable onPress={() => setExitDialogVisible(false)} style={({ pressed }) => [styles.exitButton, styles.exitStay, pressed && styles.pressed]}>
+                  <Text style={styles.exitStayText}>NO, STAY</Text>
+                </Pressable>
+                <Pressable focusable onPress={() => { setExitDialogVisible(false); BackHandler.exitApp(); }} style={({ pressed }) => [styles.exitButton, styles.exitConfirm, pressed && styles.pressed]}>
+                  <Text style={styles.exitConfirmText}>YES, EXIT</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         {showKb ? (
           <RemoteKeyboard
             query={query}
@@ -792,6 +835,22 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
 }
 
 const styles = StyleSheet.create({
+  splashScreen: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#050606" },
+  splashMark: { width: 76, height: 76, borderRadius: 22, backgroundColor: TV_GOLD, alignItems: "center", justifyContent: "center", marginBottom: 22 },
+  splashTitle: { color: "#FFFFFF", fontFamily: font.black, fontSize: 34, letterSpacing: 2 },
+  splashSubtitle: { color: TV_GOLD, fontFamily: font.bold, fontSize: 17, letterSpacing: 7, marginTop: 5 },
+  splashRule: { width: 100, height: 2, backgroundColor: TV_GOLD, marginTop: 25, marginBottom: 16 },
+  splashTagline: { color: color.muted, fontFamily: font.medium, fontSize: 11, letterSpacing: 2 },
+  exitBackdrop: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: "rgba(0,0,0,0.82)" },
+  exitCard: { width: "100%", maxWidth: 520, alignItems: "center", gap: 14, padding: 30, borderRadius: 18, borderWidth: 1, borderColor: "rgba(216,177,90,0.5)", backgroundColor: "#101311" },
+  exitTitle: { color: "#FFFFFF", fontFamily: font.black, fontSize: 25, textAlign: "center" },
+  exitMessage: { color: color.muted, fontFamily: font.body, fontSize: 16, textAlign: "center" },
+  exitActions: { flexDirection: "row", gap: 16, marginTop: 10 },
+  exitButton: { minWidth: 140, minHeight: 52, borderRadius: 10, alignItems: "center", justifyContent: "center", paddingHorizontal: 18, borderWidth: 2, borderColor: "transparent" },
+  exitStay: { backgroundColor: "#242A26" },
+  exitConfirm: { backgroundColor: TV_GOLD },
+  exitStayText: { color: "#FFFFFF", fontFamily: font.bold, fontSize: 15 },
+  exitConfirmText: { color: "#050606", fontFamily: font.black, fontSize: 15 },
   screen: { flex: 1, flexDirection: "row", backgroundColor: "#050606" },
   fullscreenScreen: { flexDirection: "column", padding: 0 },
   sidebar: { width: 118, paddingTop: 18, paddingHorizontal: 8, paddingBottom: 14, borderRightWidth: 1, borderRightColor: color.line, backgroundColor: "#080A09" },
