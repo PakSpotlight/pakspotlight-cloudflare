@@ -76,6 +76,15 @@ jobs:
       - name: Generate native Android TV project
         run: npx expo prebuild --platform android --no-install
 
+      - name: Increase Gradle distribution download timeout
+        run: |
+          PROPS="android/gradle/wrapper/gradle-wrapper.properties"
+          if grep -q '^networkTimeout=' "$PROPS"; then
+            sed -i 's/^networkTimeout=.*/networkTimeout=120000/' "$PROPS"
+          else
+            echo 'networkTimeout=120000' >> "$PROPS"
+          fi
+
       - name: Write signing keystore
         if: env.KEYSTORE_B64 != ''
         run: echo "$KEYSTORE_B64" | base64 -d > "$GITHUB_WORKSPACE/mobile/release.keystore"
