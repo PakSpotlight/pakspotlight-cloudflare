@@ -558,7 +558,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                   </View>
                 </View>
               </View>
-              {currentGroup.length > 1 ? <Shelf title="Episodes" scrollId="rail:episodes" items={currentGroup} cardWidth={cardWidth} pageScrollId="detailsScroll" episodeCounts={episodeCounts} onSelect={openDetails} onPlay={playDrama} /> : null}
+              {currentGroup.length > 1 ? <Shelf title="Episodes" scrollId="rail:episodes" items={currentGroup} cardWidth={cardWidth} pageScrollId="detailsScroll" episodeCounts={episodeCounts} onSelect={(ep) => { void requestEpisode(ep); }} onPlay={(ep) => { void requestEpisode(ep); }} /> : null}
             </ScrollView>
           ) : null}
 
@@ -952,13 +952,7 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
         <View><Text style={styles.sectionTitle}>{title}</Text>{subtitle ? <Text style={styles.shelfSubtitle}>{subtitle}</Text> : null}</View>
         <Text style={styles.shelfCount}>{items.length} TITLES</Text>
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.rail}
-        ref={(r) => { if (r) tvScrollables.set(scrollId, { ref: r, kind: "scroll", axis: "x" }); }}
-      >
-        <FlatList
+      <FlatList
         horizontal
         data={items}
         keyExtractor={(drama) => String(drama.id)}
@@ -992,7 +986,6 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
           />
         )}
       />
-      </ScrollView>
     </View>
   );
 }
