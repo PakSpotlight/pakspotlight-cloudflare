@@ -189,6 +189,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [playerFailed, setPlayerFailed] = useState(false);
+  const [heroIndex, setHeroIndex] = useState(0);
   const [playerFullscreen, setPlayerFullscreen] = useState(true);
   const [playerControlsVisible, setPlayerControlsVisible] = useState(false);
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>({ currentTime: 0, duration: 0, state: -1 });
@@ -253,7 +254,17 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, detailsFrom, nav, showKb, exitDialogVisible]);
 
-  const hero = heroCandidates[0] ?? series[0]?.[0] ?? null;
+  useEffect(() => {
+    if (page !== "home" || heroCandidates.length < 2) return;
+    const timer = setInterval(() => {
+      setHeroIndex((current) => (current + 1) % heroCandidates.length);
+    }, 6500);
+    return () => clearInterval(timer);
+  }, [page, heroCandidates.length]);
+
+  const hero = heroCandidates.length
+    ? heroCandidates[heroIndex % heroCandidates.length]
+    : series[0]?.[0] ?? null;
   const featured = useMemo(() => {
     const ids = catalog?.featuredIds ?? [];
     const picks = ids.map((id) => rows.find((row) => row.id === id)).filter((x): x is Drama => !!x);
@@ -390,6 +401,15 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                       <ActionButton label="Play" icon="play" primary autoFocus onPress={() => playDrama(hero)} />
                       <ActionButton label="Details" icon="information-circle-outline" onPress={() => openDetails(hero)} showKb={showKb} />
                     </View>
+                    {heroCandidates.length > 1 ? <View style={styles.heroPager}>
+                      <TvPress focusKey="heroPrevious" showKb={showKb} onPress={() => setHeroIndex((current) => (current - 1 + heroCandidates.length) % heroCandidates.length)} style={styles.heroPagerButton} focusedStyle={styles.focused}>
+                        <Ionicons name="chevron-back" size={18} color={color.text} />
+                      </TvPress>
+                      <Text style={styles.heroPagerText}>{(heroIndex % heroCandidates.length) + 1} / {heroCandidates.length}</Text>
+                      <TvPress focusKey="heroNext" showKb={showKb} onPress={() => setHeroIndex((current) => (current + 1) % heroCandidates.length)} style={styles.heroPagerButton} focusedStyle={styles.focused}>
+                        <Ionicons name="chevron-forward" size={18} color={color.text} />
+                      </TvPress>
+                    </View> : null}
                   </View>
                 </View>
               ) : (
@@ -1012,6 +1032,9 @@ const styles = StyleSheet.create({
   heroTitle: { color: "#fff", fontFamily: font.black, fontSize: 36, lineHeight: 42 },
   heroMeta: { color: "#D3D8D4", fontFamily: font.medium, fontSize: 14, marginTop: 2 },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 10 },
+  heroPager: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 6 },
+  heroPagerButton: { width: 34, height: 30, borderRadius: 7, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.55)", borderWidth: 1, borderColor: "rgba(255,255,255,0.24)" },
+  heroPagerText: { color: "#FFF", fontFamily: font.bold, fontSize: 11 },
   actionButton: { minHeight: 48, minWidth: 124, borderRadius: 10, paddingHorizontal: 20, gap: 9, flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#202522", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)" },
   actionPrimary: { backgroundColor: "#fff", borderColor: "#fff" },
   actionText: { color: color.text, fontFamily: font.bold, fontSize: 15 },
