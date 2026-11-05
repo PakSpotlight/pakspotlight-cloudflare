@@ -108,15 +108,22 @@ function tvScrollIntoView(itemRef: any, scrollIds: string | string[] | undefined
           const ref: any = entry.ref;
           if (typeof index === "number" && ref && typeof ref.scrollToOffset === "function") {
             const row = Math.floor(index / Math.max(1, entry.cols ?? 1));
-            ref.scrollToOffset({ offset: Math.max(0, row * (entry.rowStride ?? 0)), animated: true });
+            ref.scrollToOffset({ offset: Math.max(0, row * (entry.rowStride ?? 0)), animated: false });
           }
           continue;
         }
         const pos = await measureWithin(itemRef, entry.ref);
         if (!pos) continue;
         try {
-          if (entry.axis === "y") entry.ref.scrollTo({ y: Math.max(0, pos.y - 110), animated: true });
-          else entry.ref.scrollTo({ x: Math.max(0, pos.x - 250), animated: true });
+          // Only move a rail/page when focus has actually left its visible area.
+          // Repeated animated scrolls on every D-pad focus caused visible stutter.
+          if (entry.axis === "y") {
+            if (pos.y > 620) entry.ref.scrollTo({ y: Math.max(0, pos.y - 460), animated: false });
+            else if (pos.y < -90) entry.ref.scrollTo({ y: Math.max(0, pos.y - 90), animated: false });
+          } else {
+            if (pos.x > 1120) entry.ref.scrollTo({ x: Math.max(0, pos.x - 850), animated: false });
+            else if (pos.x < -120) entry.ref.scrollTo({ x: Math.max(0, pos.x - 100), animated: false });
+          }
         } catch {}
       }
     })();
@@ -825,7 +832,7 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
     >
       <View style={[styles.posterFrame, { height: Math.round(width * 9 / 16) }, !focused && styles.posterDimmed]}>
-        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="contain" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
+        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
         {episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}
       </View>
       <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
