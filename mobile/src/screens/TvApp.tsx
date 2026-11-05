@@ -220,11 +220,14 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   // reveals the app controls; subsequent OK presses activate the focused control.
   useTVEventHandler((event) => {
     if (page !== "player" || !playerFullscreen) return;
-    if (event.eventType === "select") setPlayerControlsVisible(true);
-    else if (event.eventType === "left") {
+    // While the overlay is hidden, left/right seek the video. Once controls
+    // are visible, let Android TV's native focus engine move between buttons.
+    if (event.eventType === "select") {
+      if (!playerControlsVisible) setPlayerControlsVisible(true);
+    } else if (event.eventType === "left" && !playerControlsVisible) {
       playerRef.current?.seekBy(-10);
       setPlayerControlsVisible(true);
-    } else if (event.eventType === "right") {
+    } else if (event.eventType === "right" && !playerControlsVisible) {
       playerRef.current?.seekBy(10);
       setPlayerControlsVisible(true);
     } else if (event.eventType === "playPause") {
