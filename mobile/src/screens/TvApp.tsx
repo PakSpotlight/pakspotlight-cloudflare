@@ -18,6 +18,7 @@ import {
 import type { ColorValue } from "react-native";
 import { Player } from "../components/Player";
 import type { PlayerHandle, PlayerProgress } from "../components/Player";
+import { clearTvPlaybackProgress, getTvPlaybackProgress, saveTvPlaybackProgress } from "../lib/tvPlaybackProgress";
 import { useCatalog } from "../lib/catalog";
 import {
   displayTitle,
@@ -192,6 +193,9 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [playerControlsVisible, setPlayerControlsVisible] = useState(false);
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>({ currentTime: 0, duration: 0, state: -1 });
   const playerRef = useRef<PlayerHandle>(null);
+  const pendingResumeSecondsRef = useRef(0);
+  const lastSavedProgressRef = useRef("");
+  const [resumePrompt, setResumePrompt] = useState<{ episode: Drama; seconds: number } | null>(null);
   const [showKb, setShowKb] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
   const [exitDialogVisible, setExitDialogVisible] = useState(false);
@@ -281,16 +285,35 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     setPage("details");
   };
 
-  const playDrama = (drama: Drama) => {
-    const startId = seriesStartId(rows, drama);
-    const first = rows.find((row) => row.id === startId) ?? drama;
-    setSelected(drama);
-    setEpisode(first);
+  const launchEpisode = (nextEpisode: Drama, resumeAt = 0) => {
+    pendingResumeSecondsRef.current = resumeAt;
+    lastSavedProgressRef.current = "";
+    setEpisode(nextEpisode);
     setPlayerFailed(false);
     setPlayerProgress({ currentTime: 0, duration: 0, state: -1 });
     setPlayerFullscreen(true);
     setPlayerControlsVisible(false);
+    setResumePrompt(null);
     setPage("player");
+  };
+
+  const requestEpisode = async (nextEpisode: Drama) => {
+    const id = extractYouTubeId(nextEpisode.youtube);
+    if (id) {
+      const saved = await getTvPlaybackProgress(id);
+      if (saved && saved.currentTime >= 30 && (!saved.duration || saved.currentTime / saved.duration < 0.95)) {
+        setResumePrompt({ episode: nextEpisode, seconds: saved.currentTime });
+        return;
+      }
+    }
+    launchEpisode(nextEpisode, 0);
+  };
+
+  const playDrama = (drama: Drama) => {
+    const startId = seriesStartId(rows, drama);
+    const first = rows.find((row) => row.id === startId) ?? drama;
+    setSelected(drama);
+    void requestEpisode(first);
   };
 
   const openNav = (next: NavItem) => {
@@ -525,7 +548,30 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                 <TvPress focusKey="playerExpand" showKb={showKb} onPress={() => setPlayerFullscreen(true)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="expand" size={19} color={color.text} /><Text style={styles.playerControlText}>Full screen</Text></TvPress>
               </View> : null}
               <View style={[styles.playerFrame, playerFullscreen && styles.playerFrameFullscreen]}>
-                {videoId && !playerFailed ? <Player ref={playerRef} key={videoId} videoId={videoId} onProgress={setPlayerProgress} onError={() => setPlayerFailed(true)} /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={42} color={color.muted} /><Text style={styles.bodyText}>This episode could not be loaded.</Text></View>}
+                {videoId && !playerFailed ? <Player
+                  ref={playerRef}
+                  key={videoId}
+                  videoId={videoId}
+                  onReady={() => {
+                    const seconds = pendingResumeSecondsRef.current;
+                    if (seconds > 0) {
+                      pendingResumeSecondsRef.current = 0;
+                      setTimeout(() => playerRef.current?.seekBy(seconds), 500);
+                    }
+                  }}
+                  onProgress={(progress) => {
+                    setPlayerProgress(progress);
+                    if (videoId && progress.currentTime > 0 && progress.duration > 0) {
+                      const bucket = Math.floor(progress.currentTime / 5);
+                      const saveKey = `${videoId}:${bucket}`;
+                      if (saveKey !== lastSavedProgressRef.current) {
+                        lastSavedProgressRef.current = saveKey;
+                        void saveTvPlaybackProgress(videoId, progress.currentTime, progress.duration);
+                      }
+                    }
+                  }}
+                  onError={() => setPlayerFailed(true)}
+                /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={42} color={color.muted} /><Text style={styles.bodyText}>This episode could not be loaded.</Text></View>}
               </View>
               {!playerFullscreen ? <ScrollView
                 horizontal
@@ -533,7 +579,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                 contentContainerStyle={styles.episodeRail}
                 ref={(r) => { if (r) tvScrollables.set("playerRail", { ref: r, kind: "scroll", axis: "x" }); }}
               >
-                {currentGroup.map((ep, i) => <EpisodeButton key={ep.id} episode={ep} number={i + 1} index={i} selected={episode.id === ep.id} onPress={() => { setEpisode(ep); setPlayerFailed(false); }} showKb={showKb} />)}
+                {currentGroup.map((ep, i) => <EpisodeButton key={ep.id} episode={ep} number={i + 1} index={i} selected={episode.id === ep.id} onPress={() => { void requestEpisode(ep); }} showKb={showKb} />)}
               </ScrollView> : null}
               {playerFullscreen && playerControlsVisible ? <TVFocusGuideView autoFocus style={styles.playerOverlayControls}>
                 <TvPress focusKey="playerExitFullscreen" autoFocus showKb={showKb} onPress={() => setPlayerFullscreen(false)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="contract" size={19} color={color.text} /><Text style={styles.playerControlText}>Episodes / Exit full screen</Text></TvPress>
@@ -572,6 +618,34 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
             <Text style={styles.splashSubtitle}>PAKISTAN</Text>
             <View style={styles.splashRule} />
             <Text style={styles.splashTagline}>YOUR CLASSIC TELEVISION ARCHIVE</Text>
+          </View>
+        </Modal>
+
+        <Modal visible={!!resumePrompt} transparent animationType="fade" onRequestClose={() => setResumePrompt(null)}>
+          <View style={styles.exitBackdrop}>
+            <View style={styles.exitCard}>
+              <Ionicons name="play-circle-outline" size={36} color={TV_GOLD} />
+              <Text style={styles.exitTitle}>Resume watching?</Text>
+              <Text style={styles.exitMessage}>
+                {resumePrompt ? `You stopped at ${formatPlayerTime(resumePrompt.seconds)}. Would you like to continue from there?` : ""}
+              </Text>
+              <View style={styles.exitActions}>
+                <Pressable hasTVPreferredFocus focusable onPress={() => {
+                  if (resumePrompt) {
+                    const next = resumePrompt.episode;
+                    void clearTvPlaybackProgress(extractYouTubeId(next.youtube) || "");
+                    launchEpisode(next, 0);
+                  }
+                }} style={({ pressed }) => [styles.exitButton, styles.exitStay, pressed && styles.pressed]}>
+                  <Text style={styles.exitStayText}>START OVER</Text>
+                </Pressable>
+                <Pressable focusable onPress={() => {
+                  if (resumePrompt) launchEpisode(resumePrompt.episode, resumePrompt.seconds);
+                }} style={({ pressed }) => [styles.exitButton, styles.exitConfirm, pressed && styles.pressed]}>
+                  <Text style={styles.exitConfirmText}>RESUME</Text>
+                </Pressable>
+              </View>
+            </View>
           </View>
         </Modal>
 
