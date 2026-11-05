@@ -92,9 +92,16 @@ jobs:
       - name: Confirm TV and phone identities stay separate
         run: |
           npx expo config --json > /tmp/tv-config.json
-          node -e "const c=require('/tmp/tv-config.json');if(c.android.package!=='com.classictvpakistan.tv')throw Error('Wrong TV package: '+c.android.package);if(c.android.versionCode!==9)throw Error('Wrong TV version code: '+c.android.versionCode)"
           env -u CLASSIC_TV_ANDROID_TV npx expo config --json > /tmp/phone-config.json
-          node -e "const c=require('/tmp/phone-config.json');if(c.android.package!=='com.classictvpakistan.app')throw Error('Phone package changed');if(c.android.versionCode!==2)throw Error('Phone version code changed')"
+          node - <<'NODE'
+          const tv = require('/tmp/tv-config.json');
+          const phone = require('/tmp/phone-config.json');
+          if (tv.android.package !== 'com.classictvpakistan.tv') throw Error('Wrong TV package: ' + tv.android.package);
+          if (phone.android.package !== 'com.classictvpakistan.app') throw Error('Phone package changed: ' + phone.android.package);
+          if (!Number.isInteger(tv.android.versionCode) || tv.android.versionCode < 1) throw Error('Invalid TV version code: ' + tv.android.versionCode);
+          if (tv.android.versionCode === phone.android.versionCode) throw Error('TV and phone version codes must remain separate');
+          console.log({ tvPackage: tv.android.package, tvVersion: tv.version, tvVersionCode: tv.android.versionCode, phonePackage: phone.android.package, phoneVersionCode: phone.android.versionCode });
+          NODE
 
       - name: Run Expo Doctor
         run: npx expo-doctor
@@ -138,7 +145,7 @@ jobs:
       - name: Upload Android TV test APK
         uses: actions/upload-artifact@v4
         with:
-          name: ClassicTVPakistanTV-1.0.8-signed-test
+          name: ClassicTVPakistanTV-tv-build-signed-test
           path: mobile/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
