@@ -120,7 +120,16 @@ function tvScrollIntoView(itemRef: any, scrollIds: string | string[] | undefined
           const ref: any = entry.ref;
           if (typeof index === "number" && ref && typeof ref.scrollToOffset === "function") {
             const row = Math.floor(index / Math.max(1, entry.cols ?? 1));
-            ref.scrollToOffset({ offset: Math.max(0, row * (entry.rowStride ?? 0)), animated: false });
+            const stride = entry.rowStride ?? 0;
+            const target = Math.max(0, row * stride);
+            const metrics = ref?._listRef?._scrollMetrics ?? ref?._scrollMetrics;
+            const offset = Number(metrics?.offset) || 0;
+            const visible = Number(metrics?.visibleLength) || 0;
+            // Don't issue a native scroll command for every focus move.
+            // Only reposition when the target row is actually outside the viewport.
+            if (!metrics || target < offset || target + stride > offset + visible) {
+              ref.scrollToOffset({ offset: target, animated: false });
+            }
           }
           continue;
         }
@@ -390,7 +399,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
             >
               {hero ? (
                 <View style={[styles.hero, { minHeight: Math.min(320, height * 0.46) }]}>
-                  {hero.image ? <Image source={{ uri: hero.image }} style={styles.heroImage} resizeMode="cover" /> : null}
+                  {hero.image ? <Image source={{ uri: hero.image }} style={styles.heroImage} resizeMethod="resize" resizeMode="cover" /> : null}
                   <View style={styles.heroScrim} />
                   <View style={styles.heroCopy}>
                     <Text style={styles.eyebrow}>FROM THE CLASSIC ARCHIVE</Text>
@@ -532,7 +541,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               contentContainerStyle={styles.detailContent}
             >
               <View style={styles.detailHero}>
-                {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMode="cover" /> : <View style={styles.detailImage} />}
+                {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMethod="resize" resizeMode="contain" /> : <View style={styles.detailImage} />}
                 <View style={styles.detailCopy}>
                   <Text style={styles.eyebrow}>{selected.type.toUpperCase()}</Text>
                   {selected.urdu ? <Text style={styles.urduTitle}>{selected.urdu}</Text> : null}
@@ -622,6 +631,9 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                   </TvPress>
                   <TvPress focusKey="playerForward" showKb={showKb} onPress={() => playerRef.current?.seekBy(10)} style={styles.playerControl} focusedStyle={styles.focused}>
                     <Ionicons name="play-forward" size={20} color={color.text} /><Text style={styles.playerControlText}>10 sec</Text>
+                  </TvPress>
+                  <TvPress focusKey="playerStop" showKb={showKb} onPress={() => { setPlayerFullscreen(false); setPage("details"); }} style={styles.playerControl} focusedStyle={styles.focused}>
+                    <Ionicons name="stop" size={20} color={color.text} /><Text style={styles.playerControlText}>Stop</Text>
                   </TvPress>
                 </View>
               </TVFocusGuideView> : null}
@@ -1010,7 +1022,7 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
     >
       <View style={[styles.posterFrame, { height: Math.round(width * 9 / 16) }, !focused && styles.posterDimmed]}>
-        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="contain" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
+        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMethod="resize" resizeMode="contain" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
         {episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}
       </View>
       <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
