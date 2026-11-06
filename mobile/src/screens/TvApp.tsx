@@ -68,6 +68,7 @@ type TvScrollable = {
 };
 
 const tvScrollables = new Map<string, TvScrollable>();
+const tvFocusableRefs = new Map<string, any>();
 let tvLastFocusedKey = "";
 
 function measureWithin(itemRef: any, ancestorRef: any): Promise<{ x: number; y: number } | null> {
@@ -156,6 +157,10 @@ function useTvItem(
   opts?: { scrollIds?: string | string[]; itemIndex?: number; onFocus?: () => void; onBlur?: () => void },
 ) {
   const ref = useRef<any>(null);
+  useEffect(() => {
+    tvFocusableRefs.set(focusKey, ref);
+    return () => { tvFocusableRefs.delete(focusKey); };
+  }, [focusKey]);
   const onFocus = () => {
     tvLastFocusedKey = focusKey;
     opts?.onFocus?.();
@@ -194,7 +199,14 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [detailsFrom, setDetailsFrom] = useState<NavItem>(initialPage === "browse" ? "browse" : "home");
   const [nav, setNav] = useState<NavItem>(initialPage === "browse" ? "browse" : "home");
   const [selected, setSelected] = useState<Drama | null>(null);
+  const [detailResume, setDetailResume] = useState<{ episode: Drama; seconds: number; duration: number } | null>(null);
   const [episode, setEpisode] = useState<Drama | null>(null);
+  const homeScrollRef = useRef<any>(null);
+  const browseGridRef = useRef<any>(null);
+  const homeOffsetRef = useRef(0);
+  const browseOffsetRef = useRef(0);
+  const originFocusKeyRef = useRef("");
+  const restoreFocusKeyRef = useRef("");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [playerFailed, setPlayerFailed] = useState(false);
@@ -277,6 +289,12 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const hero = heroCandidates.length
     ? heroCandidates[heroIndex % heroCandidates.length]
     : series[0]?.[0] ?? null;
+  const latest = useMemo(() => [...series]
+    .filter((group) => group.length > 0)
+    .sort((a, b) => Math.max(...b.map((item) => item.id)) - Math.max(...a.map((item) => item.id)))
+    .slice(0, 14)
+    .map((group) => group[0]), [series]);
+
   const featured = useMemo(() => {
     const ids = catalog?.featuredIds ?? [];
     const picks = ids.map((id) => rows.find((row) => row.id === id)).filter((x): x is Drama => !!x);
@@ -302,6 +320,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   }, [series, query, category]);
 
   const openDetails = (drama: Drama) => {
+    originFocusKeyRef.current = tvLastFocusedKey;
     setDetailsFrom(page === "browse" || page === "library" ? page : "home");
     setSelected(drama);
     setEpisode(null);
@@ -348,9 +367,26 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   };
 
   const backFromDetails = () => {
+    restoreFocusKeyRef.current = originFocusKeyRef.current;
     setPage(detailsFrom);
     setNav(detailsFrom);
   };
+
+  useEffect(() => {
+    if (page !== "home" && page !== "browse" && page !== "library") return;
+    const offset = page === "browse" ? browseOffsetRef.current : page === "home" ? homeOffsetRef.current : 0;
+    const focusKey = restoreFocusKeyRef.current;
+    const timer = setTimeout(() => {
+      if (page === "home") homeScrollRef.current?.scrollTo({ y: offset, animated: false });
+      if (page === "browse") browseGridRef.current?.scrollToOffset({ offset, animated: false });
+      if (focusKey) {
+        const target = tvFocusableRefs.get(focusKey);
+        if (target) tvRequestFocus(target);
+        restoreFocusKeyRef.current = "";
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [page]);
 
   const closeKb = () => {
     setShowKb(false);
@@ -358,6 +394,21 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   };
 
   const currentGroup = selected ? groupFor(selected) : [];
+  useEffect(() => {
+    let active = true;
+    setDetailResume(null);
+    if (page === "details" && selected) {
+      const firstId = seriesStartId(rows, selected);
+      const first = rows.find((row) => row.id === firstId) ?? selected;
+      const id = extractYouTubeId(first.youtube);
+      if (id) void getTvPlaybackProgress(id).then((saved) => {
+        if (active && saved && saved.currentTime >= 30 && (!saved.duration || saved.currentTime / saved.duration < 0.95)) {
+          setDetailResume({ episode: first, seconds: saved.currentTime, duration: saved.duration });
+        }
+      });
+    }
+    return () => { active = false; };
+  }, [page, selected, rows]);
   const videoId = episode ? extractYouTubeId(episode.youtube) : null;
   const cardWidth = Math.max(220, Math.min(290, Math.round((width - 260) / 4)));
   const gridCols = Math.max(1, Math.floor((width - 150) / (cardWidth + 14)));
@@ -395,10 +446,12 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
 
           {page === "home" ? (
             <ScrollView
-              ref={(r) => { if (r) tvScrollables.set("homeScroll", { ref: r, kind: "scroll", axis: "y" }); }}
+              ref={(r) => { homeScrollRef.current = r; if (r) tvScrollables.set("homeScroll", { ref: r, kind: "scroll", axis: "y" }); }}
               style={styles.pageScroll}
               contentContainerStyle={styles.homeContent}
-              showsVerticalScrollIndicator={false}
+              onScroll={(event) => { homeOffsetRef.current = event.nativeEvent.contentOffset.y; }}
+              scrollEventThrottle={120}
+              showsVerticalScrollIndicator={false>
             >
               {hero ? (
                 <View style={[styles.hero, { minHeight: Math.min(320, height * 0.46) }]}>
@@ -428,6 +481,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                 <View style={styles.emptyHero}><Text style={styles.heroTitle}>{loading ? "Loading the archive…" : "Classic TV Pakistan"}</Text><Text style={styles.bodyText}>{error ?? "Browse the archive to discover classics."}</Text></View>
               )}
               {loading && !catalog ? <Text style={styles.bodyText}>Connecting to the archive…</Text> : null}
+              <Shelf title="Latest Dramas" subtitle="Recently added to the archive" scrollId="rail:latest" items={latest} cardWidth={cardWidth} episodeCounts={episodeCounts} pageScrollId="homeScroll" onSelect={openDetails} onPlay={playDrama} />
               <Shelf title="Featured classics" subtitle="A selection from the archive" scrollId="rail:featured" items={featured} cardWidth={cardWidth} episodeCounts={episodeCounts} pageScrollId="homeScroll" onSelect={openDetails} onPlay={playDrama} />
               {categories.map((cat) => {
                 const items = series.filter((group) => group[0]?.type === cat).slice(0, 14).map((group) => group[0]);
@@ -476,6 +530,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               </ScrollView>
               <FlatList
                 ref={(r: any) => {
+                  browseGridRef.current = r;
                   if (r) tvScrollables.set("browseGrid", { ref: r, kind: "flatlist", cols: gridCols, rowStride: gridRowStride });
                 }}
                 style={styles.pageScroll}
@@ -500,6 +555,8 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                 maxToRenderPerBatch={gridCols * 2}
                 windowSize={9}
                 updateCellsBatchingPeriod={50}
+                onScroll={(event) => { browseOffsetRef.current = event.nativeEvent.contentOffset.y; }}
+                scrollEventThrottle={120}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={<Text style={styles.bodyText}>{loading ? "Loading titles…" : "No titles match this search."}</Text>}
               />
@@ -558,6 +615,20 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                   </View>
                 </View>
               </View>
+              {detailResume ? (
+                <View style={styles.resumeCard}>
+                  <View style={styles.resumeCopy}>
+                    <Text style={styles.resumeEyebrow}>CONTINUE WATCHING</Text>
+                    <Text style={styles.resumeTitle} numberOfLines={1}>{displayTitle(detailResume.episode)}</Text>
+                    <View style={styles.resumeTrack}>
+                      <View style={[styles.resumeFill, { width: `${Math.max(0, Math.min(100, detailResume.duration > 0 ? detailResume.seconds / detailResume.duration * 100 : 0))}%` }]} />
+                    </View>
+                    <Text style={styles.resumeTime}>{formatPlayerTime(detailResume.seconds)} watched</Text>
+                  </View>
+                  <ActionButton label="Resume" icon="play" primary onPress={() => launchEpisode(detailResume.episode, detailResume.seconds)} showKb={showKb} />
+                  <ActionButton label="Start Over" icon="refresh" onPress={() => { void clearTvPlaybackProgress(extractYouTubeId(detailResume.episode.youtube) || ""); launchEpisode(detailResume.episode, 0); }} showKb={showKb} />
+                </View>
+              ) : null}
               {currentGroup.length > 1 ? <Shelf title="Episodes" scrollId="rail:episodes" items={currentGroup} cardWidth={cardWidth} pageScrollId="detailsScroll" episodeCounts={episodeCounts} onSelect={(ep) => { void requestEpisode(ep); }} onPlay={(ep) => { void requestEpisode(ep); }} /> : null}
             </ScrollView>
           ) : null}
@@ -1098,6 +1169,13 @@ const styles = StyleSheet.create({
   focusOutline: { borderWidth: 1, borderColor: "transparent" },
   focusOutlineOn: { borderColor: TV_GOLD },
   shelf: { gap: 12 },
+  resumeCard: { flexDirection: "row", alignItems: "center", gap: 18, padding: 18, borderRadius: 12, borderWidth: 1, borderColor: "rgba(216,177,90,0.45)", backgroundColor: "#111713" },
+  resumeCopy: { flex: 1, gap: 7 },
+  resumeEyebrow: { color: TV_GOLD, fontFamily: font.bold, fontSize: 10, letterSpacing: 1.2 },
+  resumeTitle: { color: "#fff", fontFamily: font.bold, fontSize: 17 },
+  resumeTrack: { height: 5, borderRadius: 3, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.22)" },
+  resumeFill: { height: 5, backgroundColor: "#E11B22" },
+  resumeTime: { color: color.muted, fontSize: 11 },
   shelfHeading: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", paddingRight: 4 },
   sectionTitle: { color: color.text, fontFamily: font.bold, fontSize: 21 },
   shelfSubtitle: { color: color.dim, fontSize: 12, marginTop: 3 },
@@ -1109,7 +1187,7 @@ const styles = StyleSheet.create({
   posterFallback: { flex: 1, alignItems: "center", justifyContent: "center" },
   posterBadge: { position: "absolute", left: 8, top: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5, backgroundColor: "rgba(0,0,0,0.82)" },
   badgeText: { color: "#fff", fontFamily: font.bold, fontSize: 10 },
-  posterTitle: { color: color.text, fontFamily: font.bold, fontSize: 14, lineHeight: 18 },
+  posterTitle: { color: color.text, fontFamily: font.bold, fontSize: 14, lineHeight: 21, minHeight: 42, includeFontPadding: true },
   posterTitleLit: { color: "#FFF3D6" },
   posterYear: { color: color.dim, fontSize: 12 },
   posterYearLit: { color: TV_GOLD },
