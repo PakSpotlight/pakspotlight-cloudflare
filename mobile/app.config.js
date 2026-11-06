@@ -10,12 +10,12 @@ module.exports = ({ config }) => {
   return {
     ...config,
     name: isTv ? "Classic TV Pakistan TV" : config.name,
-    version: isTv ? "1.1.4" : config.version,
+    version: isTv ? "1.1.5" : config.version,
     orientation: isTv ? "landscape" : config.orientation,
     android: {
       ...config.android,
       package: isTv ? "com.classictvpakistan.tv" : config.android.package,
-      versionCode: isTv ? 15 : config.android.versionCode,
+      versionCode: isTv ? 16 : config.android.versionCode,
     },
     extra: {
       ...(config.extra || {}),
