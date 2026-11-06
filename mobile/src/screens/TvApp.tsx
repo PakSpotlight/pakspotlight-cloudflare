@@ -607,7 +607,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               contentContainerStyle={styles.detailContent}
             >
               <View style={styles.detailHero}>
-                {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMethod="resize" resizeMode="contain" /> : <View style={styles.detailImage} />}
+                {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMethod="resize" resizeMode="cover" /> : <View style={styles.detailImage} />}
                 <View style={styles.detailCopy}>
                   <Text style={styles.eyebrow}>{selected.type.toUpperCase()}</Text>
                   {selected.urdu ? <Text style={styles.urduTitle}>{selected.urdu}</Text> : null}
@@ -623,6 +623,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               </View>
               {detailResume ? (
                 <View style={styles.resumeCard}>
+                  {detailResume.episode.image ? <Image source={{ uri: detailResume.episode.image }} style={styles.resumeImage} resizeMethod="resize" resizeMode="cover" /> : null}
                   <View style={styles.resumeCopy}>
                     <Text style={styles.resumeEyebrow}>CONTINUE WATCHING</Text>
                     <Text style={styles.resumeTitle} numberOfLines={1}>{displayTitle(detailResume.episode)}</Text>
@@ -1098,8 +1099,8 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       accessibilityLabel={displayTitle(drama)}
       style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
     >
-      <View style={[styles.posterFrame, { height: Math.round(width * 9 / 16) }, !focused && styles.posterDimmed]}>
-        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMethod="resize" resizeMode="contain" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
+      <View style={[styles.posterFrame, { height: Math.round(width * 9 / 16) }, focused && styles.posterFrameFocused]}>
+        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMethod="resize" resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
         {episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}
       </View>
       <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
@@ -1159,7 +1160,7 @@ const styles = StyleSheet.create({
   heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.34)" },
   heroCopy: { padding: 28, maxWidth: 650, gap: 9 },
   eyebrow: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11, letterSpacing: 1.7 },
-  urduTitle: { color: "#fff", fontSize: 22, lineHeight: 42 },
+  urduTitle: { color: "#fff", fontFamily: font.urdu, fontSize: 29, lineHeight: 66, textAlign: "right", includeFontPadding: true },
   heroTitle: { color: "#fff", fontFamily: font.black, fontSize: 36, lineHeight: 42 },
   heroMeta: { color: "#D3D8D4", fontFamily: font.medium, fontSize: 14, marginTop: 2 },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 10 },
@@ -1171,15 +1172,17 @@ const styles = StyleSheet.create({
   actionText: { color: color.text, fontFamily: font.bold, fontSize: 15 },
   actionTextPrimary: { color: "#000" },
   actionTextLit: { color: TV_GOLD },
-  focused: { borderColor: TV_GOLD, borderWidth: 3, backgroundColor: "rgba(216,177,90,0.18)" },
-  posterFocused: { borderColor: TV_GOLD, borderWidth: 3, borderRadius: 12, backgroundColor: "#211B10", zIndex: 2 },
+  focused: { borderColor: TV_GOLD, borderWidth: 2, backgroundColor: "rgba(216,177,90,0.06)" },
+  posterFocused: { borderColor: "transparent", borderWidth: 2, borderRadius: 10, backgroundColor: "transparent", zIndex: 2 },
+  posterFrameFocused: { borderColor: TV_GOLD },
   posterLit: { opacity: 1 },
-  posterDimmed: { opacity: 0.62 },
+  posterDimmed: { opacity: 1 },
   pressed: { opacity: 0.78 },
   focusOutline: { borderWidth: 1, borderColor: "transparent" },
   focusOutlineOn: { borderColor: TV_GOLD },
   shelf: { gap: 12 },
-  resumeCard: { flexDirection: "row", alignItems: "center", gap: 18, padding: 18, borderRadius: 12, borderWidth: 1, borderColor: "rgba(216,177,90,0.45)", backgroundColor: "#111713" },
+  resumeCard: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: "rgba(216,177,90,0.30)", backgroundColor: "#111713" },
+  resumeImage: { width: 190, height: 107, borderRadius: 8, backgroundColor: "#000" },
   resumeCopy: { flex: 1, gap: 7 },
   resumeEyebrow: { color: TV_GOLD, fontFamily: font.bold, fontSize: 10, letterSpacing: 1.2 },
   resumeTitle: { color: "#fff", fontFamily: font.bold, fontSize: 17 },
@@ -1192,12 +1195,12 @@ const styles = StyleSheet.create({
   shelfCount: { color: color.dim, fontFamily: font.bold, fontSize: 10, letterSpacing: 1 },
   rail: { gap: 14, paddingVertical: 8, paddingRight: 8 },
   posterTile: { borderRadius: 10, padding: 4, gap: 6, borderWidth: 2, borderColor: "transparent" },
-  posterFrame: { borderRadius: 8, overflow: "hidden", backgroundColor: "#000", aspectRatio: 16 / 9 },
-  poster: { width: "100%", height: "100%" },
+  posterFrame: { borderRadius: 8, overflow: "hidden", backgroundColor: "#000", aspectRatio: 16 / 9, borderWidth: 2, borderColor: "transparent" },
+  poster: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
   posterFallback: { flex: 1, alignItems: "center", justifyContent: "center" },
   posterBadge: { position: "absolute", left: 8, top: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5, backgroundColor: "rgba(0,0,0,0.82)" },
   badgeText: { color: "#fff", fontFamily: font.bold, fontSize: 10 },
-  posterTitle: { color: color.text, fontFamily: font.bold, fontSize: 14, lineHeight: 21, minHeight: 42, includeFontPadding: true },
+  posterTitle: { color: color.text, fontFamily: font.bold, fontSize: 16, lineHeight: 24, minHeight: 48, includeFontPadding: true },
   posterTitleLit: { color: "#FFF3D6" },
   posterYear: { color: color.dim, fontSize: 12 },
   posterYearLit: { color: TV_GOLD },
@@ -1226,7 +1229,7 @@ const styles = StyleSheet.create({
   infoCardTitle: { color: color.text, fontFamily: font.bold, fontSize: 18 },
   detailContent: { paddingBottom: 32, gap: 22 },
   detailHero: { flexDirection: "row", gap: 28, minHeight: 280, alignItems: "center" },
-  detailImage: { width: 340, height: 191, borderRadius: 12, backgroundColor: color.surfaceAlt },
+  detailImage: { width: 340, height: 191, borderRadius: 12, backgroundColor: color.surfaceAlt, overflow: "hidden" },
   detailCopy: { flex: 1, gap: 12, maxWidth: 720 },
   detailTitle: { color: "#fff", fontFamily: font.black, fontSize: 34, lineHeight: 40 },
   description: { color: color.muted, fontSize: 15, lineHeight: 23, maxWidth: 650 },
