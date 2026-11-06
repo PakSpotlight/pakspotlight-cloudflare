@@ -69,6 +69,7 @@ type TvScrollable = {
 
 const tvScrollables = new Map<string, TvScrollable>();
 const tvFocusableRefs = new Map<string, any>();
+const tvRailOffsets = new Map<string, number>();
 let tvLastFocusedKey = "";
 
 function measureWithin(itemRef: any, ancestorRef: any): Promise<{ x: number; y: number } | null> {
@@ -376,16 +377,17 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     if (page !== "home" && page !== "browse" && page !== "library") return;
     const offset = page === "browse" ? browseOffsetRef.current : page === "home" ? homeOffsetRef.current : 0;
     const focusKey = restoreFocusKeyRef.current;
-    const timer = setTimeout(() => {
+    const restore = () => {
       if (page === "home") homeScrollRef.current?.scrollTo({ y: offset, animated: false });
       if (page === "browse") browseGridRef.current?.scrollToOffset({ offset, animated: false });
       if (focusKey) {
         const target = tvFocusableRefs.get(focusKey);
-        if (target) tvRequestFocus(target);
-        restoreFocusKeyRef.current = "";
+        if (target && tvRequestFocus(target)) restoreFocusKeyRef.current = "";
       }
-    }, 300);
-    return () => clearTimeout(timer);
+    };
+    const first = setTimeout(restore, 320);
+    const second = setTimeout(restore, 700);
+    return () => { clearTimeout(first); clearTimeout(second); };
   }, [page]);
 
   const closeKb = () => {
@@ -401,14 +403,21 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
       const firstId = seriesStartId(rows, selected);
       const first = rows.find((row) => row.id === firstId) ?? selected;
       const id = extractYouTubeId(first.youtube);
-      if (id) void getTvPlaybackProgress(id).then((saved) => {
-        if (active && saved && saved.currentTime >= 30 && (!saved.duration || saved.currentTime / saved.duration < 0.95)) {
-          setDetailResume({ episode: first, seconds: saved.currentTime, duration: saved.duration });
-        }
+      const episodes = groupFor(selected);
+      void Promise.all(episodes.map(async (item) => {
+        const videoId = extractYouTubeId(item.youtube);
+        return videoId ? { item, saved: await getTvPlaybackProgress(videoId) } : null;
+      })).then((results) => {
+        if (!active) return;
+        const resumable = results
+          .filter((entry): entry is { item: Drama; saved: NonNullable<Awaited<ReturnType<typeof getTvPlaybackProgress>>> } =>
+            !!entry?.saved && entry.saved.currentTime >= 30 && (!entry.saved.duration || entry.saved.currentTime / entry.saved.duration < 0.95))
+          .sort((a, b) => b.saved.updatedAt - a.saved.updatedAt)[0];
+        if (resumable) setDetailResume({ episode: resumable.item, seconds: resumable.saved.currentTime, duration: resumable.saved.duration });
       });
     }
     return () => { active = false; };
-  }, [page, selected, rows]);
+  }, [page, selected, rows, groupFor]);
   const videoId = episode ? extractYouTubeId(episode.youtube) : null;
   const cardWidth = Math.max(220, Math.min(290, Math.round((width - 260) / 4)));
   const gridCols = Math.max(1, Math.floor((width - 150) / (cardWidth + 14)));
@@ -1034,7 +1043,9 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
         maxToRenderPerBatch={4}
         windowSize={3}
         updateCellsBatchingPeriod={60}
-        getItemLayout={(_, index) => {
+        onScroll={(event) => { tvRailOffsets.set(scrollId, event.nativeEvent.contentOffset.x); }}
+         scrollEventThrottle={120}
+         getItemLayout={(_, index) => {
           const tileWidth = compact ? Math.round(cardWidth * 0.8) : cardWidth;
           return { length: tileWidth + 14, offset: (tileWidth + 14) * index, index };
         }}
@@ -1042,6 +1053,8 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
           if (r) {
             const tileWidth = compact ? Math.round(cardWidth * 0.8) : cardWidth;
             tvScrollables.set(scrollId, { ref: r, kind: "flatlist", cols: 1, rowStride: tileWidth + 14 });
+             const savedOffset = tvRailOffsets.get(scrollId) ?? 0;
+             if (savedOffset > 0) setTimeout(() => r.scrollToOffset({ offset: savedOffset, animated: false }), 80);
           }
         }}
         renderItem={({ item: drama, index }) => (
