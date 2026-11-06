@@ -451,7 +451,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               contentContainerStyle={styles.homeContent}
               onScroll={(event) => { homeOffsetRef.current = event.nativeEvent.contentOffset.y; }}
               scrollEventThrottle={120}
-              showsVerticalScrollIndicator={false>
+              showsVerticalScrollIndicator={false}
             >
               {hero ? (
                 <View style={[styles.hero, { minHeight: Math.min(320, height * 0.46) }]}>
