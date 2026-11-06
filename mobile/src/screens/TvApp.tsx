@@ -400,9 +400,6 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     let active = true;
     setDetailResume(null);
     if (page === "details" && selected) {
-      const firstId = seriesStartId(rows, selected);
-      const first = rows.find((row) => row.id === firstId) ?? selected;
-      const id = extractYouTubeId(first.youtube);
       const episodes = groupFor(selected);
       void Promise.all(episodes.map(async (item) => {
         const videoId = extractYouTubeId(item.youtube);
