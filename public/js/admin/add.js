@@ -449,17 +449,56 @@ async function handleSingleAddSubmit(e) {
     youtube_url: $("addUrlInput").value.trim()
   };
 
-  const { data, error } = await window.sbClient.from("Drama").insert(payload).select().single();
-  if (error) {
+  // Prevent duplicate videos even when the same YouTube link is pasted in a
+  // different format (watch, youtu.be, shorts, or embed).
+  const videoMatch = payload.youtube_url.match(/[A-Za-z0-9_-]{11}/);
+  let duplicateQuery = window.sbClient.from("Drama").select("*");
+  if (videoMatch) duplicateQuery = duplicateQuery.ilike("youtube_url", "%" + videoMatch[0] + "%");
+  else duplicateQuery = duplicateQuery.eq("youtube_url", payload.youtube_url);
+  const { data: existingDrama, error: duplicateError } = await duplicateQuery.limit(1).maybeSingle();
+  if (duplicateError) {
     status.className = "status show err";
-    status.textContent = error.message;
+    status.textContent = "Could not check for an existing upload. Nothing was saved. Please retry.";
     btn.disabled = false;
     return;
   }
 
-  const dramaId = data.id;
+  let dramaId = null;
+  const alreadyExists = !!existingDrama;
+  if (alreadyExists) {
+    // Merge only missing metadata; never overwrite details already reviewed in the vault.
+    const mergePatch = {};
+    ["title", "urdu_title", "series_name", "episode_number", "year", "type",
+      "writer", "director", "produced", "cast", "description", "youtube_url"].forEach(key => {
+      const oldValue = existingDrama[key];
+      const newValue = payload[key];
+      const oldIsBlank = oldValue == null || String(oldValue).trim() === "";
+      const newIsPresent = newValue != null && String(newValue).trim() !== "";
+      if (oldIsBlank && newIsPresent) mergePatch[key] = newValue;
+    });
+    dramaId = existingDrama.id;
+    if (Object.keys(mergePatch).length) {
+      const { error: mergeError } = await window.sbClient.from("Drama").update(mergePatch).eq("id", dramaId);
+      if (mergeError) {
+        status.className = "status show err";
+        status.textContent = "This video is already uploaded, but its missing details could not be merged: " + mergeError.message;
+        btn.disabled = false;
+        return;
+      }
+    }
+  } else {
+    const { data, error } = await window.sbClient.from("Drama").insert(payload).select().single();
+    if (error) {
+      status.className = "status show err";
+      status.textContent = error.message;
+      btn.disabled = false;
+      return;
+    }
+    dramaId = data.id;
+  }
   const fileInput = $("f_customFile");
   const customFile = fileInput && fileInput.files ? fileInput.files[0] : null;
+  const useStagedThumbnail = !alreadyExists || !existingDrama.thumbnail_url;
 
   try {
     if (customFile) {
@@ -475,7 +514,7 @@ async function handleSingleAddSubmit(e) {
         const pubUrl = window.sbClient.storage.from("thumbnails").getPublicUrl(storagePath).data.publicUrl;
         await window.sbClient.from("Drama").update({ thumbnail_url: pubUrl }).eq("id", dramaId);
       }
-    } else if (stagedThumbnailUrl) {
+    } else if (stagedThumbnailUrl && useStagedThumbnail) {
       status.textContent = "Storing artwork…";
       await fetch("/api/store-thumbnail", {
         method: "POST",
@@ -486,8 +525,10 @@ async function handleSingleAddSubmit(e) {
   } catch {}
 
   status.className = "status show ok";
-  status.textContent = `"${payload.title}" is in the vault.`;
-  vaultToast("Added to the vault");
+  status.textContent = alreadyExists
+    ? `Already uploaded — merged any missing details into the existing record for "${payload.title}". No duplicate was created.`
+    : `"${payload.title}" is in the vault.`;
+  vaultToast(alreadyExists ? "Already in vault — details merged" : "Added to the vault");
 
   // Reset for the next upload
   $("addUrlInput").value = "";
