@@ -215,6 +215,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [playerFullscreen, setPlayerFullscreen] = useState(true);
   const [playerControlsVisible, setPlayerControlsVisible] = useState(false);
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>({ currentTime: 0, duration: 0, state: -1 });
+  const [playerProgressWidth, setPlayerProgressWidth] = useState(0);
   const playerRef = useRef<PlayerHandle>(null);
   const pendingResumeSecondsRef = useRef(0);
   const lastSavedProgressRef = useRef("");
@@ -236,7 +237,10 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     // While the overlay is hidden, left/right seek the video. Once controls
     // are visible, let Android TV's native focus engine move between buttons.
     if (event.eventType === "select") {
-      if (!playerControlsVisible) setPlayerControlsVisible(true);
+      if (!playerControlsVisible) {
+        playerRef.current?.playPause();
+        setPlayerControlsVisible(true);
+      }
     } else if (event.eventType === "left" && !playerControlsVisible) {
       playerRef.current?.seekBy(-10);
       setPlayerControlsVisible(true);
@@ -248,6 +252,12 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
       setPlayerControlsVisible(true);
     }
   });
+
+  useEffect(() => {
+    if (page !== "player" || !playerFullscreen || !playerControlsVisible) return;
+    const timer = setTimeout(() => setPlayerControlsVisible(false), 12000);
+    return () => clearTimeout(timer);
+  }, [page, playerFullscreen, playerControlsVisible]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -698,9 +708,21 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               {playerFullscreen && playerControlsVisible ? <TVFocusGuideView style={styles.playerBottomControls}>
                 <View style={styles.playerProgressRow}>
                   <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.currentTime)}</Text>
-                  <View style={styles.playerProgressTrack}>
+                  <Pressable
+                    focusable={false}
+                    onLayout={(event) => setPlayerProgressWidth(event.nativeEvent.layout.width)}
+                    onPress={(event) => {
+                      if (playerProgress.duration > 0 && playerProgressWidth > 0) {
+                        const fraction = Math.max(0, Math.min(1, event.nativeEvent.locationX / playerProgressWidth));
+                        playerRef.current?.seekTo(fraction * playerProgress.duration);
+                      }
+                    }}
+                    style={styles.playerProgressTrack}
+                    accessibilityRole="adjustable"
+                    accessibilityLabel="Video progress"
+                  >
                     <View style={[styles.playerProgressFill, { width: `${Math.max(0, Math.min(100, playerProgress.duration > 0 ? playerProgress.currentTime / playerProgress.duration * 100 : 0))}%` }]} />
-                  </View>
+                  </Pressable>
                   <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.duration)}</Text>
                 </View>
                 <View style={styles.playerActionsRow}>
@@ -1112,9 +1134,9 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
     >
       <View style={[styles.posterFrame, { height: Math.round(width * 9 / 16) }, focused && styles.posterFrameFocused]}>
         {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMethod="resize" resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
-        {episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}
       </View>
       <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
+      {!compact && episodeCount > 1 ? <Text style={[styles.posterEpisodeCount, focused && styles.posterYearLit]}>{episodeCount} Episodes</Text> : null}
       {!compact && drama.year ? <Text style={[styles.posterYear, focused && styles.posterYearLit]}>{drama.year}</Text> : null}
     </Pressable>
   );
@@ -1209,8 +1231,7 @@ const styles = StyleSheet.create({
   posterFrame: { borderRadius: 8, overflow: "hidden", backgroundColor: "#000", aspectRatio: 16 / 9, borderWidth: 2, borderColor: "transparent" },
   poster: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
   posterFallback: { flex: 1, alignItems: "center", justifyContent: "center" },
-  posterBadge: { position: "absolute", left: 8, top: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5, backgroundColor: "rgba(0,0,0,0.82)" },
-  badgeText: { color: "#fff", fontFamily: font.bold, fontSize: 10 },
+  posterEpisodeCount: { color: color.muted, fontFamily: font.medium, fontSize: 12, marginTop: -2 },
   posterTitle: { color: color.text, fontFamily: font.bold, fontSize: 16, lineHeight: 24, minHeight: 48, includeFontPadding: true },
   posterTitleLit: { color: "#FFF3D6" },
   posterYear: { color: color.dim, fontSize: 12 },
