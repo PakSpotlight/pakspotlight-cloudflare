@@ -1065,6 +1065,7 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
             onPress={() => onSelect(drama)}
             onPlay={() => onPlay(drama)}
             compact={compact}
+            clampHorizontal
           />
         )}
       />
@@ -1072,7 +1073,7 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
   );
 }
 
-function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = false, scrollId, scrollIds, index, autoFocus }: {
+function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = false, scrollId, scrollIds, index, autoFocus, clampHorizontal = false }: {
   drama: Drama;
   width: number;
   episodeCount: number;
@@ -1083,13 +1084,23 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
   scrollIds?: string[];
   index?: number;
   autoFocus?: boolean;
+  clampHorizontal?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
+  const [selfFocusId, setSelfFocusId] = useState<number | undefined>(undefined);
   const tv = useTvItem(`poster:${drama.id}`, { scrollIds: scrollIds ?? scrollId, itemIndex: index });
   return (
     <Pressable
       ref={tv.ref}
       focusable
+      nextFocusLeft={clampHorizontal ? selfFocusId : undefined}
+      nextFocusRight={clampHorizontal ? selfFocusId : undefined}
+      onLayout={() => {
+        if (clampHorizontal && selfFocusId == null) {
+          const node = findNodeHandle(tv.ref.current);
+          if (typeof node === "number") setSelfFocusId(node);
+        }
+      }}
       {...tvFocusProps(!!autoFocus)}
       onFocus={() => { tv.onFocus(); setFocused(true); }}
       onBlur={() => { tv.onBlur(); setFocused(false); }}
