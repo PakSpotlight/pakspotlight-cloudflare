@@ -315,11 +315,10 @@ async function aiAutofill(video, env, opts = {}) {
   }
 
   const desc = String(video.description || "");
-  const hasCredits = /(writer|written by|تحریر|director|ہدایت|cast|ف��کار|producer|پروڈیوسر)/i.test(desc);
   const needsSearch = opts.skipSearch === true ? false : true;
   const sharedCredits = opts.sharedCredits || null;
 
-  // Web search only when the description doesn't already carry writer/director/cast credits.
+  // Search every fresh admin lookup; YouTube descriptions alone are not treated as verified research.
   const wantSearch = needsSearch && !sharedCredits;
 
   // Budget evidence pass: free DDG snippets are fetched for the cleaned drama
@@ -329,10 +328,7 @@ async function aiAutofill(video, env, opts = {}) {
   if (wantSearch) {
     webSnippets = await ddgWebSnippets(cleanedTitle + " Pakistani drama writer director cast year");
   }
-  const creditsFoundByDdg = webSnippets.some(s =>
-    /(writ(en)?|direct(ed|or)|cast|starr?ing|aired|broadcast)/i.test(s.snippet + " " + s.title)
-  );
-  // Pay for OpenRouter's richer search only if DDG didn't already surface credits.
+  // Use OpenRouter web search as well as the DuckDuckGo evidence pass.
   const useTools = wantSearch;
 
   const webEvidence = webSnippets.length
@@ -366,7 +362,7 @@ async function aiAutofill(video, env, opts = {}) {
 
   var rawContent = "";
   var aiProvider = "";
-  const sharedSearchState = { searched: false };
+  const sharedSearchState = { searched: webSnippets.length > 0 };
 
   // ── PRIMARY: OpenRouter (web search tools) ──
   // deepseek-flash + openrouter:web_search is what historically fetched the full
