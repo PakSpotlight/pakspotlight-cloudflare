@@ -395,9 +395,10 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
         if (target && tvRequestFocus(target)) restoreFocusKeyRef.current = "";
       }
     };
-    const first = setTimeout(restore, 320);
-    const second = setTimeout(restore, 700);
-    return () => { clearTimeout(first); clearTimeout(second); };
+    const first = setTimeout(restore, 0);
+    const second = setTimeout(restore, 250);
+    const third = setTimeout(restore, 700);
+    return () => { clearTimeout(first); clearTimeout(second); clearTimeout(third); };
   }, [page]);
 
   const closeKb = () => {
@@ -470,7 +471,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               showsVerticalScrollIndicator={false}
             >
               {hero ? (
-                <View style={[styles.hero, { minHeight: Math.min(320, height * 0.46) }]}>
+                <View style={[styles.hero, { minHeight: Math.min(400, height * 0.58) }]}>
                   {hero.image ? <Image source={{ uri: hero.image }} style={styles.heroImage} resizeMethod="resize" resizeMode="cover" /> : null}
                   <View style={styles.heroScrim} />
                   <View style={styles.heroCopy}>
@@ -1191,7 +1192,7 @@ const styles = StyleSheet.create({
   hero: { overflow: "hidden", borderRadius: 18, backgroundColor: "#141816", justifyContent: "flex-end" },
   heroImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%", opacity: 0.64 },
   heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.34)" },
-  heroCopy: { padding: 28, maxWidth: 650, gap: 9 },
+  heroCopy: { padding: 32, paddingBottom: 36, maxWidth: 700, gap: 10 },
   eyebrow: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11, letterSpacing: 1.7 },
   urduTitle: { color: "#fff", fontFamily: font.urdu, fontSize: 29, lineHeight: 66, textAlign: "right", includeFontPadding: true },
   heroTitle: { color: "#fff", fontFamily: font.black, fontSize: 36, lineHeight: 42 },
