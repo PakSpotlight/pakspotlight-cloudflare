@@ -128,7 +128,7 @@ function useTvItem(
   const onFocus = () => {
     tvLastFocusedKey = focusKey;
     opts?.onFocus?.();
-    tvScrollIntoView(ref, opts?.scrollIds, opts?.itemIndex);
+    // Avoid measuring and animating multiple scroll containers on every D-pad move.
   };
   const onBlur = () => {
     opts?.onBlur?.();
@@ -258,7 +258,7 @@ export function TvApp() {
   const videoId = episode ? extractYouTubeId(episode.youtube) : null;
   const cardWidth = Math.max(142, Math.min(194, Math.round((width - 300) / 6)));
   const gridCols = Math.max(1, Math.floor((width - 210) / (cardWidth + 14)));
-  const gridRowStride = Math.round(cardWidth * 1.36) + 84;
+  const gridRowStride = Math.round(cardWidth * 9 / 16) + 84;
 
   return (
     <View style={[styles.screen, page === "player" && styles.fullscreenScreen]}>
@@ -268,7 +268,7 @@ export function TvApp() {
             <Text style={styles.brandText}>CLASSIC TV<Text style={styles.brandPakistan}> PAKISTAN</Text></Text>
           </View>
           <View style={styles.navItems}>
-            <NavButton label="Home" icon="home-outline" active={nav === "home" && page !== "details"} autoFocus onPress={() => openNav("home")} />
+            <NavButton label="Home" icon="home-outline" active={nav === "home" && page !== "details"} onPress={() => openNav("home")} />
             <NavButton label="Browse" icon="grid-outline" active={nav === "browse" || page === "details"} onPress={() => openNav("browse")} showKb={showKb} />
             <NavButton label="My List" icon="bookmark-outline" active={nav === "library"} onPress={() => openNav("library")} showKb={showKb} />
             <NavButton label="Info" icon="information-circle-outline" active={page === "info"} onPress={() => openNav("info")} showKb={showKb} />
@@ -359,7 +359,7 @@ export function TvApp() {
                 contentContainerStyle={styles.chips}
                 ref={(r) => { if (r) tvScrollables.set("chips", { ref: r, kind: "scroll", axis: "x" }); }}
               >
-                <FilterButton label="All" active={!category} autoFocus onPress={() => setCategory(null)} showKb={showKb} />
+                <FilterButton label="All" active={!category} onPress={() => setCategory(null)} showKb={showKb} />
                 {categories.map((cat) => <FilterButton key={cat} label={cat} active={category === cat} onPress={() => setCategory(category === cat ? null : cat)} showKb={showKb} />)}
               </ScrollView>
               <FlatList
@@ -432,7 +432,7 @@ export function TvApp() {
               contentContainerStyle={styles.detailContent}
             >
               <View style={styles.detailHero}>
-                {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMode="cover" /> : <View style={styles.detailImage} />}
+                {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMode="contain" /> : <View style={styles.detailImage} />}
                 <View style={styles.detailCopy}>
                   <Text style={styles.eyebrow}>{selected.type.toUpperCase()}</Text>
                   {selected.urdu ? <Text style={styles.urduTitle}>{selected.urdu}</Text> : null}
@@ -607,7 +607,7 @@ function TvPress({
       {...tvFocusProps(autoFocus && !showKb)}
       onLongPress={undefined}
       onPress={onPress}
-      onFocus={() => { tvLastFocusedKey = focusKey; setFocused(true); onFocusCb?.(); tvScrollIntoView(ownRef, scrollIds); }}
+      onFocus={() => { tvLastFocusedKey = focusKey; setFocused(true); onFocusCb?.(); }}
       onBlur={() => { setFocused(false); onBlurCb?.(); }}
       accessibilityRole="button"
       style={[typeof style === "function" ? null : style, focused ? (focusedStyle ?? styles.focusOutlineOn) : styles.focusOutline]}
@@ -628,8 +628,8 @@ function NavButton({ label, icon, active, autoFocus, onPress, showKb }: { label:
       focusable
       disabled={showKb}
       {...tvFocusProps(!!autoFocus && !showKb)}
-      onFocus={tv.onFocus}
-      onBlur={() => tv.onBlur()}
+      onFocus={() => { tv.onFocus(); setFocused(true); }}
+      onBlur={() => { tv.onBlur(); setFocused(false); }}
       onPress={onPress}
       style={[styles.navButton, active && styles.navActive, focused && styles.navFocused]}
     >
@@ -649,8 +649,8 @@ function ActionButton({ label, icon, primary = false, onPress, autoFocus, showKb
       focusable
       disabled={showKb}
       {...tvFocusProps(!!autoFocus && !showKb)}
-      onFocus={tv.onFocus}
-      onBlur={() => tv.onBlur()}
+      onFocus={() => { tv.onFocus(); setFocused(true); }}
+      onBlur={() => { tv.onBlur(); setFocused(false); }}
       onPress={onPress}
       style={({ pressed }) => [styles.actionButton, primary && styles.actionPrimary, focused && styles.focused, pressed && styles.pressed]}
     >
@@ -669,8 +669,8 @@ function FilterButton({ label, active, autoFocus, onPress, showKb }: { label: st
       focusable
       disabled={showKb}
       {...tvFocusProps(!!autoFocus && !showKb)}
-      onFocus={tv.onFocus}
-      onBlur={() => tv.onBlur()}
+      onFocus={() => { tv.onFocus(); setFocused(true); }}
+      onBlur={() => { tv.onBlur(); setFocused(false); }}
       onPress={onPress}
       style={[styles.filter, active && styles.filterActive, focused && styles.focused]}
     >
@@ -688,8 +688,8 @@ function EpisodeButton({ episode, number, index, selected, onPress, showKb }: { 
       focusable
       disabled={showKb}
       {...tvFocusProps(index === 0 && !showKb)}
-      onFocus={tv.onFocus}
-      onBlur={() => tv.onBlur()}
+      onFocus={() => { tv.onFocus(); setFocused(true); }}
+      onBlur={() => { tv.onBlur(); setFocused(false); }}
       onPress={onPress}
       style={[styles.episodeChip, selected && styles.episodeSelected, focused && styles.focused]}
     >
@@ -760,16 +760,16 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       ref={tv.ref}
       focusable
       {...tvFocusProps(!!autoFocus)}
-      onFocus={tv.onFocus}
-      onBlur={() => tv.onBlur()}
+      onFocus={() => { tv.onFocus(); setFocused(true); }}
+      onBlur={() => { tv.onBlur(); setFocused(false); }}
       onPress={onPress}
       onLongPress={onPlay}
       accessibilityRole="button"
       accessibilityLabel={displayTitle(drama)}
       style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
     >
-      <View style={[styles.posterFrame, { height: Math.round(width * 1.36) }, !focused && styles.posterDimmed]}>
-        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={30} color={focused ? TV_GOLD : color.dim} /></View>}
+      <View style={[styles.posterFrame, { height: Math.round(width * 9 / 16) }, !focused && styles.posterDimmed]}>
+        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMode="contain" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={30} color={focused ? TV_GOLD : color.dim} /></View>}
         {episodeCount > 1 ? <View style={styles.posterBadge}><Text style={styles.badgeText}>{episodeCount} EPS</Text></View> : null}
       </View>
       <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
@@ -836,7 +836,7 @@ const styles = StyleSheet.create({
   shelfCount: { color: color.dim, fontFamily: font.bold, fontSize: 10, letterSpacing: 1 },
   rail: { gap: 14, paddingVertical: 8, paddingRight: 8 },
   posterTile: { borderRadius: 12, padding: 4, gap: 7, borderWidth: 2, borderColor: "transparent" },
-  posterFrame: { borderRadius: 9, overflow: "hidden", backgroundColor: color.surfaceAlt },
+  posterFrame: { aspectRatio: 16 / 9, borderRadius: 9, overflow: "hidden", backgroundColor: "#000" },
   poster: { width: "100%", height: "100%" },
   posterFallback: { flex: 1, alignItems: "center", justifyContent: "center" },
   posterBadge: { position: "absolute", left: 8, top: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5, backgroundColor: "rgba(0,0,0,0.82)" },
@@ -870,7 +870,7 @@ const styles = StyleSheet.create({
   infoCardTitle: { color: color.text, fontFamily: font.bold, fontSize: 18 },
   detailContent: { paddingBottom: 32, gap: 22 },
   detailHero: { flexDirection: "row", gap: 28, minHeight: 280, alignItems: "center" },
-  detailImage: { width: 210, height: 290, borderRadius: 12, backgroundColor: color.surfaceAlt },
+  detailImage: { width: 320, height: 180, borderRadius: 12, backgroundColor: color.surfaceAlt },
   detailCopy: { flex: 1, gap: 12, maxWidth: 720 },
   detailTitle: { color: "#fff", fontFamily: font.black, fontSize: 34, lineHeight: 40 },
   description: { color: color.muted, fontSize: 15, lineHeight: 23, maxWidth: 650 },
