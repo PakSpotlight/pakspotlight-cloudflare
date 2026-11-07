@@ -453,7 +453,7 @@ async function handleSingleAddSubmit(e) {
 
   // Match the actual YouTube video ID so watch, youtu.be, shorts and embed links
   // cannot create separate records for the same video.
-  const videoIdMatch = payload.youtube_url.match(/(?:v=|youtu\\.be\\/|shorts\\/|embed\\/)([A-Za-z0-9_-]{11})/i);
+  const videoIdMatch = payload.youtube_url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/i);
   const videoId = videoIdMatch ? videoIdMatch[1] : "";
   let duplicateQuery = window.sbClient.from("Drama").select("*");
   duplicateQuery = videoId
