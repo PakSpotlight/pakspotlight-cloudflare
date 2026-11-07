@@ -70,6 +70,7 @@ export function playerHtml(videoId: string): string {
           if (!ready || !player) return;
           try {
             if (command === "seekBy") player.seekTo(Math.max(0, player.getCurrentTime() + Number(value || 0)), true);
+            if (command === "seekTo") player.seekTo(Math.max(0, Math.min(player.getDuration() || 0, Number(value || 0))), true);
             if (command === "playPause") {
               if (player.getPlayerState() === YT.PlayerState.PLAYING) player.pauseVideo();
               else player.playVideo();
