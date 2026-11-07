@@ -7,6 +7,7 @@ import { openInYouTube, playerHtml } from "../lib/youtube";
 export type PlayerProgress = { currentTime: number; duration: number; state: number };
 export type PlayerHandle = {
   seekBy: (seconds: number) => void;
+  seekTo: (seconds: number) => void;
   playPause: () => void;
 };
 
@@ -34,6 +35,7 @@ export const Player = forwardRef<PlayerHandle, Props>(function Player(
 
   useImperativeHandle(forwardedRef, () => ({
     seekBy: (seconds) => command("seekBy", seconds),
+    seekTo: (seconds) => command("seekTo", seconds),
     playPause: () => command("playPause"),
   }), [command]);
 
