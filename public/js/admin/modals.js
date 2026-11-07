@@ -367,6 +367,23 @@ function openAddEpisodeModal(seriesName) {
       thumbnail_url: thumb
     };
 
+    if (yId) {
+      const { data: duplicateEpisode, error: duplicateCheckError } = await window.sbClient
+        .from("Drama").select("id,title").ilike("youtube_url", "%" + yId + "%").limit(1).maybeSingle();
+      if (duplicateCheckError) {
+        stat.className = "status show err";
+        stat.textContent = "Could not check whether this episode is already uploaded. Nothing was saved. Please retry.";
+        btn.disabled = false;
+        return;
+      }
+      if (duplicateEpisode) {
+        stat.className = "status show ok";
+        stat.textContent = `Already uploaded as "${duplicateEpisode.title}". No duplicate episode was created.`;
+        btn.disabled = false;
+        return;
+      }
+    }
+
     const { data, error } = await window.sbClient.from("Drama").insert(payload).select().single();
     if (error) {
       stat.className = "status show err";
