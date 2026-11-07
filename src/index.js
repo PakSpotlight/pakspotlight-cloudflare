@@ -316,12 +316,9 @@ async function aiAutofill(video, env, opts = {}) {
   }
 
   const desc = String(video.description || "");
-  const hasCredits = /(writer|written by|تحریر|director|ہدایت|cast|ف��کار|producer|پروڈیوسر)/i.test(desc);
-  const needsSearch = opts.forceSearch === true
-    ? true
-    : opts.skipSearch === true
-      ? false
-      : !(hasCredits && desc.length > 250);
+  // Every fresh Admin lookup should verify the production against web sources;
+  // YouTube descriptions alone are not sufficient for classic drama credits.
+  const needsSearch = opts.skipSearch === true ? false : true;
   const sharedCredits = opts.sharedCredits || null;
 
   // Web search only when the description doesn't already carry writer/director/cast credits.
@@ -338,7 +335,7 @@ async function aiAutofill(video, env, opts = {}) {
     /(writ(en)?|direct(ed|or)|cast|starr?ing|aired|broadcast)/i.test(s.snippet + " " + s.title)
   );
   // Pay for OpenRouter's richer search only if DDG didn't already surface credits.
-  const useTools = wantSearch && !creditsFoundByDdg;
+  const useTools = wantSearch;
 
   const webEvidence = webSnippets.length
     ? "Web search results (evidence - only trust entries clearly about THIS production, ignore remakes/Indian serials/stage plays):\n" +
@@ -985,7 +982,7 @@ var index_default = {
           const it = items[i];
           try {
             // Skip videos already in the archive (same YouTube URL).
-            const dupCheck = await supaRest(`Drama?select=id&youtube_url=eq.${encodeURIComponent(it.url)}`, auth.token);
+            const dupCheck = await supaRest(`Drama?select=id&youtube_url=ilike.*${encodeURIComponent(it.id)}*`, auth.token);
             const dupData = await dupCheck.json().catch(() => []);
             if (Array.isArray(dupData) && dupData.length > 0) {
               results.push({ id: it.id, title: it.title, status: "skipped", note: "Already added" });
