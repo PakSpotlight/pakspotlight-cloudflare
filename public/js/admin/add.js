@@ -687,8 +687,10 @@ async function runPlaylistImport() {
     const data = await res.json();
     if (!res.ok || data.error) throw new Error(data.error || "Import failed.");
 
-    status.className = "status show ok";
-    status.textContent = `Imported ${data.added} episodes into "${seriesName}". ${data.skipped} were already in the vault.`;
+    const failed = Number(data.failed) || (data.results || []).filter(x => x.status === "error").length;
+    const firstFailure = (data.results || []).find(x => x.status === "error");
+    status.className = failed ? "status show err" : "status show ok";
+    status.textContent = `Imported ${data.added} episodes into "${seriesName}". ${data.skipped} were already in the vault. ${failed} failed.` + (firstFailure ? ` First error: ${String(firstFailure.note || "Unknown error").slice(0, 140)}` : "");
     vaultToast(`Imported ${data.added} episodes`);
 
     await fetchArchiveData();
