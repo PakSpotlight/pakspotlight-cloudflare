@@ -294,7 +294,7 @@ async function handleAddFetch() {
   $("playlistFlow").style.display = "none";
   $("videoFlow").style.display = "none";
   status.className = "status show info";
-  status.textContent = "AI is checking the video details…";
+  status.textContent = "AI is researching the drama using YouTube and web sources…";
   try {
     const res = await fetch("/api/ai-autofill", {
       method: "POST",
@@ -360,7 +360,7 @@ async function autoFillPlaylistDetails(firstItem) {
   try {
     if (status) {
       status.className = "status show info";
-      status.textContent = "AI is reading the first video for the shared series details…";
+      status.textContent = "AI is researching the series using YouTube and web sources…";
     }
     const res = await fetch("/api/ai-autofill", {
       method: "POST",
@@ -390,7 +390,9 @@ async function autoFillPlaylistDetails(firstItem) {
       status.className = "status show ok";
       status.textContent = data.cached
         ? `Found ${plItems.length} videos. Series details filled from a saved record — review and import.`
-        : `Found ${plItems.length} videos. AI filled the shared series details — review and import.`;
+        : (data.searched
+          ? `Found ${plItems.length} videos. AI researched the series using web search and YouTube details — review and import.`
+          : `Found ${plItems.length} videos. AI filled the shared series details — review and import.`);
     }
   } catch (err) {
     // Non-blocking: the admin can still fill details by hand.
