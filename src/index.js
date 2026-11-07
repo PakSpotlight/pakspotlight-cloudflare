@@ -978,19 +978,33 @@ var index_default = {
         const pick = (field) => String(given[field] || "").trim() || shared?.[field] || "";
 
         const results = [];
-        for (let i = 0; i < items.length; i++) {
-          const it = items[i];
-          try {
-            // Skip videos already in the archive (same YouTube URL).
-            const dupCheck = await supaRest(`Drama?select=id&youtube_url=ilike.*${encodeURIComponent(it.id)}*`, auth.token);
-            const dupData = await dupCheck.json().catch(() => []);
-            if (Array.isArray(dupData) && dupData.length > 0) {
+        // Batch duplicate checks and inserts to stay safely below Worker subrequest limits.
+        // 20 episodes per batch means two database calls per batch instead of two per episode.
+        const batchSize = 20;
+        for (let offset = 0; offset < items.length; offset += batchSize) {
+          const batch = items.slice(offset, offset + batchSize);
+          const duplicateFilter = batch.map(it => `youtube_url.ilike.*${it.id}*`).join(",");
+          const dupCheck = await supaRest(`Drama?select=youtube_url&or=${encodeURIComponent("(" + duplicateFilter + ")")}`, auth.token);
+          if (!dupCheck.ok) {
+            const detail = await dupCheck.text();
+            throw new Error(`Could not check existing episodes: ${detail.slice(0, 180)}`);
+          }
+          const existingRows = await dupCheck.json().catch(() => []);
+          const existingUrls = Array.isArray(existingRows) ? existingRows.map(row => String(row.youtube_url || "")) : [];
+          const newRows = [];
+          const newItems = [];
+
+          for (let i = 0; i < batch.length; i++) {
+            const it = batch[i];
+            if (existingUrls.some(existingUrl => existingUrl.includes(it.id))) {
               results.push({ id: it.id, title: it.title, status: "skipped", note: "Already added" });
               continue;
             }
-            const ep = parseEpisodeNumber(it.title, "") || String(i + 1);
+            const globalIndex = offset + i;
+            const ep = parseEpisodeNumber(it.title, "") || String(globalIndex + 1);
             const title = cleanDramaTitle(it.title) || `${seriesName} Ep ${ep}`;
-            const payload = {
+            newItems.push({ id: it.id, title, episode: ep });
+            newRows.push({
               title,
               urdu_title: pick("urdu_title"),
               year: pick("year") || null,
@@ -1004,27 +1018,39 @@ var index_default = {
               description: (it.description || shared?.description || "").slice(0, 800),
               youtube_url: it.url,
               thumbnail_url: it.thumbnail || ""
-            };
-            const ins = await supaRest("Drama", auth.token, {
-              method: "POST",
-              headers: { Prefer: "return=representation" },
-              body: JSON.stringify(payload)
             });
-            if (!ins.ok) {
-              const t = await ins.text();
-              results.push({ id: it.id, title: it.title, status: "error", note: t.slice(0, 160) });
-              continue;
+          }
+
+          if (!newRows.length) continue;
+          const ins = await supaRest("Drama", auth.token, {
+            method: "POST",
+            headers: { Prefer: "return=representation" },
+            body: JSON.stringify(newRows)
+          });
+          if (!ins.ok) {
+            const detail = await ins.text();
+            for (const item of newItems) {
+              results.push({ id: item.id, title: item.title, status: "error", note: detail.slice(0, 160) });
             }
-            const row = await ins.json().catch(() => []);
-            results.push({ id: it.id, title, status: "added", dramaId: row?.[0]?.id || null, episode: ep });
-          } catch (e) {
-            results.push({ id: it.id, title: it.title, status: "error", note: e.message || String(e) });
+            continue;
+          }
+          const insertedRows = await ins.json().catch(() => []);
+          for (let i = 0; i < newItems.length; i++) {
+            const item = newItems[i];
+            results.push({
+              id: item.id,
+              title: item.title,
+              status: "added",
+              dramaId: insertedRows?.[i]?.id || null,
+              episode: item.episode
+            });
           }
         }
 
         const added = results.filter(r => r.status === "added").length;
         const skipped = results.filter(r => r.status === "skipped").length;
-        return json({ success: true, series: seriesName, added, skipped, total: results.length, research: { searchPasses: first.searchPasses || 0, verificationPasses: first.verificationPasses || 0, webSearchUsed: Boolean(first.webSearchUsed), provider: first.provider, queries: first.groundingQueries || [], sources: first.groundingSources || [] }, results });
+        const failed = results.filter(r => r.status === "error").length;
+        return json({ success: true, series: seriesName, added, skipped, failed, total: results.length, research: { searchPasses: first.searchPasses || 0, verificationPasses: first.verificationPasses || 0, webSearchUsed: Boolean(first.webSearchUsed), provider: first.provider, queries: first.groundingQueries || [], sources: first.groundingSources || [] }, results });
       } catch (e) {
         return json({ error: e.message || String(e) }, 400);
       }
