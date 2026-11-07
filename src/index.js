@@ -368,7 +368,7 @@ async function aiAutofill(video, env, opts = {}) {
 
   var rawContent = "";
   var aiProvider = "";
-  const sharedSearchState = { searched: false };
+  const sharedSearchState = { searched: webSnippets.length > 0 };
 
   // ── PRIMARY: OpenRouter (web search tools) ──
   // deepseek-flash + openrouter:web_search is what historically fetched the full
