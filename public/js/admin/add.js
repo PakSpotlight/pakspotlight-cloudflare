@@ -223,6 +223,73 @@ function setAddMode(mode) {
   }
 }
 
+function getAdminYouTubeId(value) {
+  const raw = String(value || "").trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(raw)) return raw;
+  try {
+    const u = new URL(raw);
+    const host = u.hostname.toLowerCase().replace(/^www\./, "");
+    if (host === "youtu.be") return (u.pathname.split("/").filter(Boolean)[0] || "").slice(0, 11);
+    if (host.endsWith("youtube.com") || host === "youtube-nocookie.com") {
+      const v = u.searchParams.get("v");
+      if (v) return v.slice(0, 11);
+      const parts = u.pathname.split("/").filter(Boolean);
+      const marker = parts.findIndex(p => ["shorts", "embed", "live", "v"].includes(p));
+      if (marker >= 0 && parts[marker + 1]) return parts[marker + 1].slice(0, 11);
+    }
+  } catch {}
+  const m = raw.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:shorts\/|embed\/|live\/|v\/|watch\?v=))([A-Za-z0-9_-]{11})/i);
+  return m ? m[1] : "";
+}
+
+async function findExistingDramaForVideo(url) {
+  const id = getAdminYouTubeId(url);
+  if (!id) return null;
+  const { data, error } = await window.sbClient
+    .from("Drama")
+    .select("*")
+    .ilike("youtube_url", "%" + id + "%")
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error("Could not check the vault for this video: " + error.message);
+  return data || null;
+}
+
+function showExistingDramaInAddForm(d) {
+  $("f_title").value = d.title || "";
+  $("f_urdu").value = d.urdu_title || "";
+  $("f_year").value = d.year || "";
+  $("f_writer").value = d.writer || "";
+  $("f_director").value = d.director || "";
+  $("f_produced").value = d.produced || "";
+  $("f_cast").value = d.cast || "";
+  $("f_description").value = d.description || "";
+  if (d.type) {
+    const match = configuredCategories.find(c => c.toLowerCase() === String(d.type).toLowerCase());
+    if (match) $("f_type").value = match;
+  }
+  const isEpisode = !!(d.series_name || d.episode_number);
+  $("f_series").value = d.series_name || "";
+  $("f_episode").value = d.episode_number || "";
+  setAddMode(isEpisode ? "episode" : "single");
+  stagedThumbnailUrl = d.thumbnail_url || "";
+  if (stagedThumbnailUrl) {
+    $("thumbStaging").style.display = "flex";
+    $("thumbStagingImg").src = stagedThumbnailUrl;
+  } else {
+    $("thumbStaging").style.display = "none";
+    $("thumbStagingImg").src = "";
+  }
+  $("videoDetected").innerHTML = `
+    <img src="${esc(d.thumbnail_url || '/logo.png')}" alt="" onerror="this.src='/logo.png';">
+    <div class="detected-meta">
+      <div class="detected-title">${esc(d.title || "Existing drama")}</div>
+      <div class="detected-sub">This YouTube video is already in your vault. Existing details loaded; no duplicate will be created.</div>
+    </div>
+  `;
+  $("videoFlow").style.display = "block";
+}
+
 async function handleAddFetch() {
   const url = $("addUrlInput").value.trim();
   const status = $("addFetchStatus");
@@ -291,6 +358,21 @@ async function handleAddFetch() {
   }
 
   // Single video
+  // Check the vault before spending time on an AI lookup.
+  try {
+    const existing = await findExistingDramaForVideo(url);
+    if (existing) {
+      showExistingDramaInAddForm(existing);
+      status.className = "status show ok";
+      status.textContent = `Already uploaded as "${existing.title || "this drama"}". Existing details loaded; no duplicate will be created.`;
+      return;
+    }
+  } catch (err) {
+    status.className = "status show err";
+    status.textContent = err.message;
+    return;
+  }
+
   $("playlistFlow").style.display = "none";
   $("videoFlow").style.display = "none";
   status.className = "status show info";
@@ -341,10 +423,18 @@ async function handleAddFetch() {
     }
 
     $("videoFlow").style.display = "block";
-    status.className = "status show ok";
+    const usableFields = [
+      f.urdu_title, f.year, f.writer, f.director, f.produced, f.cast,
+      f.description, f.series_name, f.episode_number
+    ].some(value => value !== null && value !== undefined && String(value).trim() !== "");
+    status.className = usableFields ? "status show ok" : "status show err";
     status.textContent = data.cached
-      ? "Filled from a cached record of this drama — no AI lookup needed."
-      : "AI filled the details (" + (data.provider || "unknown provider") + (data.searched ? ", web search" : "") + "). Review and save.";
+      ? (usableFields
+          ? "Details filled from a saved record. Review and save."
+          : "A saved record was found, but it has no usable details. Please enter the missing information manually.")
+      : (usableFields
+          ? "AI returned details (" + (data.provider || "AI provider") + (data.searched ? ", web results checked" : "") + "). Review the fields before saving."
+          : "AI did not return usable drama details. The YouTube title was loaded, but the other fields are empty. Please try again or enter details manually.");
   } catch (err) {
     status.className = "status show err";
     status.textContent = err.message;
