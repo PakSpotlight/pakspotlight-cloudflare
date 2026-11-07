@@ -983,7 +983,7 @@ var index_default = {
           const it = items[i];
           try {
             // Skip videos already in the archive (same YouTube URL).
-            const dupCheck = await supaRest(`Drama?select=id&youtube_url=eq.${encodeURIComponent(it.url)}`, auth.token);
+            const dupCheck = await supaRest(`Drama?select=id&youtube_url=ilike.*${encodeURIComponent(it.id)}*`, auth.token);
             const dupData = await dupCheck.json().catch(() => []);
             if (Array.isArray(dupData) && dupData.length > 0) {
               results.push({ id: it.id, title: it.title, status: "skipped", note: "Already added" });
