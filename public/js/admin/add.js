@@ -365,11 +365,13 @@ async function handleAddFetch() {
       showExistingDramaInAddForm(existing);
       status.className = "status show ok";
       status.textContent = `Already uploaded as "${existing.title || "this drama"}". Existing details loaded; no duplicate will be created.`;
+      btn.disabled = false;
       return;
     }
   } catch (err) {
     status.className = "status show err";
     status.textContent = err.message;
+    btn.disabled = false;
     return;
   }
 
