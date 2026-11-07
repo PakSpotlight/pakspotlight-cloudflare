@@ -216,6 +216,8 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [playerControlsVisible, setPlayerControlsVisible] = useState(false);
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>({ currentTime: 0, duration: 0, state: -1 });
   const [playerProgressWidth, setPlayerProgressWidth] = useState(0);
+  const [playerControlsActivity, setPlayerControlsActivity] = useState(0);
+  const playerProgressFocusedRef = useRef(false);
   const playerRef = useRef<PlayerHandle>(null);
   const pendingResumeSecondsRef = useRef(0);
   const lastSavedProgressRef = useRef("");
@@ -236,15 +238,16 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     if (page !== "player" || !playerFullscreen) return;
     // While the overlay is hidden, left/right seek the video. Once controls
     // are visible, let Android TV's native focus engine move between buttons.
+    if (playerControlsVisible) setPlayerControlsActivity((value) => value + 1);
     if (event.eventType === "select") {
       if (!playerControlsVisible) {
         playerRef.current?.playPause();
         setPlayerControlsVisible(true);
       }
-    } else if (event.eventType === "left" && !playerControlsVisible) {
+    } else if (event.eventType === "left" && (!playerControlsVisible || playerProgressFocusedRef.current)) {
       playerRef.current?.seekBy(-10);
       setPlayerControlsVisible(true);
-    } else if (event.eventType === "right" && !playerControlsVisible) {
+    } else if (event.eventType === "right" && (!playerControlsVisible || playerProgressFocusedRef.current)) {
       playerRef.current?.seekBy(10);
       setPlayerControlsVisible(true);
     } else if (event.eventType === "playPause") {
@@ -257,7 +260,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     if (page !== "player" || !playerFullscreen || !playerControlsVisible) return;
     const timer = setTimeout(() => setPlayerControlsVisible(false), 12000);
     return () => clearTimeout(timer);
-  }, [page, playerFullscreen, playerControlsVisible]);
+  }, [page, playerFullscreen, playerControlsVisible, playerControlsActivity]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -710,7 +713,9 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                 <View style={styles.playerProgressRow}>
                   <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.currentTime)}</Text>
                   <Pressable
-                    focusable={false}
+                    focusable
+                    onFocus={() => { playerProgressFocusedRef.current = true; }}
+                    onBlur={() => { playerProgressFocusedRef.current = false; }}
                     onLayout={(event) => setPlayerProgressWidth(event.nativeEvent.layout.width)}
                     onPress={(event) => {
                       if (playerProgress.duration > 0 && playerProgressWidth > 0) {
