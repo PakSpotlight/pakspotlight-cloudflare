@@ -367,7 +367,7 @@ function openAddEpisodeModal(seriesName) {
       thumbnail_url: thumb
     };
 
-    const videoIdMatch = ytUrl.match(/(?:v=|youtu\\.be\\/|shorts\\/|embed\\/)([A-Za-z0-9_-]{11})/i);
+    const videoIdMatch = ytUrl.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/i);
     const videoId = videoIdMatch ? videoIdMatch[1] : "";
     if (videoId) {
       const { data: duplicateEpisode, error: duplicateCheckError } = await window.sbClient
