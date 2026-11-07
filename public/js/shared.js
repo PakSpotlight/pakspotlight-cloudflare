@@ -307,7 +307,7 @@ function getDramaSeriesEpisodes(drama) {
   const isSer = isSeries(drama) && !!String(drama.series || "").trim();
   if (!isSer) return [drama];
   return rows
-    .filter(x => normalize(x.series) === normalize(drama.series))
+    .filter(x => isSeries(x) && normalize(x.series) === normalize(drama.series))
     .sort((a, b) => ((a.episode == null ? 9999 : a.episode) - (b.episode == null ? 9999 : b.episode)));
 }
 
