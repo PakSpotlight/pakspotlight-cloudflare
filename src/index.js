@@ -453,6 +453,43 @@ async function aiAutofill(video, env, opts = {}) {
     }
   }
 
+  // ── SECONDARY: Groq GPT-OSS with built-in browser search ──
+  // Uses the existing GROQ_API_KEY; no additional secret is required.
+  if (!rawContent && env.GROQ_API_KEY) {
+    try {
+      const groqResp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + env.GROQ_API_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-oss-120b",
+          messages: [
+            { role: "system", content: "Research this exact classic Pakistani PTV production using web search. Return ONLY one valid JSON object with every requested key. Verify credits and original broadcast year; never invent facts." },
+            { role: "user", content: prompt }
+          ],
+          tools: [{ type: "browser_search" }],
+          response_format: { type: "json_object" },
+          temperature: 0.2
+        })
+      });
+      if (!groqResp.ok) {
+        const groqErr = await groqResp.text();
+        throw new Error("Groq request failed (" + groqResp.status + "): " + groqErr.slice(0, 240));
+      }
+      const groqData = await groqResp.json();
+      const groqContent = groqData.choices?.[0]?.message?.content;
+      rawContent = typeof groqContent === "string" ? groqContent.trim() : "";
+      if (rawContent) {
+        aiProvider = "groq:openai/gpt-oss-120b";
+        sharedSearchState.searched = true;
+      }
+    } catch (groqErr) {
+      console.warn("Groq web-search AI failed, falling back to Cloudflare AI:", groqErr?.message || groqErr);
+    }
+  }
+
   // ── SECONDARY: Cloudflare Workers AI (GLM) ──
   if (!rawContent) {
     if (!env.AI || typeof env.AI.run !== "function") {
