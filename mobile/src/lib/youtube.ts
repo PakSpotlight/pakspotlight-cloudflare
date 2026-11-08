@@ -16,13 +16,13 @@ import { SITE_ORIGIN } from "./api";
 
 const ORIGIN = SITE_ORIGIN;
 
-export function embedUrl(videoId: string, opts?: { autoplay?: boolean; origin?: string; controls?: boolean }): string {
+export function embedUrl(videoId: string, opts?: { autoplay?: boolean; origin?: string }): string {
   const params = new URLSearchParams({
     rel: "0",
     playsinline: "1",
     enablejsapi: "1",
-    controls: opts?.controls === false ? "0" : "1",
-    fs: opts?.controls === false ? "0" : "1",
+    controls: "1",
+    fs: "0",
     origin: opts?.origin ?? ORIGIN,
   });
   if (opts?.autoplay) params.set("autoplay", "1");
@@ -40,7 +40,7 @@ export function shareUrl(dramaId: number): string {
 
 /** The document loaded by the native WebView player. */
 export function playerHtml(videoId: string): string {
-  const src = embedUrl(videoId, { autoplay: true, controls: false });
+  const src = embedUrl(videoId, { autoplay: true });
   return `<!DOCTYPE html>
 <html>
   <head>
@@ -80,7 +80,7 @@ export function playerHtml(videoId: string): string {
         window.onYouTubeIframeAPIReady = function () {
           player = new YT.Player("player", {
             videoId: ${JSON.stringify(videoId)},
-            playerVars: { autoplay: 1, controls: 0, rel: 0, playsinline: 1, fs: 0, enablejsapi: 1, origin: ${JSON.stringify(ORIGIN)} },
+            playerVars: { autoplay: 1, controls: 1, rel: 0, playsinline: 1, fs: 0, enablejsapi: 1, origin: ${JSON.stringify(ORIGIN)} },
             events: {
               onReady: function () {
                 ready = true;
