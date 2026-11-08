@@ -212,7 +212,6 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [category, setCategory] = useState<string | null>(null);
   const [playerFailed, setPlayerFailed] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
-  const [playerFullscreen, setPlayerFullscreen] = useState(true);
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>({ currentTime: 0, duration: 0, state: -1 });
   const playerRef = useRef<PlayerHandle>(null);
   const pendingResumeSecondsRef = useRef(0);
@@ -324,7 +323,6 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     setEpisode(nextEpisode);
     setPlayerFailed(false);
     setPlayerProgress({ currentTime: 0, duration: 0, state: -1 });
-    setPlayerFullscreen(true);
     setResumePrompt(null);
     setPage("player");
   };
@@ -631,23 +629,8 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
           ) : null}
 
           {page === "player" && selected && episode ? (
-            <View style={[styles.playerPage, playerFullscreen && styles.playerPageFullscreen]}>
-              {!playerFullscreen ? <View style={styles.playerTop}>
-                <TvPress
-                  focusKey="playerBack"
-                  autoFocus
-                  showKb={showKb}
-                  onPress={() => setPage("details")}
-                  style={styles.backButton}
-                  focusedStyle={styles.focused}
-                >
-                  <Ionicons name="arrow-back" size={20} color={color.text} />
-                  <Text style={styles.actionText}>Back</Text>
-                </TvPress>
-                <Text style={styles.playerHeading} numberOfLines={1}>{displayTitle(selected)}{episode.episode ? ` · Episode ${episode.episode}` : ""}</Text>
-                <TvPress focusKey="playerExpand" showKb={showKb} onPress={() => setPlayerFullscreen(true)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="expand" size={19} color={color.text} /><Text style={styles.playerControlText}>Full screen</Text></TvPress>
-              </View> : null}
-              <View style={[styles.playerFrame, playerFullscreen && styles.playerFrameFullscreen]}>
+            <View style={styles.playerPage}>
+              <View style={styles.playerFrame}>
                 {videoId && !playerFailed ? <Player
                   ref={playerRef}
                   key={videoId}
@@ -673,15 +656,6 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                   onError={() => setPlayerFailed(true)}
                 /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={42} color={color.muted} /><Text style={styles.bodyText}>This episode could not be loaded.</Text></View>}
               </View>
-              {!playerFullscreen ? <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.episodeRail}
-                ref={(r) => { if (r) tvScrollables.set("playerRail", { ref: r, kind: "scroll", axis: "x" }); }}
-              >
-                {currentGroup.map((ep, i) => <EpisodeButton key={ep.id} episode={ep} number={i + 1} index={i} selected={episode.id === ep.id} onPress={() => { void requestEpisode(ep); }} showKb={showKb} />)}
-              </ScrollView> : null}
-
             </View>
           ) : null}
         </View>
@@ -1208,12 +1182,10 @@ const styles = StyleSheet.create({
   detailTitle: { color: "#fff", fontFamily: font.black, fontSize: 34, lineHeight: 40 },
   description: { color: color.muted, fontSize: 15, lineHeight: 23, maxWidth: 650 },
   playerPage: { flex: 1, minHeight: 0, gap: 0, backgroundColor: "#000" },
-  playerPageFullscreen: { ...StyleSheet.absoluteFillObject, zIndex: 50, elevation: 50 },
   playerTop: { flexDirection: "row", alignItems: "center", gap: 16, minHeight: 42, paddingHorizontal: 18, paddingTop: 10 },
   playerHeading: { color: color.text, fontFamily: font.bold, fontSize: 17, flex: 1 },
   playerHint: { color: color.dim, fontSize: 11 },
   playerFrame: { flex: 1, minHeight: 0, width: "100%", backgroundColor: "#000", borderRadius: 0, overflow: "hidden" },
-  playerFrameFullscreen: { ...StyleSheet.absoluteFillObject, zIndex: 1 },
   playerOverlayControls: { position: "absolute", zIndex: 5, top: 18, left: 18, right: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   playerBottomControls: { position: "absolute", zIndex: 6, left: 28, right: 28, bottom: 24, padding: 16, gap: 12, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.82)", borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" },
   playerProgressRow: { flexDirection: "row", alignItems: "center", gap: 12 },
