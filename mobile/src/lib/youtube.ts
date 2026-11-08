@@ -80,7 +80,7 @@ export function playerHtml(videoId: string): string {
         window.onYouTubeIframeAPIReady = function () {
           player = new YT.Player("player", {
             videoId: ${JSON.stringify(videoId)},
-            playerVars: { autoplay: 1, controls: 1, disablekb: 0, rel: 0, playsinline: 1, fs: 0, enablejsapi: 1, origin: ${JSON.stringify(ORIGIN)} },
+            playerVars: { autoplay: 1, controls: 1, disablekb: 0, cc_load_policy: 0, rel: 0, playsinline: 1, fs: 0, enablejsapi: 1, origin: ${JSON.stringify(ORIGIN)} },
             events: {
               onReady: function () {
                 ready = true;
