@@ -449,11 +449,11 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
             >
               {hero ? (
                 <View style={[styles.hero, { minHeight: Math.min(400, height * 0.58) }]}>
-                  {hero.image ? <Image source={{ uri: hero.image }} style={styles.heroImage} resizeMethod="resize" resizeMode="cover" /> : null}
+                  {hero.image ? <Image source={{ uri: hero.image }} style={styles.heroImage} resizeMethod="resize" resizeMode="contain" /> : null}
                   <View style={styles.heroScrim} />
                   <View style={styles.heroCopy}>
                     <Text style={styles.eyebrow}>FROM THE CLASSIC ARCHIVE</Text>
-                    {hero.urdu ? <Text style={styles.urduTitle}>{hero.urdu}</Text> : null}
+                    {hero.urdu ? <Text style={[styles.urduTitle, styles.urduTitleGold]}>{hero.urdu}</Text> : null}
                     <Text style={styles.heroTitle} numberOfLines={2}>{displayTitle(hero)}</Text>
                     <Text style={styles.heroMeta}>{[hero.year, hero.type, episodeCounts[hero.id] ? `${episodeCounts[hero.id]} episodes` : ""].filter(Boolean).join("  •  ")}</Text>
                     <View style={styles.actions}>
@@ -595,10 +595,10 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               contentContainerStyle={styles.detailContent}
             >
               <View style={styles.detailHero}>
-                {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMethod="resize" resizeMode="cover" /> : <View style={styles.detailImage} />}
+                {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMethod="resize" resizeMode="contain" /> : <View style={styles.detailImage} />}
                 <View style={styles.detailCopy}>
                   <Text style={styles.eyebrow}>{selected.type.toUpperCase()}</Text>
-                  {selected.urdu ? <Text style={styles.urduTitle}>{selected.urdu}</Text> : null}
+                  {selected.urdu ? <Text style={[styles.urduTitle, styles.urduTitleGold]}>{selected.urdu}</Text> : null}
                   <Text style={styles.detailTitle}>{displayTitle(selected)}</Text>
                   <Text style={styles.heroMeta}>{[selected.year, currentGroup.length > 1 ? `${currentGroup.length} episodes` : "Classic archive"].filter(Boolean).join("  •  ")}</Text>
                   <Text style={styles.description} numberOfLines={5}>{selected.description || "A title from the Classic TV Pakistan archive."}</Text>
@@ -624,7 +624,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                   <ActionButton label="Start Over" icon="refresh" onPress={() => { void clearTvPlaybackProgress(extractYouTubeId(detailResume.episode.youtube) || ""); launchEpisode(detailResume.episode, 0); }} showKb={showKb} />
                 </View>
               ) : null}
-              {currentGroup.length > 1 ? <Shelf title="Episodes" scrollId="rail:episodes" items={currentGroup} cardWidth={cardWidth} pageScrollId="detailsScroll" episodeCounts={episodeCounts} onSelect={(ep) => { void requestEpisode(ep); }} onPlay={(ep) => { void requestEpisode(ep); }} /> : null}
+              {currentGroup.length > 1 ? <Shelf title="Episodes" scrollId="rail:episodes" items={currentGroup} cardWidth={cardWidth} pageScrollId="detailsScroll" episodeCounts={episodeCounts} showEpisodeNumber onSelect={(ep) => { void requestEpisode(ep); }} onPlay={(ep) => { void requestEpisode(ep); }} /> : null}
             </ScrollView>
           ) : null}
 
@@ -949,7 +949,7 @@ function EpisodeButton({ episode, number, index, selected, onPress, showKb }: { 
   );
 }
 
-function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pageScrollId, onSelect, onPlay, compact = false }: {
+function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pageScrollId, onSelect, onPlay, compact = false, showEpisodeNumber = false }: {
   title: string;
   subtitle?: string;
   scrollId: string;
@@ -960,6 +960,7 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
   onSelect: (drama: Drama) => void;
   onPlay: (drama: Drama) => void;
   compact?: boolean;
+  showEpisodeNumber?: boolean;
 }) {
   if (!items.length) return null;
   return (
@@ -1003,6 +1004,7 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
             onPress={() => onSelect(drama)}
             onPlay={() => onPlay(drama)}
             compact={compact}
+            showEpisodeNumber={showEpisodeNumber}
             clampHorizontal
           />
         )}
@@ -1011,7 +1013,7 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
   );
 }
 
-function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = false, scrollId, scrollIds, index, autoFocus, clampHorizontal = false }: {
+function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = false, scrollId, scrollIds, index, autoFocus, clampHorizontal = false, showEpisodeNumber = false }: {
   drama: Drama;
   width: number;
   episodeCount: number;
@@ -1023,6 +1025,7 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
   index?: number;
   autoFocus?: boolean;
   clampHorizontal?: boolean;
+  showEpisodeNumber?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
   const [selfFocusId, setSelfFocusId] = useState<number | undefined>(undefined);
@@ -1049,10 +1052,11 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
     >
       <View style={[styles.posterFrame, { height: Math.round(width * 9 / 16) }, focused && styles.posterFrameFocused]}>
-        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMethod="resize" resizeMode="cover" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
+        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMethod="resize" resizeMode="contain" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
       </View>
       <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
-      {!compact && episodeCount > 1 ? <Text style={[styles.posterEpisodeCount, focused && styles.posterYearLit]}>{episodeCount} Episodes</Text> : null}
+      {!compact && showEpisodeNumber ? <Text style={[styles.posterEpisodeCount, focused && styles.posterYearLit]}>Episode {drama.episode ?? (index ?? 0) + 1}</Text> : null}
+      {!compact && !showEpisodeNumber && episodeCount > 1 ? <Text style={[styles.posterEpisodeCount, focused && styles.posterYearLit]}>{episodeCount} Episodes</Text> : null}
       {!compact && drama.year ? <Text style={[styles.posterYear, focused && styles.posterYearLit]}>{drama.year}</Text> : null}
     </Pressable>
   );
@@ -1110,6 +1114,7 @@ const styles = StyleSheet.create({
   heroCopy: { padding: 32, paddingBottom: 36, maxWidth: 700, gap: 10 },
   eyebrow: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11, letterSpacing: 1.7 },
   urduTitle: { color: "#fff", fontFamily: font.urdu, fontSize: 29, lineHeight: 66, textAlign: "right", includeFontPadding: true },
+  urduTitleGold: { color: TV_GOLD },
   heroTitle: { color: "#fff", fontFamily: font.black, fontSize: 36, lineHeight: 42 },
   heroMeta: { color: "#D3D8D4", fontFamily: font.medium, fontSize: 14, marginTop: 2 },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 10 },
@@ -1121,9 +1126,9 @@ const styles = StyleSheet.create({
   actionText: { color: color.text, fontFamily: font.bold, fontSize: 15 },
   actionTextPrimary: { color: "#000" },
   actionTextLit: { color: TV_GOLD },
-  focused: { borderColor: TV_GOLD, borderWidth: 2, backgroundColor: "transparent" },
-  posterFocused: { borderColor: "transparent", borderWidth: 2, borderRadius: 10, backgroundColor: "transparent", zIndex: 2 },
-  posterFrameFocused: { borderColor: TV_GOLD },
+  focused: { borderColor: TV_GOLD, borderWidth: 2 },
+  posterFocused: { borderColor: "transparent", borderWidth: 1, borderRadius: 10, backgroundColor: "transparent", zIndex: 2 },
+  posterFrameFocused: { borderColor: TV_GOLD, borderWidth: 1 },
   posterLit: { opacity: 1 },
   posterDimmed: { opacity: 1 },
   pressed: { opacity: 0.78 },
@@ -1148,7 +1153,7 @@ const styles = StyleSheet.create({
   poster: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
   posterFallback: { flex: 1, alignItems: "center", justifyContent: "center" },
   posterEpisodeCount: { color: color.muted, fontFamily: font.medium, fontSize: 12, marginTop: -2 },
-  posterTitle: { color: color.text, fontFamily: font.bold, fontSize: 16, lineHeight: 24, minHeight: 48, includeFontPadding: true },
+  posterTitle: { color: color.text, fontFamily: font.bold, fontSize: 16, lineHeight: 26, minHeight: 52, includeFontPadding: true },
   posterTitleLit: { color: "#FFF3D6" },
   posterYear: { color: color.dim, fontSize: 12 },
   posterYearLit: { color: TV_GOLD },
