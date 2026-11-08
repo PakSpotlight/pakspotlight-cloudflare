@@ -213,11 +213,8 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [playerFailed, setPlayerFailed] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
   const [playerFullscreen, setPlayerFullscreen] = useState(true);
-  const [playerControlsVisible, setPlayerControlsVisible] = useState(false);
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>({ currentTime: 0, duration: 0, state: -1 });
   const [playerProgressWidth, setPlayerProgressWidth] = useState(0);
-  const [playerControlsActivity, setPlayerControlsActivity] = useState(0);
-  const playerProgressFocusedRef = useRef(false);
   const playerRef = useRef<PlayerHandle>(null);
   const pendingResumeSecondsRef = useRef(0);
   const lastSavedProgressRef = useRef("");
@@ -232,35 +229,17 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     return () => clearTimeout(timer);
   }, []);
 
-  // Native TV remote events: the first OK/select press while video is immersive
-  // reveals the app controls; subsequent OK presses activate the focused control.
+  // Direct TV remote playback: OK toggles play/pause; left/right seek by 10 seconds.
   useTVEventHandler((event) => {
-    if (page !== "player" || !playerFullscreen) return;
-    // While the overlay is hidden, left/right seek the video. Once controls
-    // are visible, let Android TV's native focus engine move between buttons.
-    if (playerControlsVisible) setPlayerControlsActivity((value) => value + 1);
-    if (event.eventType === "select") {
-      if (!playerControlsVisible) {
-        playerRef.current?.playPause();
-        setPlayerControlsVisible(true);
-      }
-    } else if (event.eventType === "left" && (!playerControlsVisible || playerProgressFocusedRef.current)) {
-      playerRef.current?.seekBy(-10);
-      setPlayerControlsVisible(true);
-    } else if (event.eventType === "right" && (!playerControlsVisible || playerProgressFocusedRef.current)) {
-      playerRef.current?.seekBy(10);
-      setPlayerControlsVisible(true);
-    } else if (event.eventType === "playPause") {
+    if (page !== "player") return;
+    if (event.eventType === "select" || event.eventType === "playPause") {
       playerRef.current?.playPause();
-      setPlayerControlsVisible(true);
+    } else if (event.eventType === "left") {
+      playerRef.current?.seekBy(-10);
+    } else if (event.eventType === "right") {
+      playerRef.current?.seekBy(10);
     }
   });
-
-  useEffect(() => {
-    if (page !== "player" || !playerFullscreen || !playerControlsVisible) return;
-    const timer = setTimeout(() => setPlayerControlsVisible(false), 12000);
-    return () => clearTimeout(timer);
-  }, [page, playerFullscreen, playerControlsVisible, playerControlsActivity]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -273,7 +252,6 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
         return true;
       }
       if (page === "player") {
-        setPlayerFullscreen(false);
         setPage("details");
         return true;
       }
@@ -348,7 +326,6 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     setPlayerFailed(false);
     setPlayerProgress({ currentTime: 0, duration: 0, state: -1 });
     setPlayerFullscreen(true);
-    setPlayerControlsVisible(false);
     setResumePrompt(null);
     setPage("player");
   };
@@ -705,17 +682,11 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               >
                 {currentGroup.map((ep, i) => <EpisodeButton key={ep.id} episode={ep} number={i + 1} index={i} selected={episode.id === ep.id} onPress={() => { void requestEpisode(ep); }} showKb={showKb} />)}
               </ScrollView> : null}
-              {playerFullscreen && playerControlsVisible ? <TVFocusGuideView autoFocus style={styles.playerOverlayControls}>
-                <TvPress focusKey="playerExitFullscreen" autoFocus showKb={showKb} onPress={() => setPlayerFullscreen(false)} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="contract" size={19} color={color.text} /><Text style={styles.playerControlText}>Episodes / Exit full screen</Text></TvPress>
-                <TvPress focusKey="playerOverlayBack" showKb={showKb} onPress={() => { setPlayerFullscreen(false); setPage("details"); }} style={styles.playerControl} focusedStyle={styles.focused}><Ionicons name="arrow-back" size={19} color={color.text} /><Text style={styles.playerControlText}>Back</Text></TvPress>
-              </TVFocusGuideView> : null}
-              {playerFullscreen && playerControlsVisible ? <TVFocusGuideView style={styles.playerBottomControls}>
+              <View style={styles.playerBottomControls}>
                 <View style={styles.playerProgressRow}>
                   <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.currentTime)}</Text>
                   <Pressable
                     focusable
-                    onFocus={() => { playerProgressFocusedRef.current = true; }}
-                    onBlur={() => { playerProgressFocusedRef.current = false; }}
                     onLayout={(event) => setPlayerProgressWidth(event.nativeEvent.layout.width)}
                     onPress={(event) => {
                       if (playerProgress.duration > 0 && playerProgressWidth > 0) {
@@ -731,21 +702,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                   </Pressable>
                   <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.duration)}</Text>
                 </View>
-                <View style={styles.playerActionsRow}>
-                  <TvPress focusKey="playerRewind" showKb={showKb} onPress={() => playerRef.current?.seekBy(-10)} style={styles.playerControl} focusedStyle={styles.focused}>
-                    <Ionicons name="play-back" size={20} color={color.text} /><Text style={styles.playerControlText}>10 sec</Text>
-                  </TvPress>
-                  <TvPress focusKey="playerToggle" showKb={showKb} onPress={() => playerRef.current?.playPause()} style={styles.playerControl} focusedStyle={styles.focused}>
-                    <Ionicons name={playerProgress.state === 1 ? "pause" : "play"} size={20} color={color.text} /><Text style={styles.playerControlText}>{playerProgress.state === 1 ? "Pause" : "Play"}</Text>
-                  </TvPress>
-                  <TvPress focusKey="playerForward" showKb={showKb} onPress={() => playerRef.current?.seekBy(10)} style={styles.playerControl} focusedStyle={styles.focused}>
-                    <Ionicons name="play-forward" size={20} color={color.text} /><Text style={styles.playerControlText}>10 sec</Text>
-                  </TvPress>
-                  <TvPress focusKey="playerStop" showKb={showKb} onPress={() => { setPlayerFullscreen(false); setPage("details"); }} style={styles.playerControl} focusedStyle={styles.focused}>
-                    <Ionicons name="stop" size={20} color={color.text} /><Text style={styles.playerControlText}>Stop</Text>
-                  </TvPress>
-                </View>
-              </TVFocusGuideView> : null}
+              </View>
             </View>
           ) : null}
         </View>
