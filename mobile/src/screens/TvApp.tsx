@@ -372,10 +372,15 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
         if (target && tvRequestFocus(target)) restoreFocusKeyRef.current = "";
       }
     };
-    const first = setTimeout(restore, 0);
-    const second = setTimeout(restore, 250);
-    const third = setTimeout(restore, 700);
-    return () => { clearTimeout(first); clearTimeout(second); clearTimeout(third); };
+    // Restore the saved scroll position once after the destination screen mounts.
+    // Retry focus only (not scrolling) if a virtualized tile has not mounted yet.
+    const first = setTimeout(restore, 100);
+    const second = setTimeout(() => {
+      if (!restoreFocusKeyRef.current) return;
+      const target = tvFocusableRefs.get(restoreFocusKeyRef.current);
+      if (target && tvRequestFocus(target)) restoreFocusKeyRef.current = "";
+    }, 320);
+    return () => { clearTimeout(first); clearTimeout(second); };
   }, [page]);
 
   const closeKb = () => {
