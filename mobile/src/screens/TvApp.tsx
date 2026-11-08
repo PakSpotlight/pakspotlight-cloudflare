@@ -214,7 +214,6 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [heroIndex, setHeroIndex] = useState(0);
   const [playerFullscreen, setPlayerFullscreen] = useState(true);
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>({ currentTime: 0, duration: 0, state: -1 });
-  const [playerProgressWidth, setPlayerProgressWidth] = useState(0);
   const playerRef = useRef<PlayerHandle>(null);
   const pendingResumeSecondsRef = useRef(0);
   const lastSavedProgressRef = useRef("");
@@ -682,27 +681,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
               >
                 {currentGroup.map((ep, i) => <EpisodeButton key={ep.id} episode={ep} number={i + 1} index={i} selected={episode.id === ep.id} onPress={() => { void requestEpisode(ep); }} showKb={showKb} />)}
               </ScrollView> : null}
-              <View style={styles.playerBottomControls}>
-                <View style={styles.playerProgressRow}>
-                  <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.currentTime)}</Text>
-                  <Pressable
-                    focusable
-                    onLayout={(event) => setPlayerProgressWidth(event.nativeEvent.layout.width)}
-                    onPress={(event) => {
-                      if (playerProgress.duration > 0 && playerProgressWidth > 0) {
-                        const fraction = Math.max(0, Math.min(1, event.nativeEvent.locationX / playerProgressWidth));
-                        playerRef.current?.seekTo(fraction * playerProgress.duration);
-                      }
-                    }}
-                    style={styles.playerProgressTrack}
-                    accessibilityRole="adjustable"
-                    accessibilityLabel="Video progress"
-                  >
-                    <View style={[styles.playerProgressFill, { width: `${Math.max(0, Math.min(100, playerProgress.duration > 0 ? playerProgress.currentTime / playerProgress.duration * 100 : 0))}%` }]} />
-                  </Pressable>
-                  <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.duration)}</Text>
-                </View>
-              </View>
+
             </View>
           ) : null}
         </View>
