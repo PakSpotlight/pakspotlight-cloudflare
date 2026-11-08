@@ -63,7 +63,7 @@ export const Player = forwardRef<PlayerHandle, Props>(function Player(
       originWhitelist={["https://*", "http://*"]}
       javaScriptEnabled
       domStorageEnabled
-      allowsFullscreenVideo
+      allowsFullscreenVideo={false}
       allowsInlineMediaPlayback
       mediaPlaybackRequiresUserAction={false}
       setSupportMultipleWindows={false}
