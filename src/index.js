@@ -1219,7 +1219,7 @@ var index_default = {
             // Make numbered episode pages distinct without changing their stable URLs or stored titles.
             const baseTitle = d.title || "Classic PTV Drama";
             const episodeNumber = String(d.episode_number || "").trim();
-            const alreadyHasEpisode = episodeNumber && new RegExp(\`\b(?:ep|episode|part|qist)\s*#?\s*\${episodeNumber}\b\`, "i").test(baseTitle);
+            const alreadyHasEpisode = episodeNumber && new RegExp(`\b(?:ep|episode|part|qist)\s*#?\s*${episodeNumber}\b`, "i").test(baseTitle);
             const episodeTitle = episodeNumber && !alreadyHasEpisode
               ? `${baseTitle} — Episode ${episodeNumber}`
               : baseTitle;
