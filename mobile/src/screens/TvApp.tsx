@@ -458,8 +458,8 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                   <View style={styles.heroScrim} />
                   <View style={styles.heroCopy}>
                     <Text style={styles.eyebrow}>FROM THE CLASSIC ARCHIVE</Text>
-                    {hero.urdu ? <Text style={[styles.urduTitle, styles.urduTitleGold]}>{hero.urdu}</Text> : null}
                     <Text style={styles.heroTitle} numberOfLines={2}>{displayTitle(hero)}</Text>
+                    {hero.urdu ? <Text style={[styles.urduTitle, styles.urduTitleGold]}>{hero.urdu}</Text> : null}
                     <Text style={styles.heroMeta}>{[hero.year, hero.type, episodeCounts[hero.id] ? `${episodeCounts[hero.id]} episodes` : ""].filter(Boolean).join("  •  ")}</Text>
                     <View style={styles.actions}>
                       <ActionButton label="Play" icon="play" primary autoFocus onPress={() => playDrama(hero)} />
@@ -603,8 +603,8 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                 {selected.image ? <Image source={{ uri: selected.image }} style={styles.detailImage} resizeMethod="resize" resizeMode="contain" /> : <View style={styles.detailImage} />}
                 <View style={styles.detailCopy}>
                   <Text style={styles.eyebrow}>{selected.type.toUpperCase()}</Text>
-                  {selected.urdu ? <Text style={[styles.urduTitle, styles.urduTitleGold]}>{selected.urdu}</Text> : null}
                   <Text style={styles.detailTitle}>{displayTitle(selected)}</Text>
+                  {selected.urdu ? <Text style={[styles.urduTitle, styles.urduTitleGold]}>{selected.urdu}</Text> : null}
                   <Text style={styles.heroMeta}>{[selected.year, currentGroup.length > 1 ? `${currentGroup.length} episodes` : "Classic archive"].filter(Boolean).join("  •  ")}</Text>
                   <Text style={styles.description} numberOfLines={5}>{selected.description || "A title from the Classic TV Pakistan archive."}</Text>
                   <View style={styles.actions}>
@@ -988,12 +988,12 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
         onScroll={(event) => { tvRailOffsets.set(scrollId, event.nativeEvent.contentOffset.x); }}
          scrollEventThrottle={120}
          getItemLayout={(_, index) => {
-          const tileWidth = compact ? Math.round(cardWidth * 0.8) : cardWidth;
+          const tileWidth = cardWidth;
           return { length: tileWidth + 14, offset: (tileWidth + 14) * index, index };
         }}
         ref={(r: any) => {
           if (r) {
-            const tileWidth = compact ? Math.round(cardWidth * 0.8) : cardWidth;
+            const tileWidth = cardWidth;
             tvScrollables.set(scrollId, { ref: r, kind: "flatlist", cols: 1, rowStride: tileWidth + 14 });
              const savedOffset = tvRailOffsets.get(scrollId) ?? 0;
              if (savedOffset > 0) setTimeout(() => r.scrollToOffset({ offset: savedOffset, animated: false }), 80);
@@ -1002,7 +1002,7 @@ function Shelf({ title, subtitle, scrollId, items, cardWidth, episodeCounts, pag
         renderItem={({ item: drama, index }) => (
           <PosterTile
             drama={drama}
-            width={compact ? Math.round(cardWidth * 0.8) : cardWidth}
+            width={cardWidth}
             episodeCount={episodeCounts[drama.id] ?? 1}
             scrollIds={[scrollId, pageScrollId].filter(Boolean) as string[]}
             index={index}
@@ -1033,20 +1033,11 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
   showEpisodeNumber?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
-  const [selfFocusId, setSelfFocusId] = useState<number | undefined>(undefined);
   const tv = useTvItem(`poster:${drama.id}`, { scrollIds: scrollIds ?? scrollId, itemIndex: index });
   return (
     <Pressable
       ref={tv.ref}
       focusable
-      nextFocusLeft={clampHorizontal ? selfFocusId : undefined}
-      nextFocusRight={clampHorizontal ? selfFocusId : undefined}
-      onLayout={() => {
-        if (clampHorizontal && selfFocusId == null) {
-          const node = findNodeHandle(tv.ref.current);
-          if (typeof node === "number") setSelfFocusId(node);
-        }
-      }}
       {...tvFocusProps(!!autoFocus)}
       onFocus={() => { tv.onFocus(); setFocused(true); }}
       onBlur={() => { tv.onBlur(); setFocused(false); }}
@@ -1118,7 +1109,7 @@ const styles = StyleSheet.create({
   heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.34)" },
   heroCopy: { padding: 32, paddingBottom: 36, maxWidth: 700, gap: 10 },
   eyebrow: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11, letterSpacing: 1.7 },
-  urduTitle: { color: "#fff", fontFamily: font.urdu, fontSize: 29, lineHeight: 66, textAlign: "right", includeFontPadding: true },
+  urduTitle: { color: "#fff", fontFamily: font.urdu, fontSize: 29, lineHeight: 46, textAlign: "right", includeFontPadding: true },
   urduTitleGold: { color: TV_GOLD },
   heroTitle: { color: "#fff", fontFamily: font.black, fontSize: 36, lineHeight: 42 },
   heroMeta: { color: "#D3D8D4", fontFamily: font.medium, fontSize: 14, marginTop: 2 },

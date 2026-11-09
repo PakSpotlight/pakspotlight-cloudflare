@@ -48,9 +48,9 @@ export function playerHtml(videoId: string): string {
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <style>
-      html, body { margin: 0; padding: 0; height: 100%; background: #000; overflow: hidden; }
-      #player { position: absolute; inset: 0; width: 100%; height: 100%; }
-      iframe { width: 100%; height: 100%; border: 0; }
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+      #player { position: fixed; inset: 0; width: 100vw; height: 100vh; }
+      iframe { display: block; width: 100%; height: 100%; min-width: 100vw; min-height: 100vh; border: 0; }
     </style>
   </head>
   <body>
@@ -84,6 +84,15 @@ export function playerHtml(videoId: string): string {
             events: {
               onReady: function () {
                 ready = true;
+                // Give Android TV DPAD navigation to the embedded YouTube frame so
+                // its own seek, captions and settings controls can receive focus.
+                try {
+                  var iframe = player.getIframe();
+                  if (iframe) {
+                    iframe.setAttribute("tabindex", "0");
+                    setTimeout(function () { try { iframe.focus(); } catch (_) {} }, 150);
+                  }
+                } catch (_) {}
                 send("ready");
                 setInterval(function () {
                   if (!ready || !player) return;
