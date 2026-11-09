@@ -1216,7 +1216,14 @@ var index_default = {
             watchUrl2.pathname = "/watch.html";
             const assetResp = await env.ASSETS.fetch(watchUrl2.toString());
             const html = await assetResp.text();
-            const h1Text = `${d.title || "Classic PTV Drama"}${d.year ? ` (${d.year})` : ""}`;
+            // Make numbered episode pages distinct without changing their stable URLs or stored titles.
+            const baseTitle = d.title || "Classic PTV Drama";
+            const episodeNumber = String(d.episode_number || "").trim();
+            const alreadyHasEpisode = episodeNumber && new RegExp(`\\\\b(?:ep|episode|part|qist)\\\\s*#?\\\\s*${episodeNumber}\\\\b`, "i").test(baseTitle);
+            const episodeTitle = episodeNumber && !alreadyHasEpisode
+              ? `${baseTitle} — Episode ${episodeNumber}`
+              : baseTitle;
+            const h1Text = `${episodeTitle}${d.year ? ` (${d.year})` : ""}`;
             const title = `${h1Text} — Watch on Classic TV Pakistan`;
             const thumb = d.thumbnail_url || "https://classictvpakistan.com/logo.png";
             const url_ = `https://classictvpakistan.com/watch?id=${dramaId}`;
@@ -1270,7 +1277,7 @@ var index_default = {
             const jsonLd = {
               "@context": "https://schema.org",
               "@type": "VideoObject",
-              name: d.title || "",
+              name: episodeTitle,
               description: summary,
               thumbnailUrl: [thumb],
               uploadDate: d.year || undefined,
