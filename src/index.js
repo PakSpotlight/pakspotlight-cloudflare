@@ -1162,8 +1162,18 @@ var index_default = {
     // ── SEO: Dynamic Sitemap ──
     if (url.pathname === "/sitemap.xml") {
       try {
-        const dramas = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=id,title,created_at&order=id.desc`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
-        const dramaList = await dramas.json().catch(() => []);
+        const pageSize = 100;
+        let offset = 0;
+        const dramaList = [];
+        while (true) {
+          const dramas = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=id,title,created_at&order=id.desc&limit=${pageSize}&offset=${offset}`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
+          if (!dramas.ok) throw new Error(`Sitemap query failed: ${dramas.status}`);
+          const batch = await dramas.json();
+          if (!Array.isArray(batch)) throw new Error("Invalid sitemap query response");
+          dramaList.push(...batch);
+          if (batch.length < pageSize) break;
+          offset += pageSize;
+        }
         const base = "https://classictvpakistan.com";
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
         xml += `  <url><loc>${base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n`;
