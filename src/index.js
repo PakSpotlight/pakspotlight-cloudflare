@@ -1015,7 +1015,8 @@ var index_default = {
               director: pick("director"),
               produced: pick("produced"),
               cast: pick("cast"),
-              description: (it.description || shared?.description || "").slice(0, 800),
+              // Preserve the complete YouTube description; Supabase text supports long values.
+              description: String(it.description || shared?.description || ""),
               youtube_url: it.url,
               thumbnail_url: it.thumbnail || ""
             });
