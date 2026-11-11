@@ -49,7 +49,7 @@ async function loadAryEntries() {
   box.innerHTML = '<div class="status show info">Loading saved entries…</div>';
   var result = await window.sbClient.from(getAdminExternalMediaTableName()).select("*").eq("provider", "ary").order("created_at", { ascending: false }).limit(200);
   if (result.error) {
-    box.innerHTML = '<div class="status show err">Could not load ARY entries. Apply the supplied ExternalMedia SQL setup first. ' + esc(result.error.message) + '</div>';
+    box.innerHTML = '<div class="status show err">Could not load ARY entries from ' + getAdminExternalMediaTableName() + '. Check that the matching SQL setup has been run. ' + esc(result.error.message) + '</div>';
     return;
   }
   if (!result.data || !result.data.length) {
@@ -84,7 +84,7 @@ async function saveAryEntry(event) {
     video_url: videoUrl,
     thumbnail_url: $("aryArtwork").value.trim()
   };
-  var result = await window.sbClient.from("ExternalMedia").insert(payload).select().single();
+  var result = await window.sbClient.from(getAdminExternalMediaTableName()).insert(payload).select().single();
   button.disabled = false;
   if (result.error) {
     status.className = "status show err";
