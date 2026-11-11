@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BackHandler,
+  Linking,
   FlatList,
   Image,
   Modal,
@@ -575,6 +576,11 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                 <Text style={styles.infoCardTitle}>Archive status</Text>
                 <Text style={styles.bodyText}>{loading ? "Checking catalogue…" : error ? `Catalogue message: ${error}` : `${rows.length.toLocaleString()} archive entries available`}</Text>
                 {catalog?.stale ? <Text style={styles.offline}>Showing saved catalogue data while offline.</Text> : null}
+              </View>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoCardTitle}>ARY Digital link test</Text>
+                <Text style={styles.bodyText}>Test the official Dar-E-Nijaat episode link. Playback will be handled by ARY Plus in the browser or its app if Android routes the link there. This is a link test only; it does not copy or host ARY videos.</Text>
+                <ActionButton label="Open Dar-E-Nijaat episode" icon="open-outline" primary onPress={() => { void Linking.openURL("https://aryplus.tv/video/v2/3/6aef23fa8c972be612ab59d2/6a57868b5bf57c474cc00a50").catch(() => {}); }} />
               </View>
               {showKb ? null : <ActionButton label={loading ? "Updating…" : "Update catalogue"} icon="refresh" primary onPress={() => { void refresh(); }} autoFocus />}
             </View>
