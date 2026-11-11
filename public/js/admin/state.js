@@ -255,12 +255,16 @@ function renderPanes() {
     <section class="vault-pane ${activeTab === 'add' ? 'active' : ''}" id="pane-add">
       ${renderAddPane()}
     </section>
+    <section class="vault-pane ${activeTab === 'ary' ? 'active' : ''}" id="pane-ary">
+      ${renderAryPane()}
+    </section>
     <section class="vault-pane ${activeTab === 'curation' ? 'active' : ''}" id="pane-curation">
       ${renderCurationPane()}
     </section>
   `;
   bindCatalogEvents();
   bindAddEvents();
+  bindAryEvents();
 }
 
 function switchTab(tab) {
