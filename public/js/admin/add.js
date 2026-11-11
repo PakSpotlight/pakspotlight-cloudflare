@@ -16,17 +16,17 @@ function renderAddPane() {
     <div class="sec">
       <div class="sec-head">
         <div>
-          <div class="sec-title">Add from YouTube</div>
-          <div class="sec-sub">Paste a single video link, or a playlist link to import a whole serial at once.</div>
+          <div class="sec-title">Add Media</div>
+          <div class="sec-sub">Paste a YouTube video, YouTube playlist, or official ARY Plus link. The source is detected automatically.</div>
         </div>
       </div>
 
       <div class="add-box">
         <div class="field">
-          <label for="addUrlInput">YouTube link</label>
+          <label for="addUrlInput">Media link</label>
           <div class="add-url-row">
-            <input type="url" id="addUrlInput" class="input-url" placeholder="https://www.youtube.com/watch?v=… or /playlist?list=…" autocomplete="off">
-            <button class="btn btn-primary" type="button" id="addFetchBtn" onclick="handleAddFetch()" style="min-width:130px">Fetch details</button>
+            <input type="url" id="addUrlInput" class="input-url" placeholder="Paste YouTube, playlist, or ARY Plus link…" autocomplete="off">
+            <button class="btn btn-primary" type="button" id="addFetchBtn" onclick="handleAddFetch()" style="min-width:130px">Detect source</button>
           </div>
           <div class="status" id="addFetchStatus"></div>
         </div>
@@ -302,6 +302,43 @@ async function handleAddFetch() {
 
   btn.disabled = true;
 
+  // Route official ARY Plus links from this same universal input to the ARY form.
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    const isAryHost = parsed.protocol === "https:" && (host === "aryplus.tv" || host.endsWith(".aryplus.tv"));
+    if (isAryHost) {
+      $("videoFlow").style.display = "none";
+      $("playlistFlow").style.display = "none";
+      switchTab("ary");
+      const isSeriesLink = host === "social.aryplus.tv" && /\/sharer\/series\//i.test(parsed.pathname);
+      if (isSeriesLink) $("arySeriesUrl").value = url;
+      else if (host === "aryplus.tv" && /\/video\//i.test(parsed.pathname)) $("aryVideoUrl").value = url;
+      else {
+        status.className = "status show err";
+        status.textContent = "This ARY link type is not supported yet. Paste an official ARY series/share or video link.";
+        btn.disabled = false;
+        return;
+      }
+      const aryStatus = $("arySaveStatus");
+      if (aryStatus) {
+        aryStatus.className = "status show info";
+        aryStatus.textContent = isSeriesLink
+          ? "ARY series link detected. Add the drama title and episode video link, then save."
+          : "ARY episode link detected. Add the series link and drama details, then save.";
+      }
+      btn.disabled = false;
+      return;
+    }
+  } catch {}
+
+  if (!isPlaylistUrl(url) && !getAdminYouTubeId(url)) {
+    status.className = "status show err";
+    status.textContent = "Unsupported link. Use a YouTube video/playlist or an official ARY Plus series/video link.";
+    btn.disabled = false;
+    return;
+  }
+
   if (isPlaylistUrl(url)) {
     $("videoFlow").style.display = "none";
     $("playlistFlow").style.display = "none";
@@ -514,6 +551,12 @@ function toggleAllPlaylistChecks(checked) {
 
 async function handleSingleAddSubmit(e) {
   e.preventDefault();
+  if (window.location.hostname.endsWith(".workers.dev")) {
+    const blocked = $("saveDramaStatus");
+    blocked.className = "status show err";
+    blocked.textContent = "This is a safe test copy. YouTube saves are disabled here; use ARY links to test the separate catalogue.";
+    return;
+  }
   const btn = $("saveDramaBtn");
   const status = $("saveDramaStatus");
   btn.disabled = true;
@@ -642,6 +685,11 @@ async function handleSingleAddSubmit(e) {
 }
 
 async function runPlaylistImport() {
+  if (window.location.hostname.endsWith(".workers.dev")) {
+    const blocked = $("plStatus");
+    if (blocked) { blocked.className = "status show err"; blocked.textContent = "YouTube imports are disabled in this safe test copy. Use ARY links to test the separate catalogue."; }
+    return;
+  }
   const url = $("addUrlInput").value.trim();
   const status = $("plStatus");
   const btn = $("plImportBtn");
