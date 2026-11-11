@@ -154,11 +154,15 @@ async function loadCategories() {
   return categories;
 }
 
+function getExternalMediaTableName() {
+  return window.location.hostname.endsWith(".workers.dev") ? "ExternalMediaTest" : "ExternalMedia";
+}
+
 async function loadExternalMedia() {
   if (!sbClient) return;
   try {
     const { data, error } = await sbClient
-      .from("ExternalMedia")
+      .from(getExternalMediaTableName())
       .select("*")
       .eq("provider", "ary")
       .order("created_at", { ascending: false })
