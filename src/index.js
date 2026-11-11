@@ -669,6 +669,16 @@ var index_default = {
     const url = new URL(request.url);
     ctxRef.waitUntil = ctx.waitUntil ? ctx.waitUntil.bind(ctx) : null;
 
+    // The workers.dev copy is a safe test environment: never let its API mutate
+    // production Drama rows, category/featured config, or thumbnail storage.
+    const isIsolatedPreview = url.hostname.endsWith(".workers.dev");
+    const blockedPreviewWrites = new Set([
+      "/api/categories", "/api/featured", "/api/playlist-import", "/api/store-thumbnail"
+    ]);
+    if (isIsolatedPreview && request.method === "POST" && blockedPreviewWrites.has(url.pathname)) {
+      return json({ error: "This is a safe test copy. Production archive and configuration writes are disabled." }, 403);
+    }
+
     // Pre-flight CORS support
     if (request.method === "OPTIONS") {
       return new Response(null, {
