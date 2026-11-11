@@ -296,7 +296,7 @@ async function handleAddFetch() {
   const btn = $("addFetchBtn");
   if (!url) {
     status.className = "status show err";
-    status.textContent = "Paste a YouTube link first.";
+    status.textContent = "Paste a supported media link first.";
     return;
   }
 
