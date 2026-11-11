@@ -29,8 +29,8 @@ function renderAryPane() {
       <div id="aryEntriesList"><div class="status show info">Loading saved entries…</div></div>
     </div>`;
 }
-function isAllowedAryUrl(value, host) {
-  try { var u = new URL(value); return u.protocol === "https:" && (u.hostname === host || u.hostname.endsWith("." + host)); }
+function isAllowedAryUrl(value, hosts) {
+  try { var u = new URL(value); return u.protocol === "https:" && hosts.some(function(host) { return u.hostname === host || u.hostname.endsWith("." + host); }); }
   catch (e) { return false; }
 }
 function bindAryEvents() {
@@ -63,7 +63,7 @@ async function saveAryEntry(event) {
   var button = $("arySaveBtn");
   var seriesUrl = $("arySeriesUrl").value.trim();
   var videoUrl = $("aryVideoUrl").value.trim();
-  if (!isAllowedAryUrl(seriesUrl, "aryplus.tv") || !isAllowedAryUrl(seriesUrl, "social.aryplus.tv") || !isAllowedAryUrl(videoUrl, "aryplus.tv")) {
+  if (!isAllowedAryUrl(seriesUrl, ["aryplus.tv", "social.aryplus.tv"]) || !isAllowedAryUrl(videoUrl, ["aryplus.tv"])) {
     status.className = "status show err";
     status.textContent = "Use HTTPS links from social.aryplus.tv or aryplus.tv.";
     return;
