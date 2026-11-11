@@ -25,13 +25,16 @@ function renderAryPane() {
           <div class="status" id="arySaveStatus"></div>
         </form>
       </div>
-      <div class="sec-head" style="margin-top:24px"><div><div class="sec-title">Saved ARY links</div><div class="sec-sub">Entries saved in the separate ExternalMedia table.</div></div><button class="btn btn-quiet btn-sm" type="button" id="aryRefreshBtn">Refresh</button></div>
+      <div class="sec-head" style="margin-top:24px"><div><div class="sec-title">Saved ARY links</div><div class="sec-sub">Entries saved in the separate ARY catalogue.</div></div><button class="btn btn-quiet btn-sm" type="button" id="aryRefreshBtn">Refresh</button></div>
       <div id="aryEntriesList"><div class="status show info">Loading saved entries…</div></div>
     </div>`;
 }
 function isAllowedAryUrl(value, hosts) {
   try { var u = new URL(value); return u.protocol === "https:" && hosts.some(function(host) { return u.hostname === host || u.hostname.endsWith("." + host); }); }
   catch (e) { return false; }
+}
+function getAdminExternalMediaTableName() {
+  return window.location.hostname.endsWith(".workers.dev") ? "ExternalMediaTest" : "ExternalMedia";
 }
 function bindAryEvents() {
   var form = $("aryEntryForm");
@@ -44,7 +47,7 @@ async function loadAryEntries() {
   var box = $("aryEntriesList");
   if (!box || !window.sbClient) return;
   box.innerHTML = '<div class="status show info">Loading saved entries…</div>';
-  var result = await window.sbClient.from("ExternalMedia").select("*").eq("provider", "ary").order("created_at", { ascending: false }).limit(200);
+  var result = await window.sbClient.from(getAdminExternalMediaTableName()).select("*").eq("provider", "ary").order("created_at", { ascending: false }).limit(200);
   if (result.error) {
     box.innerHTML = '<div class="status show err">Could not load ARY entries. Apply the supplied ExternalMedia SQL setup first. ' + esc(result.error.message) + '</div>';
     return;
