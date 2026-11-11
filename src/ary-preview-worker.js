@@ -1,17 +1,24 @@
-const ALLOWED_PATHS = new Set(["/", "/ary-preview.html", "/css/admin.css", "/logo.png"]);
+const PAGE = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>ARY Digital — Admin Studio Preview | Classic TV Pakistan</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap" rel="stylesheet"><style>
+:root{color-scheme:dark;--bg:#14110b;--panel:#1b1712;--line:#2f2a1f;--text:#eee7d9;--muted:#a69a85;--gold:#e2b14c;--soft:rgba(226,177,76,.12)}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 Archivo,system-ui,sans-serif}.top{height:58px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 max(16px,calc((100% - 940px)/2));gap:12px;position:sticky;top:0;background:var(--bg)}.brand{font-weight:700}.tag,.readonly{border:1px solid rgba(226,177,76,.4);color:var(--gold);border-radius:4px;padding:3px 8px;font-size:11px}.readonly{border-color:var(--line);color:var(--muted)}main{max-width:940px;margin:28px auto;padding:0 16px 60px}.banner{background:var(--soft);border:1px solid rgba(226,177,76,.4);border-radius:8px;padding:12px 14px;color:var(--gold);margin-bottom:24px;font-size:13px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}.heading{font-size:17px;font-weight:700}.sub,.note{font-size:12px;color:var(--muted)}.panel{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:20px}.label{font-size:12px;color:var(--muted);font-weight:600;margin:18px 0 10px}.label:first-child{margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.full{grid-column:1/-1}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}input{width:100%;background:#14110b;border:1px solid var(--line);border-radius:4px;padding:11px;color:var(--text);font:13px Archivo,system-ui,sans-serif}input[readonly]{opacity:.95}.urdu{font-family:'Noto Nastaliq Urdu',serif;direction:rtl;color:var(--gold)}.foot{display:flex;justify-content:flex-end;margin-top:18px}.btn{background:var(--gold);color:#221a08;border:0;border-radius:4px;padding:10px 16px;font-weight:700;opacity:.45}.sample{margin-top:28px}.episode{border:1px solid var(--line);border-radius:8px;padding:16px;background:var(--panel)}a{color:var(--gold);font-weight:600;font-size:13px;overflow-wrap:anywhere}.note{margin-top:10px}@media(max-width:600px){.top{padding:0 14px}.panel{padding:14px}.grid{grid-template-columns:1fr}.full{grid-column:auto}.head{align-items:flex-start}}
+</style></head><body><header class="top"><div class="brand">Classic TV Pakistan <span class="tag">Vault</span></div><span class="readonly">Preview only · Read-only</span></header><main><div class="banner"><strong>Safe preview:</strong> sample information only. This page has no Supabase connection and cannot save or change website data.</div><section><div class="head"><div><div class="heading">ARY Digital</div><div class="sub">Add official ARY drama and episode links. Playback stays on ARY Plus.</div></div><span class="readonly">Admin Studio · New source</span></div><div class="panel"><div class="label">DRAMA / SERIES</div><div class="grid"><div class="field"><label>Drama title</label><input value="Dar-E-Nijaat" readonly></div><div class="field"><label>Urdu title</label><input class="urdu" value="درِ نجات" readonly></div><div class="field full"><label>Official ARY series/share link</label><input value="https://social.aryplus.tv/sharer/series/6a57868b5bf57c474cc00a50" readonly></div><div class="field full"><label>Poster / thumbnail URL (optional)</label><input placeholder="Official artwork URL" readonly></div></div><div class="label">EPISODE</div><div class="grid"><div class="field"><label>Episode number</label><input value="1" readonly></div><div class="field"><label>Episode title (optional)</label><input value="Episode 1" readonly></div><div class="field full"><label>Official ARY Plus video link</label><input value="https://aryplus.tv/video/v2/3/6aef23fa8c972be612ab59d2/6a57868b5bf57c474cc00a50" readonly></div></div><div class="foot"><button class="btn" disabled>Save ARY episode</button></div><p class="note">Saving is intentionally disabled in this preview. The real Admin Studio form will be available after review and approval.</p></div></section><section class="sample"><div class="head"><div><div class="heading">Saved ARY links</div><div class="sub">Example of how a saved episode will appear.</div></div></div><div class="episode"><strong>Dar-E-Nijaat — Episode 1</strong><div class="urdu">درِ نجات</div><p><a href="https://aryplus.tv/video/v2/3/6aef23fa8c972be612ab59d2/6a57868b5bf57c474cc00a50" target="_blank" rel="noopener noreferrer">Open official episode ↗</a></p></div><p class="note">Opening the sample link leaves Classic TV Pakistan and goes to the official ARY Plus page.</p></section></main></body></html>`;
 
 export default {
-  async fetch(request, env) {
+  async fetch(request) {
     if (request.method !== "GET" && request.method !== "HEAD") {
       return new Response("Method not allowed", { status: 405, headers: { Allow: "GET, HEAD" } });
     }
-
-    const url = new URL(request.url);
-    if (!ALLOWED_PATHS.has(url.pathname)) {
+    const path = new URL(request.url).pathname;
+    if (path !== "/" && path !== "/ary-preview.html") {
       return new Response("Not found", { status: 404 });
     }
-
-    if (url.pathname === "/") url.pathname = "/ary-preview.html";
-    return env.ASSETS.fetch(new Request(url.toString(), request));
+    return new Response(request.method === "HEAD" ? null : PAGE, {
+      status: 200,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store",
+        "x-robots-tag": "noindex, nofollow"
+      }
+    });
   }
 };
