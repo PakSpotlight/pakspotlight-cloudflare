@@ -173,11 +173,15 @@ async function checkAuth() {
 
 async function openConsole() {
   updateTopAuthUi();
-  if (window.location.hostname.endsWith(".workers.dev")) document.body.classList.add("safe-preview");
+  if (window.location.hostname.endsWith(".workers.dev")) {
+    document.body.classList.add("safe-preview");
+    activeTab = "add";
+  }
   await fetchArchiveData();
   renderPanes();
   if (window.location.hostname.endsWith(".workers.dev")) {
     $("studioApp").insertAdjacentHTML("afterbegin", '<div class="status show info" style="margin:0 0 16px">SAFE TEST COPY · ARY entries save only to the separate test catalogue. YouTube, category, and curation changes are disabled here.</div>');
+    document.querySelectorAll('[data-tab="catalog"], [data-tab="curation"]').forEach(el => { el.hidden = true; });
   }
   document.body.classList.add("authed");
   $("vaultTabs").hidden = false;
