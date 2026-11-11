@@ -44,13 +44,12 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         shell: bash
         run: |
-          set -o pipefail
           OUTPUT="$(npx wrangler deploy --config wrangler.ary-preview.jsonc 2>&1)" || {
-            printf '%s\\n' "$OUTPUT"
+            printf '%s\n' "$OUTPUT"
             exit 1
           }
-          printf '%s\\n' "$OUTPUT"
-          PREVIEW_URL="$(printf '%s\\n' "$OUTPUT" | grep -Eo 'https://[^[:space:]]+workers\\.dev' | head -n 1)"
+          printf '%s\n' "$OUTPUT"
+          PREVIEW_URL="$(printf '%s\n' "$OUTPUT" | grep -Eo 'https://[^[:space:]]+workers[.]dev' | head -n 1)"
           if [ -z "$PREVIEW_URL" ]; then
             echo "Could not find the preview Worker URL in Wrangler output."
             exit 1
@@ -72,9 +71,11 @@ jobs:
           script: |
             const marker = '<!-- ary-admin-preview-link -->';
             const url = process.env.PREVIEW_URL + '/ary-preview.html';
-            const body = marker + '\\n### ARY Admin Studio preview\\n' +
-              '[Open the read-only preview](' + url + ')\\n\\n' +
-              'This preview runs on a separate Worker with no Supabase connection. Saving is disabled; production and the Android apps are untouched.';
+            const body = `${marker}
+            ### ARY Admin Studio preview
+            [Open the read-only preview](${url})
+
+            This preview runs on a separate Worker with no Supabase connection. Saving is disabled; production and the Android apps are untouched.`;
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
             const comments = await github.paginate(github.rest.issues.listComments, {
