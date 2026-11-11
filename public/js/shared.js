@@ -150,7 +150,49 @@ async function loadCategories() {
   } catch (e) {
     console.warn("Could not load categories.json, using defaults:", e);
   }
+  if (!categories.some(c => normalize(c) === "ary dramas")) categories.push("ARY Dramas");
   return categories;
+}
+
+async function loadExternalMedia() {
+  if (!sbClient) return;
+  try {
+    const { data, error } = await sbClient
+      .from("ExternalMedia")
+      .select("*")
+      .eq("provider", "ary")
+      .order("created_at", { ascending: false })
+      .limit(5000);
+    if (error) {
+      console.warn("Could not load ARY catalogue entries:", error.message);
+      return;
+    }
+    const externalRows = (data || []).map(r => ({
+      id: "ary-" + r.id,
+      title: r.title || "Untitled ARY Drama",
+      urdu: r.urdu_title || "",
+      writer: "",
+      director: "",
+      cast: "",
+      music: "",
+      producer: "",
+      episodes_count: null,
+      youtube: "",
+      image: r.thumbnail_url || "",
+      type: "ARY Dramas",
+      is_series: true,
+      series: r.title || "",
+      episode: r.episode_number == null ? null : Number(r.episode_number),
+      year: "",
+      description: "",
+      provider: "ary",
+      externalUrl: r.series_url || r.video_url || "",
+      videoUrl: r.video_url || ""
+    }));
+    rows = rows.filter(r => r.provider !== "ary").concat(externalRows);
+  } catch (err) {
+    console.warn("Could not load ARY catalogue entries:", err);
+  }
 }
 
 async function loadData() {
@@ -187,6 +229,7 @@ async function loadData() {
         } catch (err) {
           console.warn("Could not refresh featured IDs while using cached dramas:", err);
         }
+        await loadExternalMedia();
         return rows;
       }
     }
@@ -224,8 +267,6 @@ async function loadData() {
       if (chunk.length < PAGE_SIZE) break;
     }
 
-    if (data.length === 0) return [];
-
     console.log("✅ Successfully loaded Drama data, count:", data.length);
     rows = data.map(mapRow);
 
@@ -248,6 +289,7 @@ async function loadData() {
       }
     } catch {}
 
+    await loadExternalMedia();
     return rows;
   } catch (err) {
     console.error("❌ Error fetching dramas:", err);
@@ -262,11 +304,11 @@ function getDramaById(id) {
 function heroPick() {
   const picks = [];
   for (const id of featuredIds) {
-    const d = rows.find(r => r.id === id && r.image && r.title);
+    const d = rows.find(r => !r.provider && r.id === id && r.image && r.title);
     if (d) picks.push(d);
   }
   if (picks.length === 0) {
-    const fallback = rows.find(r => r.image && r.title && r.description) || rows[0];
+    const fallback = rows.find(r => !r.provider && r.image && r.title && r.description) || rows.find(r => !r.provider) || rows[0];
     if (fallback) picks.push(fallback);
   }
   return picks;
@@ -307,7 +349,7 @@ function getDramaSeriesEpisodes(drama) {
   const isSer = isSeries(drama) && !!String(drama.series || "").trim();
   if (!isSer) return [drama];
   return rows
-    .filter(x => normalize(x.series) === normalize(drama.series))
+    .filter(x => x.provider === drama.provider && normalize(x.series) === normalize(drama.series))
     .sort((a, b) => ((a.episode == null ? 9999 : a.episode) - (b.episode == null ? 9999 : b.episode)));
 }
 
@@ -487,9 +529,13 @@ function handleMobileSearchInput() {
 function renderPosterCard(d, epCount = 1) {
   const title = isSeries(d) && d.series ? d.series : d.title;
   const playId = seriesStartId(d) || d.id;
+  const cardOpen = d.provider === "ary"
+    ? `<a class="netflix-card" href="${esc(d.externalUrl || d.videoUrl || "#")}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit" title="${esc(title)}">`
+    : `<div class="netflix-card" onclick="window.location.href='/watch?id=${playId}'" title="${esc(title)}">`;
+  const cardClose = d.provider === "ary" ? "</a>" : "</div>";
 
   return `
-    <div class="netflix-card" onclick="window.location.href='/watch?id=${playId}'" title="${esc(title)}">
+    ${cardOpen}
       <div class="card-media">
         ${d.image ? `
           <img src="${esc(d.image)}" alt="${esc(title)}" loading="lazy" onerror="this.onerror=null; this.src='/logo.png';">
@@ -511,7 +557,7 @@ function renderPosterCard(d, epCount = 1) {
           ${d.year ? ` · <span>${esc(d.year)}</span>` : ''}
         </div>
       </div>
-    </div>
+    ${cardClose}
   `;
 }
 
