@@ -308,7 +308,7 @@ function heroPick() {
     if (d) picks.push(d);
   }
   if (picks.length === 0) {
-    const fallback = rows.find(r => !r.provider && r.image && r.title && r.description) || rows.find(r => !r.provider) || rows[0];
+    const fallback = rows.find(r => !r.provider && r.image && r.title && r.description) || rows.find(r => !r.provider);
     if (fallback) picks.push(fallback);
   }
   return picks;
