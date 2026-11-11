@@ -10,7 +10,8 @@ create table if not exists public."ExternalMedia" (
   episode_title text not null default '',
   video_url text not null,
   thumbnail_url text not null default '',
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint external_media_provider_video_unique unique (provider, video_url)
 );
 alter table public."ExternalMedia" enable row level security;
 drop policy if exists "Authenticated admins manage external media" on public."ExternalMedia";
