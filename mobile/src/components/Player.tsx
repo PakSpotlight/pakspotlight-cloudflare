@@ -24,6 +24,7 @@ export const Player = forwardRef<PlayerHandle, Props>(function Player(
   { videoId, onError, onProgress, onReady }, forwardedRef
 ) {
   const webViewRef = useRef<WebView>(null);
+  const hasNativeFocusRef = useRef(false);
   const source = useMemo(() => ({ html: playerHtml(videoId), baseUrl: SITE_ORIGIN }), [videoId]);
 
   const command = useCallback((name: string, value?: number) => {
@@ -39,6 +40,9 @@ export const Player = forwardRef<PlayerHandle, Props>(function Player(
     seekTo: (seconds) => command("seekTo", seconds),
     playPause: () => command("playPause"),
     focus: () => {
+      // Do not steal focus back from YouTube's own controls once the WebView
+      // already owns native focus; only recover focus if it escaped the player.
+      if (hasNativeFocusRef.current) return;
       try { (webViewRef.current as any)?.requestTVFocus?.(); } catch {}
       webViewRef.current?.injectJavaScript(
         "try { var f=document.querySelector('iframe'); if(f) f.focus(); } catch(e) {} true;"
@@ -78,6 +82,8 @@ export const Player = forwardRef<PlayerHandle, Props>(function Player(
       mediaPlaybackRequiresUserAction={false}
       setSupportMultipleWindows={false}
       onMessage={handleMessage}
+      onFocus={() => { hasNativeFocusRef.current = true; }}
+      onBlur={() => { hasNativeFocusRef.current = false; }}
       onError={() => onError?.()}
       onHttpError={() => onError?.()}
       onShouldStartLoadWithRequest={(request) => {
