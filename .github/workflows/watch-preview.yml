@@ -1,0 +1,39 @@
+name: Deploy watch-page test preview
+
+on:
+  push:
+    branches:
+      - preview/watch-page-direct-loading
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pak-spotlight-watch-preview
+  cancel-in-progress: false
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out preview branch
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Check browser JavaScript compatibility
+        run: npm run check:es2019
+
+      - name: Deploy isolated preview Worker
+        run: npx wrangler deploy --config wrangler.preview.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
