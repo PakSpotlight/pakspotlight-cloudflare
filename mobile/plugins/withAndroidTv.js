@@ -72,15 +72,15 @@ module.exports = function withAndroidTv(config) {
       let appSource = fs.readFileSync(mainApplication, "utf8");
       if (!appSource.includes("ReactFeatureFlags.enableKeyDownEvents = true")) {
         if (!appSource.includes("import com.facebook.react.config.ReactFeatureFlags")) {
-          appSource = appSource.replace(/^(package [^\\n]+\\n)/m, "$1import com.facebook.react.config.ReactFeatureFlags\\n");
+          appSource = appSource.replace(/^(package [^\n]+\n)/m, "$1import com.facebook.react.config.ReactFeatureFlags\n");
         }
         const isKotlin = mainApplication.endsWith(".kt");
         const statement = isKotlin
           ? "ReactFeatureFlags.enableKeyDownEvents = true"
           : "ReactFeatureFlags.enableKeyDownEvents = true;";
-        const loader = /SoLoader\\.init\\([^\\n]+\\)/;
+        const loader = /SoLoader\.init\([^\n]+\)/;
         if (!loader.test(appSource)) throw new Error("Android TV build could not find SoLoader.init in MainApplication");
-        appSource = appSource.replace(loader, (match) => match + "\\n    " + statement);
+        appSource = appSource.replace(loader, (match) => match + "\n    " + statement);
         fs.writeFileSync(mainApplication, appSource, "utf8");
       }
 
