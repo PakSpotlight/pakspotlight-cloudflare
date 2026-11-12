@@ -51,6 +51,39 @@ module.exports = function withAndroidTv(config) {
   config = withDangerousMod(config, [
     "android",
     async (config) => {
+      // Emit key-down and key-up actions on Android TV. The JS player handler
+      // consumes only key-up, so holding Left/Right cannot trigger a burst of seeks.
+      const javaRoot = path.join(config.modRequest.platformProjectRoot, "app", "src", "main", "java");
+      const findMainApplication = (dir) => {
+        if (!fs.existsSync(dir)) return null;
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            const found = findMainApplication(full);
+            if (found) return found;
+          } else if (entry.name === "MainApplication.kt" || entry.name === "MainApplication.java") {
+            return full;
+          }
+        }
+        return null;
+      };
+      const mainApplication = findMainApplication(javaRoot);
+      if (!mainApplication) throw new Error("Android TV build could not locate MainApplication source");
+      let appSource = fs.readFileSync(mainApplication, "utf8");
+      if (!appSource.includes("ReactFeatureFlags.enableKeyDownEvents = true")) {
+        if (!appSource.includes("import com.facebook.react.config.ReactFeatureFlags")) {
+          appSource = appSource.replace(/^(package [^\n]+\n)/m, "$1import com.facebook.react.config.ReactFeatureFlags\n");
+        }
+        const isKotlin = mainApplication.endsWith(".kt");
+        const statement = isKotlin
+          ? "ReactFeatureFlags.enableKeyDownEvents = true"
+          : "ReactFeatureFlags.enableKeyDownEvents = true;";
+        const loader = /SoLoader\.init\([^\n]+\)/;
+        if (!loader.test(appSource)) throw new Error("Android TV build could not find SoLoader.init in MainApplication");
+        appSource = appSource.replace(loader, (match) => match + "\n    " + statement);
+        fs.writeFileSync(mainApplication, appSource, "utf8");
+      }
+
       const resourceDir = path.join(config.modRequest.platformProjectRoot, "app", "src", "main", "res", "drawable-nodpi");
       fs.mkdirSync(resourceDir, { recursive: true });
       fs.writeFileSync(
