@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - fix/android-tv-native-tv-framework
+      - fix/tv-episode-grid-and-remote-speed
   workflow_dispatch:
     inputs:
       publish:
