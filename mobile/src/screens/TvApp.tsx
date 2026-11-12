@@ -466,7 +466,12 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
             >
               {hero ? (
                 <View style={[styles.hero, { minHeight: Math.min(400, height * 0.58) }]}>
-                  {hero.image ? <Image source={{ uri: hero.image }} style={styles.heroImage} resizeMethod="resize" resizeMode="contain" /> : null}
+                  {hero.image ? (
+                    <>
+                      <Image source={{ uri: hero.image }} style={styles.heroBackdrop} resizeMethod="resize" resizeMode="cover" />
+                      <Image source={{ uri: hero.image }} style={styles.heroImage} resizeMethod="resize" resizeMode="contain" />
+                    </>
+                  ) : null}
                   <View style={styles.heroScrim} />
                   <View style={styles.heroCopy}>
                     <Text style={styles.eyebrow}>FROM THE CLASSIC ARCHIVE</Text>
@@ -1106,7 +1111,12 @@ function PosterTile({ drama, width, episodeCount, onPress, onPlay, compact = fal
       style={({ pressed }) => [styles.posterTile, { width }, focused && styles.posterFocused, pressed && styles.pressed]}
     >
       <View style={[styles.posterFrame, { height: Math.round(width * 9 / 16) }, focused && styles.posterFrameFocused]}>
-        {drama.image ? <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMethod="resize" resizeMode="contain" /> : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
+        {drama.image ? (
+          <>
+            {episodeCount > 1 ? <Image source={{ uri: drama.image }} style={styles.posterBackdrop} resizeMethod="resize" resizeMode="cover" /> : null}
+            <Image source={{ uri: drama.image }} style={[styles.poster, focused && styles.posterLit]} resizeMethod="resize" resizeMode="contain" />
+          </>
+        ) : <View style={styles.posterFallback}><Ionicons name="film-outline" size={28} color={color.muted} /></View>}
       </View>
       <Text style={[styles.posterTitle, focused && styles.posterTitleLit]} numberOfLines={2}>{displayTitle(drama)}</Text>
       {!compact && showEpisodeNumber ? <Text style={[styles.posterEpisodeCount, focused && styles.posterYearLit]}>Episode {drama.episode ?? (index ?? 0) + 1}</Text> : null}
@@ -1163,11 +1173,12 @@ const styles = StyleSheet.create({
   pageScroll: { flex: 1 },
   homeContent: { paddingBottom: 40, gap: 22 },
   hero: { overflow: "hidden", borderRadius: 18, backgroundColor: "#141816", justifyContent: "flex-end" },
-  heroImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%", opacity: 0.64 },
+  heroBackdrop: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%", opacity: 0.42 },
+  heroImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%", opacity: 0.82 },
   heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.34)" },
   heroCopy: { padding: 32, paddingBottom: 36, maxWidth: 700, gap: 10 },
   eyebrow: { color: TV_GOLD, fontFamily: font.bold, fontSize: 11, letterSpacing: 1.7 },
-  urduTitle: { color: "#fff", fontFamily: font.urdu, fontSize: 29, lineHeight: 46, textAlign: "right", includeFontPadding: true },
+  urduTitle: { color: "#fff", fontFamily: font.urdu, fontSize: 34, lineHeight: 54, textAlign: "right", includeFontPadding: true },
   urduTitleGold: { color: TV_GOLD },
   heroTitle: { color: "#fff", fontFamily: font.black, fontSize: 36, lineHeight: 42 },
   heroMeta: { color: "#D3D8D4", fontFamily: font.medium, fontSize: 14, marginTop: 2 },
@@ -1204,6 +1215,7 @@ const styles = StyleSheet.create({
   rail: { gap: 14, paddingVertical: 8, paddingRight: 8 },
   posterTile: { borderRadius: 10, padding: 4, gap: 6, borderWidth: 2, borderColor: "transparent" },
   posterFrame: { borderRadius: 8, overflow: "hidden", backgroundColor: "#000", aspectRatio: 16 / 9, borderWidth: 2, borderColor: "transparent" },
+  posterBackdrop: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%", opacity: 0.42 },
   poster: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
   posterFallback: { flex: 1, alignItems: "center", justifyContent: "center" },
   posterEpisodeCount: { color: color.muted, fontFamily: font.medium, fontSize: 12, marginTop: -2 },
