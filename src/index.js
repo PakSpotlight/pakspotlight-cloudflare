@@ -200,7 +200,7 @@ function redirect(location, status = 301) {
 }
 
 var FETCH_FIX_SCRIPT = "<script>(function(){try{var orig=window.fetch;if(!orig||window.__fetchFixInjected){return;}window.__fetchFixInjected=true;window.fetch=function(input,init){try{if(typeof input==='string'&&input.indexOf('http')!==0&&input.indexOf('//')!==0){var url=new URL(input,window.location.href);url.searchParams.set('_',Date.now());return orig.call(this,url.toString(),init);}}catch(e){}return orig.call(this,input,init);};}catch(e){}})();</script>";
-var __injectFetchFix = async function(resp){try{var ct=resp.headers.get("content-type")||"";if(ct.indexOf("text/html")!==-1){var h=await resp.text();var inj=false;if(h.indexOf("<head>")!==-1){h=h.replace("<head>","<head>"+FETCH_FIX_SCRIPT);inj=true}else if(h.indexOf("</head>")!==-1){h=h.replace("</head>",FETCH_FIX_SCRIPT+"</head>");inj=true}if(inj){var nh=new Headers(resp.headers);nh.set("cache-control","no-store");return new Response(h,{headers:nh,status:resp.status})}}}catch(e){}return resp};
+var __injectFetchFix = async function(resp, preview){try{var nh=new Headers(resp.headers);if(preview)nh.set("x-robots-tag","noindex, nofollow");var ct=nh.get("content-type")||"";if(ct.indexOf("text/html")!==-1){var h=await resp.text();var inj=false;if(preview&&h.indexOf('<meta name="robots"')===-1&&h.indexOf("</head>")!==-1){h=h.replace("</head>",'<meta name="robots" content="noindex, nofollow"></head>');inj=true}if(h.indexOf("<head>")!==-1){h=h.replace("<head>","<head>"+FETCH_FIX_SCRIPT);inj=true}else if(h.indexOf("</head>")!==-1){h=h.replace("</head>",FETCH_FIX_SCRIPT+"</head>");inj=true}if(inj||preview){nh.set("cache-control","no-store");return new Response(h,{headers:nh,status:resp.status})}}if(preview)return new Response(resp.body,{headers:nh,status:resp.status});}catch(e){}return resp};
 
 function getBearer(request) {
   const h = request.headers.get("authorization") || "";
@@ -668,6 +668,16 @@ var index_default = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     ctxRef.waitUntil = ctx.waitUntil ? ctx.waitUntil.bind(ctx) : null;
+
+    // The workers.dev copy is a safe test environment: never let its API mutate
+    // production Drama rows, category/featured config, or thumbnail storage.
+    const isIsolatedPreview = url.hostname.endsWith(".workers.dev");
+    const blockedPreviewWrites = new Set([
+      "/api/categories", "/api/featured", "/api/playlist-import", "/api/store-thumbnail"
+    ]);
+    if (isIsolatedPreview && request.method === "POST" && blockedPreviewWrites.has(url.pathname)) {
+      return json({ error: "This is a safe test copy. Production archive and configuration writes are disabled." }, 403);
+    }
 
     // Pre-flight CORS support
     if (request.method === "OPTIONS") {
@@ -1202,7 +1212,7 @@ var index_default = {
       if (!isBot) {
         const watchUrl = new URL(request.url);
         watchUrl.pathname = "/watch.html";
-        return __injectFetchFix(await env.ASSETS.fetch(watchUrl.toString()));
+        return __injectFetchFix(await env.ASSETS.fetch(watchUrl.toString()), isIsolatedPreview);
       }
       // SSR: inject drama meta tags for bots
       try {
@@ -1349,13 +1359,13 @@ var index_default = {
           }
         } catch { /* fall through to the raw asset */ }
       }
-      return __injectFetchFix(fallbackResp);
+      return __injectFetchFix(fallbackResp, isIsolatedPreview);
     }
 
     // SSR homepage for bots
     if (url.pathname === "/") {
       if (!isBot) {
-        return __injectFetchFix(await env.ASSETS.fetch(request));
+        return __injectFetchFix(await env.ASSETS.fetch(request), isIsolatedPreview);
       }
       try {
         const dr = await fetch(`${SUPABASE_URL}/rest/v1/Drama?select=id,title,urdu_title,year,type,writer,director,cast,description,thumbnail_url&order=id.desc&limit=50`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}` } });
@@ -1399,21 +1409,28 @@ var index_default = {
           return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=3600" } });
         }
       } catch (e) { console.error("SSR homepage error:", e.message || e); }
-      return __injectFetchFix(await env.ASSETS.fetch(request.url));
+      return __injectFetchFix(await env.ASSETS.fetch(request.url), isIsolatedPreview);
     }
 
     // Rewrite /browse to /browse.html
     if (url.pathname === "/browse") {
       const browseUrl = new URL(request.url);
       browseUrl.pathname = "/browse.html";
-      return __injectFetchFix(await env.ASSETS.fetch(browseUrl.toString()));
+      return __injectFetchFix(await env.ASSETS.fetch(browseUrl.toString()), isIsolatedPreview);
+    }
+
+    // Clean Admin Studio route.
+    if (url.pathname === "/admin") {
+      const adminUrl = new URL(request.url);
+      adminUrl.pathname = "/admin.html";
+      return __injectFetchFix(await env.ASSETS.fetch(adminUrl.toString()), isIsolatedPreview);
     }
 
     // Rewrite /get-app to /get-app.html (Android download page)
     if (url.pathname === "/get-app") {
       const appUrl = new URL(request.url);
       appUrl.pathname = "/get-app.html";
-      return __injectFetchFix(await env.ASSETS.fetch(appUrl.toString()));
+      return __injectFetchFix(await env.ASSETS.fetch(appUrl.toString()), isIsolatedPreview);
     }
 
     // Static assets fallback

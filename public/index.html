@@ -231,7 +231,7 @@
       const allGroups = groupDramas(rows);
 
       // Newest titles first
-      const recentGroups = [...allGroups].sort((a, b) => b[0].id - a[0].id);
+      const recentGroups = [...allGroups].filter(g => !g[0].provider).sort((a, b) => b[0].id - a[0].id);
       const recentTop = recentGroups.slice(0, 20);
 
       // Build rows based on categories
