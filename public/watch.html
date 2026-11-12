@@ -164,7 +164,7 @@
 
   <!-- Vendored Supabase (ES2019 build) + Shared Utilities -->
   <script src="/js/supabase.min.js"></script>
-  <script src="/js/shared.js?v=2"></script>
+  <script src="/js/shared.js?v=3"></script>
 
   <script>
     let currentDrama = null;
@@ -427,38 +427,39 @@
         </div>
       `;
 
-      // Render recommendations
-      const recoms = getRecommendations(currentDrama, 10);
-      if (recoms.length > 0) {
+      // Load recommendations in the background; never delay the requested episode.
+      loadWatchRecommendations(currentDrama, 10).then(recoms => {
+        if (!recoms.length) return;
         const recomContainer = $("recomContainer");
         const recomTrack = $("recomTrack");
         if (recomContainer && recomTrack) {
           recomContainer.style.display = "block";
           recomTrack.innerHTML = recoms.map(r => renderPosterCard(r)).join("");
         }
-      }
+      });
     }
 
     // Initialize Watch Page
     const urlParams = new URLSearchParams(window.location.search);
     const dramaId = urlParams.get("id") || urlParams.get("watch");
 
-    Promise.all([loadData(), loadCategories()]).then(() => {
-      renderCategoryNav();
-      if (dramaId) {
-        currentDrama = getDramaById(dramaId);
-        if (currentDrama) {
-          currentEpisodes = getDramaSeriesEpisodes(currentDrama);
-          currentEp = (extractYouTubeId(currentDrama.youtube) ? currentDrama : null) ||
-                      currentEpisodes.find(e => extractYouTubeId(e.youtube)) ||
-                      currentDrama;
-        }
+    // Fetch only this episode and its siblings. Categories load independently.
+    loadCategories();
+    renderCategoryNav();
+    loadWatchData(dramaId).then(drama => {
+      currentDrama = drama;
+      if (currentDrama) {
+        currentEpisodes = getDramaSeriesEpisodes(currentDrama);
+        currentEp = (extractYouTubeId(currentDrama.youtube) ? currentDrama : null) ||
+                    currentEpisodes.find(e => extractYouTubeId(e.youtube)) ||
+                    currentDrama;
       }
       renderWatchPage();
       initAuth();
     }).catch(err => {
       console.error(err);
       renderWatchPage();
+      initAuth();
     });
 
     const mInput = $("mobileSearchInput");
