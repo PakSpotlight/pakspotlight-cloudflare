@@ -1195,7 +1195,7 @@ var index_default = {
 
     // ── SEO: Bot detection ──
     const ua = request.headers.get("user-agent") || "";
-    const isBot = /googlebot|bingbot|yandex|baidu|duckduckbot|slurp|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot/i.test(ua);
+    const isBot = /googlebot|google-inspectiontool|bingbot|yandex|baidu|duckduckbot|slurp|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot/i.test(ua);
 
     // Rewrite /watch to /watch.html so clean watch URLs work directly
     if (url.pathname === "/watch") {
