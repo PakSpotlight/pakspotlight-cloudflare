@@ -9,6 +9,7 @@ export type PlayerHandle = {
   seekBy: (seconds: number) => void;
   seekTo: (seconds: number) => void;
   playPause: () => void;
+  focus: () => void;
 };
 
 type Props = {
@@ -37,6 +38,12 @@ export const Player = forwardRef<PlayerHandle, Props>(function Player(
     seekBy: (seconds) => command("seekBy", seconds),
     seekTo: (seconds) => command("seekTo", seconds),
     playPause: () => command("playPause"),
+    focus: () => {
+      try { (webViewRef.current as any)?.requestTVFocus?.(); } catch {}
+      webViewRef.current?.injectJavaScript(
+        "try { var f=document.querySelector('iframe'); if(f) f.focus(); } catch(e) {} true;"
+      );
+    },
   }), [command]);
 
   const handleMessage = (event: WebViewMessageEvent) => {
