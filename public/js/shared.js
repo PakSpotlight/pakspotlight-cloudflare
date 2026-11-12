@@ -255,6 +255,66 @@ async function loadData() {
   }
 }
 
+
+async function loadWatchData(id) {
+  const numericId = Number(id);
+  if (!sbClient || !Number.isSafeInteger(numericId) || numericId <= 0) return null;
+
+  try {
+    const { data: record, error } = await sbClient
+      .from("Drama")
+      .select("*")
+      .eq("id", numericId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!record) return null;
+
+    let episodeRows = [record];
+    const seriesName = String(record.series_name || "").trim();
+    if (seriesName) {
+      const { data: siblings, error: siblingError } = await sbClient
+        .from("Drama")
+        .select("*")
+        .eq("series_name", seriesName)
+        .order("episode_number", { ascending: true })
+        .order("id", { ascending: true });
+
+      if (siblingError) throw siblingError;
+      if (Array.isArray(siblings) && siblings.length) episodeRows = siblings;
+    }
+
+    rows = episodeRows.map(mapRow);
+    return rows.find(item => item.id === numericId) || mapRow(record);
+  } catch (err) {
+    console.error("Could not load requested watch record:", err);
+    return null;
+  }
+}
+
+async function loadWatchRecommendations(currentDrama, limit = 10) {
+  if (!sbClient || !currentDrama) return [];
+  try {
+    const { data, error } = await sbClient
+      .from("Drama")
+      .select("*")
+      .eq("type", currentDrama.type)
+      .order("id", { ascending: false })
+      .limit(80);
+
+    if (error) throw error;
+    const known = new Set(rows.map(item => Number(item.id)));
+    const extras = (Array.isArray(data) ? data : [])
+      .filter(item => !known.has(Number(item.id)))
+      .map(mapRow);
+    rows = rows.concat(extras);
+    return getRecommendations(currentDrama, limit);
+  } catch (err) {
+    console.warn("Could not load watch recommendations:", err);
+    return [];
+  }
+}
+
 function getDramaById(id) {
   return rows.find(r => r.id === Number(id));
 }
