@@ -1,11 +1,14 @@
 name: Android TV APK
 
 # Manual build from any branch (usually main). Publishes a signed TV APK as the
+# Pushes to the dedicated TV test branches also build an unsigned/signed test artifact.
 # tv-v<version> GitHub release when publish=true and the signing secrets exist.
 on:
   push:
     branches:
       - fix/android-tv-native-tv-framework
+      - fix/tv-episode-grid-and-remote-speed
+      - fix/tv-episode-grid-and-remote-speed-v2
   workflow_dispatch:
     inputs:
       publish:
