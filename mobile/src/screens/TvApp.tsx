@@ -1244,7 +1244,7 @@ const styles = StyleSheet.create({
   playerFrame: { flex: 1, minHeight: 0, width: "100%", backgroundColor: "#000", borderRadius: 0, overflow: "hidden" },
   playerOverlayControls: { ...StyleSheet.absoluteFillObject, zIndex: 5, justifyContent: "space-between", padding: 22 },
   playerMenuTop: { flexDirection: "row", alignItems: "center", gap: 16, padding: 12, borderRadius: 10, backgroundColor: "rgba(0,0,0,0.72)" },
-  playerBottomControls: { alignSelf: "center", width: "82%", padding: 16, gap: 12, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.88)", borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" },
+  playerBottomControls: { alignSelf: "center", width: "82%" as const, padding: 16, gap: 12, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.88)", borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" },
   playerProgressRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   playerProgressTrack: { flex: 1, height: 5, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.35)", overflow: "hidden" },
   playerProgressFill: { height: 5, backgroundColor: "#F00", borderRadius: 3 },
