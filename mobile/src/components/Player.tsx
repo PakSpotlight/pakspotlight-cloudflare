@@ -59,8 +59,7 @@ export const Player = forwardRef<PlayerHandle, Props>(function Player(
     <WebView
       ref={webViewRef}
       style={styles.webview}
-      focusable
-      {...({ hasTVPreferredFocus: true } as any)}
+      focusable={false}
       source={source}
       originWhitelist={["https://*", "http://*"]}
       javaScriptEnabled
