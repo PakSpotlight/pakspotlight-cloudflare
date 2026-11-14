@@ -214,6 +214,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   const [playerFailed, setPlayerFailed] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
   const [playerProgress, setPlayerProgress] = useState<PlayerProgress>({ currentTime: 0, duration: 0, state: -1 });
+  const [showPlayerControls, setShowPlayerControls] = useState(false);
   const playerRef = useRef<PlayerHandle>(null);
   const pendingResumeSecondsRef = useRef(0);
   const lastSavedProgressRef = useRef("");
@@ -231,11 +232,15 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
   // Direct TV remote playback: OK toggles play/pause; left/right seek by 10 seconds.
   useTVEventHandler((event) => {
     if (page !== "player") return;
-    if (event.eventType === "select" || event.eventType === "playPause") {
+    if (event.eventType === "up" || (event.eventType === "down" && !showPlayerControls)) {
+      setShowPlayerControls(true);
+      return;
+    }
+    if (event.eventType === "playPause" || (event.eventType === "select" && !showPlayerControls)) {
       playerRef.current?.playPause();
-    } else if (event.eventType === "left") {
+    } else if (!showPlayerControls && event.eventType === "left") {
       playerRef.current?.seekBy(-10);
-    } else if (event.eventType === "right") {
+    } else if (!showPlayerControls && event.eventType === "right") {
       playerRef.current?.seekBy(10);
     }
   });
@@ -251,6 +256,10 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
         return true;
       }
       if (page === "player") {
+        if (showPlayerControls) {
+          setShowPlayerControls(false);
+          return true;
+        }
         setPage("details");
         return true;
       }
@@ -267,7 +276,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
     });
     return () => subscription.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, detailsFrom, nav, showKb, exitDialogVisible]);
+  }, [page, detailsFrom, nav, showKb, exitDialogVisible, showPlayerControls]);
 
   useEffect(() => {
     if (page !== "home" || heroCandidates.length < 2) return;
@@ -647,6 +656,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                   key={videoId}
                   videoId={videoId}
                   onReady={() => {
+                    setShowPlayerControls(true);
                     const seconds = pendingResumeSecondsRef.current;
                     if (seconds > 0) {
                       pendingResumeSecondsRef.current = 0;
@@ -666,6 +676,28 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                   }}
                   onError={() => setPlayerFailed(true)}
                 /> : <View style={styles.playerError}><Ionicons name="logo-youtube" size={42} color={color.muted} /><Text style={styles.bodyText}>This episode could not be loaded.</Text></View>}
+                {showPlayerControls && videoId && !playerFailed ? (
+                  <View style={styles.playerOverlayControls} pointerEvents="box-none">
+                    <View style={styles.playerMenuTop}>
+                      <Text style={styles.playerHeading} numberOfLines={1}>{displayTitle(episode)}</Text>
+                      <PlayerMenuButton label="EPISODES" icon="list" onPress={() => setPage("details")} />
+                    </View>
+                    <View style={styles.playerBottomControls}>
+                      <View style={styles.playerProgressRow}>
+                        <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.currentTime)}</Text>
+                        <View style={styles.playerProgressTrack}>
+                          <View style={[styles.playerProgressFill, { width: (playerProgress.duration > 0 ? Math.max(0, Math.min(100, playerProgress.currentTime / playerProgress.duration * 100)) : 0) + "%" }]} />
+                        </View>
+                        <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.duration)}</Text>
+                      </View>
+                      <View style={styles.playerActionsRow}>
+                        <PlayerMenuButton label="BACK 10s" icon="play-back" onPress={() => playerRef.current?.seekBy(-10)} />
+                        <PlayerMenuButton label={playerProgress.state === 1 ? "PAUSE" : "PLAY"} icon={playerProgress.state === 1 ? "pause" : "play"} onPress={() => playerRef.current?.playPause()} preferred />
+                        <PlayerMenuButton label="FORWARD 10s" icon="play-forward" onPress={() => playerRef.current?.seekBy(10)} />
+                      </View>
+                    </View>
+                  </View>
+                ) : null}
               </View>
             </View>
           ) : null}
@@ -896,6 +928,23 @@ function NavButton({ label, icon, active, autoFocus, onPress, showKb }: { label:
     >
       <Ionicons name={icon} size={22} color={active || focused ? TV_GOLD : color.muted} />
       <Text style={[styles.navText, (active || focused) && styles.navTextLit]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function PlayerMenuButton({ label, icon, onPress, preferred = false }: { label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void; preferred?: boolean }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <Pressable
+      focusable
+      {...(preferred ? ({ hasTVPreferredFocus: true } as any) : {})}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      onPress={onPress}
+      style={({ pressed }) => [styles.playerControl, focused && styles.focused, pressed && styles.pressed]}
+    >
+      <Ionicons name={icon} size={19} color={focused ? TV_GOLD : "#FFF"} />
+      <Text style={[styles.playerControlText, focused && styles.actionTextLit]}>{label}</Text>
     </Pressable>
   );
 }
@@ -1193,8 +1242,9 @@ const styles = StyleSheet.create({
   playerHeading: { color: color.text, fontFamily: font.bold, fontSize: 17, flex: 1 },
   playerHint: { color: color.dim, fontSize: 11 },
   playerFrame: { flex: 1, minHeight: 0, width: "100%", backgroundColor: "#000", borderRadius: 0, overflow: "hidden" },
-  playerOverlayControls: { position: "absolute", zIndex: 5, top: 18, left: 18, right: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  playerBottomControls: { position: "absolute", zIndex: 6, left: 28, right: 28, bottom: 24, padding: 16, gap: 12, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.82)", borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" },
+  playerOverlayControls: { ...StyleSheet.absoluteFillObject, zIndex: 5, justifyContent: "space-between", padding: 22 },
+  playerMenuTop: { flexDirection: "row", alignItems: "center", gap: 16, padding: 12, borderRadius: 10, backgroundColor: "rgba(0,0,0,0.72)" },
+  playerBottomControls: { alignSelf: "center", width: "82%", padding: 16, gap: 12, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.88)", borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" },
   playerProgressRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   playerProgressTrack: { flex: 1, height: 5, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.35)", overflow: "hidden" },
   playerProgressFill: { height: 5, backgroundColor: "#F00", borderRadius: 3 },
