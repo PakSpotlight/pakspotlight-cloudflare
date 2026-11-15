@@ -686,7 +686,7 @@ export function TvApp({ initialPage = "home" }: { initialPage?: TvPage }) {
                       <View style={styles.playerProgressRow}>
                         <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.currentTime)}</Text>
                         <View style={styles.playerProgressTrack}>
-                          <View style={[styles.playerProgressFill, { width: (playerProgress.duration > 0 ? Math.max(0, Math.min(100, playerProgress.currentTime / playerProgress.duration * 100)) : 0) + "%" }]} />
+                          <View style={[styles.playerProgressFill, { width: ((playerProgress.duration > 0 ? Math.max(0, Math.min(100, playerProgress.currentTime / playerProgress.duration * 100)) : 0) + "%") as `${number}%` }]} />
                         </View>
                         <Text style={styles.playerTime}>{formatPlayerTime(playerProgress.duration)}</Text>
                       </View>
