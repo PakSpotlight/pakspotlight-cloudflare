@@ -55,6 +55,15 @@ jobs:
           strings.write_text(source.replace(old, new, 1))
           PY
 
+      - name: Disable upstream Firebase configuration for isolated playback test
+        working-directory: smarttube
+        run: |
+          # The test APK uses a new application ID and does not need SmartTube's Firebase project.
+          # SmartTube's Google Services file only contains upstream package IDs.
+          if [ -f smarttubetv/google-services.json ]; then
+            mv smarttubetv/google-services.json smarttubetv/google-services.json.disabled
+          fi
+
       - name: Build SmartTube stable debug APK
         working-directory: smarttube
         run: ./gradlew :smarttubetv:assembleStstableDebug --no-daemon
