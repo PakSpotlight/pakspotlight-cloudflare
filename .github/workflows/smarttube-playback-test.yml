@@ -1,0 +1,79 @@
+name: SmartTube Playback Test APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-smarttube-test:
+    name: Build isolated SmartTube test APK
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out SmartTube with required source modules
+        uses: actions/checkout@v4
+        with:
+          repository: yuliskov/SmartTube
+          ref: master
+          submodules: recursive
+          path: smarttube
+
+      - name: Set up JDK 14 required by upstream build
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '14'
+
+      - name: Give Gradle wrapper execute permission
+        working-directory: smarttube
+        run: chmod +x gradlew
+
+      - name: Isolate app identity from SmartTube and Classic TV
+        working-directory: smarttube
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          gradle = Path("smarttubetv/build.gradle")
+          source = gradle.read_text()
+          old = 'applicationId "org.smarttube.stable"'
+          new = 'applicationId "com.classictvpakistan.smarttubetest"'
+          if source.count(old) != 1:
+              raise SystemExit("Could not safely locate the stable flavor application ID")
+          gradle.write_text(source.replace(old, new, 1))
+
+          strings = Path("smarttubetv/src/main/res/values/strings.xml")
+          source = strings.read_text()
+          old = '<string translatable="false" name="app_name"><![CDATA[SmartTube]]></string>'
+          new = '<string translatable="false" name="app_name"><![CDATA[Classic TV SmartTube Test]]></string>'
+          if old not in source:
+              raise SystemExit("Could not safely locate the SmartTube launcher label")
+          strings.write_text(source.replace(old, new, 1))
+          PY
+
+      - name: Build SmartTube stable debug APK
+        working-directory: smarttube
+        run: ./gradlew :smarttubetv:assembleStstableDebug --no-daemon
+
+      - name: Collect universal APK
+        working-directory: smarttube
+        run: |
+          set -euo pipefail
+          APK=$(find smarttubetv/build/outputs/apk -type f -name '*universal*.apk' | head -n 1)
+          if [ -z "$APK" ]; then
+            APK=$(find smarttubetv/build/outputs/apk -type f -name '*.apk' | head -n 1)
+          fi
+          test -n "$APK"
+          mkdir -p test-output
+          cp "$APK" test-output/ClassicTVPakistan-SmartTube-Playback-Test.apk
+          sha256sum test-output/ClassicTVPakistan-SmartTube-Playback-Test.apk | tee test-output/SHA256SUMS.txt
+          $ANDROID_HOME/build-tools/34.0.0/aapt dump badging test-output/ClassicTVPakistan-SmartTube-Playback-Test.apk | grep -E "package: name=|application-label:"
+
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClassicTVPakistan-SmartTube-Playback-Test
+          path: smarttube/test-output/*
+          if-no-files-found: error
+          retention-days: 14
