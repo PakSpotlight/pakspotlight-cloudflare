@@ -15,18 +15,18 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out SmartTube with required source modules
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: yuliskov/SmartTube
           ref: master
           submodules: recursive
           path: smarttube
 
-      - name: Set up JDK 14 required by upstream build
-        uses: actions/setup-java@v4
+      - name: Set up JDK 17 for Android Gradle Plugin 7.4.2
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '14'
+          java-version: '17'
 
       - name: Give Gradle wrapper execute permission
         working-directory: smarttube
@@ -71,7 +71,9 @@ jobs:
           mkdir -p test-output
           cp "$APK" test-output/ClassicTVPakistan-SmartTube-Playback-Test.apk
           sha256sum test-output/ClassicTVPakistan-SmartTube-Playback-Test.apk | tee test-output/SHA256SUMS.txt
-          $ANDROID_HOME/build-tools/34.0.0/aapt dump badging test-output/ClassicTVPakistan-SmartTube-Playback-Test.apk | grep -E "package: name=|application-label:"
+          AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
+          test -n "$AAPT"
+          "$AAPT" dump badging test-output/ClassicTVPakistan-SmartTube-Playback-Test.apk | grep -E "package: name=|application-label:"
 
       - name: Upload test APK
         uses: actions/upload-artifact@v4
