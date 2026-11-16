@@ -82,7 +82,8 @@ if not icon_files:
 for target in icon_files:
     target.parent.mkdir(parents=True, exist_ok=True)
     size = Image.open(target).size
-    resized = icon.resize(size, Image.Resampling.LANCZOS)\n    resized.save(target)
+    resized = icon.resize(size, Image.Resampling.LANCZOS)
+    resized.save(target)
 
 # Build a simple branded Android TV banner using the same project artwork.
 banner_files = [p for p in (app / "src/main/res").rglob("app_banner.*") if p.suffix.lower() in (".png", ".webp", ".jpg", ".jpeg")]
