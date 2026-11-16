@@ -42,7 +42,6 @@ public final class CatalogActivity extends Activity {
     private final ExecutorService io = Executors.newFixedThreadPool(4);
     private final Handler main = new Handler(Looper.getMainLooper());
     private LinearLayout content;
-    private TextView status;
     private final java.util.Map<String, Bitmap> imageCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     private static final class Drama {
@@ -73,9 +72,6 @@ public final class CatalogActivity extends Activity {
         sub.setLetterSpacing(0.16f);
         root.addView(sub, new LinearLayout.LayoutParams(-1, dp(28)));
 
-        status = text("Connecting to Supabase catalogue…", 13, Color.LTGRAY, false);
-        root.addView(status, new LinearLayout.LayoutParams(-1, dp(34)));
-
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(false);
         content = new LinearLayout(this);
@@ -93,7 +89,7 @@ public final class CatalogActivity extends Activity {
                 List<String> categories = fetchCategories();
                 main.post(() -> render(rows, categories));
             } catch (Exception e) {
-                main.post(() -> status.setText("Catalogue connection failed: " + e.getMessage()));
+                main.post(() -> Toast.makeText(this, "Catalogue connection failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
             }
         });
     }
@@ -118,8 +114,6 @@ public final class CatalogActivity extends Activity {
                 d.episode = o.optInt("episode_number", 0);
                 rows.add(d);
             }
-            final int count = rows.size();
-            main.post(() -> status.setText("Loading Supabase archive… " + count + " records"));
             if (page.length() < 1000) break;
         }
         if (rows.isEmpty()) throw new Exception("Supabase returned no drama records");
@@ -163,7 +157,6 @@ public final class CatalogActivity extends Activity {
     }
 
     private void render(List<Drama> rows, List<String> categories) {
-        status.setText("Connected · " + rows.size() + " Supabase records");
         content.removeAllViews();
         addSection("Latest Dramas", rows, 24, false);
         int initialViews = content.getChildCount();
@@ -214,9 +207,10 @@ public final class CatalogActivity extends Activity {
         card.setLayoutParams(cp);
 
         ImageView image = new ImageView(this);
-        image.setBackgroundColor(Color.rgb(24, 28, 26));
-        image.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        card.addView(image, new LinearLayout.LayoutParams(-1, dp(135)));
+        image.setBackgroundColor(Color.BLACK);
+        // Keep the complete YouTube thumbnail visible in a landscape 16:9 frame.
+        image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        card.addView(image, new LinearLayout.LayoutParams(-1, dp(108)));
         if (imageUrl != null && imageUrl.startsWith("http")) loadImage(imageUrl, image);
 
         TextView name = text(title, 14, Color.WHITE, true);
