@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.app.AlertDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.LruCache;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -31,6 +32,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.BufferedInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -46,14 +48,16 @@ public final class CatalogActivity extends Activity {
     private static final String KEY = "sb_publishable_fkK2ryuBKr0WK96m34Cczg_7ofQBaOk";
     private static final int BG = Color.rgb(5, 7, 6);
     private static final int GOLD = Color.rgb(216, 177, 90);
-    private final ExecutorService io = Executors.newFixedThreadPool(4);
+    private final ExecutorService io = Executors.newFixedThreadPool(2);
     private final Handler main = new Handler(Looper.getMainLooper());
     private LinearLayout content;
     private ScrollView catalogScroll;
     private List<Drama> catalogRows;
     private List<String> catalogCategories;
     private boolean showingSeriesPage;
-    private final java.util.Map<String, Bitmap> imageCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final LruCache<String, Bitmap> imageCache = new LruCache<String, Bitmap>(Math.max(1024, (int) (Runtime.getRuntime().maxMemory() / 8 / 1024))) {
+        @Override protected int sizeOf(String key, Bitmap value) { return Math.max(1, value.getByteCount() / 1024); }
+    };
 
     private static final class Drama {
         int id;
@@ -173,14 +177,14 @@ public final class CatalogActivity extends Activity {
     private void render(List<Drama> rows, List<String> categories) {
         content.removeAllViews();
         showingSeriesPage = false;
-        addSection("Latest Dramas", rows, Integer.MAX_VALUE, false);
+        addSection("Latest Dramas", rows, 12, false);
         int initialViews = content.getChildCount();
         for (String category : categories) {
             List<Drama> matches = new ArrayList<>();
             for (Drama d : rows) if (same(d.type, category)) matches.add(d);
-            if (!matches.isEmpty()) addSection(category, matches, Integer.MAX_VALUE, true);
+            if (!matches.isEmpty()) addSection(category, matches, 12, true);
         }
-        if (content.getChildCount() == initialViews) addSection("All Dramas", rows, Integer.MAX_VALUE, false);
+        if (content.getChildCount() == initialViews) addSection("All Dramas", rows, 12, false);
     }
 
     private void addSection(String title, List<Drama> source, int limit, boolean groupSeries) {
@@ -353,10 +357,29 @@ public final class CatalogActivity extends Activity {
                 c = (HttpURLConnection) new URL(address).openConnection();
                 c.setConnectTimeout(10000);
                 c.setReadTimeout(15000);
-                Bitmap bitmap = BitmapFactory.decodeStream(c.getInputStream());
-                if (bitmap != null) {
-                    imageCache.put(address, bitmap);
-                    main.post(() -> { if (address.equals(target.getTag())) target.setImageBitmap(bitmap); });
+                try (BufferedInputStream in = new BufferedInputStream(c.getInputStream())) {
+                    in.mark(16 * 1024 * 1024);
+                    BitmapFactory.Options bounds = new BitmapFactory.Options();
+                    bounds.inJustDecodeBounds = true;
+                    BitmapFactory.decodeStream(in, null, bounds);
+                    in.reset();
+
+                    // Decode near display size rather than retaining full-resolution images.
+                    int reqWidth = Math.max(360, dp(360));
+                    int reqHeight = Math.max(203, dp(203));
+                    int sample = 1;
+                    while (bounds.outWidth / (sample * 2) >= reqWidth &&
+                           bounds.outHeight / (sample * 2) >= reqHeight) {
+                        sample *= 2;
+                    }
+                    BitmapFactory.Options decode = new BitmapFactory.Options();
+                    decode.inSampleSize = sample;
+                    decode.inPreferredConfig = Bitmap.Config.RGB_565;
+                    Bitmap bitmap = BitmapFactory.decodeStream(in, null, decode);
+                    if (bitmap != null) {
+                        imageCache.put(address, bitmap);
+                        main.post(() -> { if (address.equals(target.getTag())) target.setImageBitmap(bitmap); });
+                    }
                 }
             } catch (Exception ignored) {
             } finally { if (c != null) c.disconnect(); }
