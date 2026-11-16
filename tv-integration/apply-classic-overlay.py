@@ -92,13 +92,13 @@ for target in banner_files:
     w, h = original.size
     canvas = Image.new("RGB", (w, h), (5, 7, 6))
     logo = icon.copy()
-    side = int(h * 0.78)
+    side = int(h * 0.58)
     logo.thumbnail((side, side), Image.Resampling.LANCZOS)
-    canvas.paste(logo, (int(h * 0.15), (h - logo.height) // 2), logo)
+    canvas.paste(logo, ((w - logo.width) // 2, int(h * 0.04)), logo)
     draw = ImageDraw.Draw(canvas)
     font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-    font = ImageFont.truetype(font_path, max(12, int(h * 0.22)))
-    draw.text((int(h * 1.15), h // 2), "CLASSIC TV PAKISTAN", fill=(255, 255, 255), font=font, anchor="lm")
+    font = ImageFont.truetype(font_path, max(10, int(h * 0.11)))
+    draw.text((w // 2, int(h * 0.84)), "CLASSIC TV PAKISTAN", fill=(255, 255, 255), font=font, anchor="mm")
     canvas.save(target)
 
 # Keep required MIT attribution with the app source and package it as an asset.
