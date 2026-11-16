@@ -1,0 +1,78 @@
+name: Classic TV Pakistan Supabase Catalog APK
+
+on:
+  push:
+    branches:
+      - rebuild/android-tv-kotlin
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-catalog-test:
+    name: Build Classic TV Pakistan catalog test
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out Classic TV Pakistan integration
+        uses: actions/checkout@v5
+        with:
+          ref: rebuild/android-tv-kotlin
+          path: classic-tv
+
+      - name: Check out SmartTube source and required modules
+        uses: actions/checkout@v5
+        with:
+          repository: yuliskov/SmartTube
+          ref: master
+          submodules: recursive
+          path: smarttube
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Python and image tooling
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install image tooling
+        run: python -m pip install --disable-pip-version-check Pillow
+
+      - name: Apply Classic TV Pakistan catalogue overlay
+        run: |
+          cd classic-tv
+          python tv-integration/apply-classic-overlay.py
+
+      - name: Build the Android TV catalog APK
+        working-directory: smarttube
+        run: |
+          chmod +x gradlew
+          ./gradlew :smarttubetv:assembleStstableDebug --no-daemon
+
+      - name: Verify package identity and collect APK
+        working-directory: smarttube
+        run: |
+          set -euo pipefail
+          APK=$(find smarttubetv/build/outputs/apk -type f -name '*universal*.apk' | head -n 1)
+          if [ -z "$APK" ]; then
+            APK=$(find smarttubetv/build/outputs/apk -type f -name '*.apk' | head -n 1)
+          fi
+          test -n "$APK"
+          mkdir -p test-output
+          cp "$APK" test-output/ClassicTVPakistan-Catalog-Test.apk
+          sha256sum test-output/ClassicTVPakistan-Catalog-Test.apk | tee test-output/SHA256SUMS.txt
+          AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
+          test -n "$AAPT"
+          "$AAPT" dump badging test-output/ClassicTVPakistan-Catalog-Test.apk | grep -E "package: name=|application-label:"
+
+      - name: Upload catalog test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClassicTVPakistan-Catalog-Test
+          path: smarttube/test-output/*
+          if-no-files-found: error
+          retention-days: 14
