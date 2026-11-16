@@ -296,10 +296,12 @@ public final class CatalogActivity extends Activity {
 
     private final class DramaCardAdapter extends RecyclerView.Adapter<CardHolder> {
         private final List<Drama> rows;
+        private final List<List<Drama>> groupedRows;
         private final boolean groupSeries;
         DramaCardAdapter(List<Drama> rows, boolean groupSeries) {
             this.rows = rows;
             this.groupSeries = groupSeries;
+            this.groupedRows = groupSeries ? buildGroups(rows) : null;
         }
         @Override public CardHolder onCreateViewHolder(ViewGroup parent, int type) {
             LinearLayout card = new LinearLayout(CatalogActivity.this);
@@ -343,15 +345,7 @@ public final class CatalogActivity extends Activity {
         }
         private List<Drama> groupAt(int index) {
             if (!groupSeries) return single(rows.get(index));
-            LinkedHashMap<String, List<Drama>> groups = new LinkedHashMap<>();
-            for (Drama d : rows) {
-                String key = !d.series.trim().isEmpty() ? "series:" + d.series.trim() : "drama:" + d.id;
-                if (!groups.containsKey(key)) groups.put(key, new ArrayList<>());
-                groups.get(key).add(d);
-            }
-            int i = 0;
-            for (List<Drama> group : groups.values()) if (i++ == index) return group;
-            return single(rows.get(index));
+            return groupedRows.get(index);
         }
         private List<Drama> single(Drama d) {
             List<Drama> one = new ArrayList<>();
@@ -360,11 +354,11 @@ public final class CatalogActivity extends Activity {
         }
         @Override public int getItemCount() {
             if (!groupSeries) return rows.size();
-            return buildGroups().size();
+            return groupedRows.size();
         }
-        private List<List<Drama>> buildGroups() {
+        private List<List<Drama>> buildGroups(List<Drama> source) {
             LinkedHashMap<String, List<Drama>> groups = new LinkedHashMap<>();
-            for (Drama d : rows) {
+            for (Drama d : source) {
                 String key = !d.series.trim().isEmpty() ? "series:" + d.series.trim() : "drama:" + d.id;
                 if (!groups.containsKey(key)) groups.put(key, new ArrayList<>());
                 groups.get(key).add(d);
