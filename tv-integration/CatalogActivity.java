@@ -8,6 +8,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,6 +54,8 @@ public final class CatalogActivity extends Activity {
     private RecyclerView list;
     private List<Drama> catalogRows;
     private List<String> catalogCategories;
+    private SectionAdapter catalogAdapter;
+    private TextView status;
     private boolean showingSeriesPage;
     private int catalogScrollY;
 
@@ -94,9 +97,9 @@ public final class CatalogActivity extends Activity {
 
         root.addView(text("CLASSIC TV PAKISTAN", 25, Color.WHITE, true),
                 new LinearLayout.LayoutParams(-1, dp(34)));
-        TextView sub = text("PAKISTANI DRAMA ARCHIVE", 11, GOLD, true);
-        sub.setLetterSpacing(0.16f);
-        root.addView(sub, new LinearLayout.LayoutParams(-1, dp(28)));
+        status = text("PAKISTANI DRAMA ARCHIVE", 11, GOLD, true);
+        status.setLetterSpacing(0.16f);
+        root.addView(status, new LinearLayout.LayoutParams(-1, dp(28)));
 
         list = new RecyclerView(this);
         list.setBackgroundColor(BG);
@@ -113,13 +116,34 @@ public final class CatalogActivity extends Activity {
     private void loadCatalog() {
         dataIo.execute(() -> {
             try {
-                List<Drama> rows = fetchRows();
-                List<String> categories = fetchCategories();
+                // Render a small first page immediately. Remaining records are
+                // fetched in the background so a slow connection or large table
+                // does not block the first screen.
+                List<Drama> firstPage = fetchRowsPage(0, 200);
+                if (firstPage.isEmpty()) throw new Exception("Supabase returned no drama records");
+                List<String> categories = defaultCategories();
                 runOnUiThread(() -> {
-                    catalogRows = rows;
+                    catalogRows = new ArrayList<>(firstPage);
                     catalogCategories = categories;
                     renderCatalog();
+                    status.setText("LOADING MORE DRAMAS...");
                 });
+
+                int offset = firstPage.size();
+                while (offset < 50000) {
+                    List<Drama> page;
+                    try {
+                        page = fetchRowsPage(offset, 1000);
+                    } catch (Exception pageError) {
+                        runOnUiThread(() -> status.setText("SHOWING LOADED DRAMAS • CONNECTION PAUSED"));
+                        break;
+                    }
+                    if (page.isEmpty()) break;
+                    runOnUiThread(() -> appendCatalogPage(page));
+                    offset += page.size();
+                    if (page.size() < 1000) break;
+                }
+                runOnUiThread(() -> status.setText("PAKISTANI DRAMA ARCHIVE"));
             } catch (Exception e) {
                 runOnUiThread(() -> Toast.makeText(this,
                         "Catalogue connection failed: " + e.getMessage(),
@@ -128,52 +152,49 @@ public final class CatalogActivity extends Activity {
         });
     }
 
-    private List<Drama> fetchRows() throws Exception {
+    private List<Drama> fetchRowsPage(int offset, int limit) throws Exception {
         List<Drama> rows = new ArrayList<>();
-        for (int offset = 0; offset < 50000; offset += 1000) {
-            String query = "/rest/v1/Drama?select=id,title,urdu_title,description,youtube_url,thumbnail_url,type,series_name,episode_number,year&order=id.desc&limit=1000&offset=" + offset;
-            JSONArray page = requestArray(API + query);
-            for (int i = 0; i < page.length(); i++) {
-                JSONObject o = page.getJSONObject(i);
-                Drama d = new Drama();
-                d.raw = o;
-                d.id = o.optInt("id");
-                d.title = o.optString("title", "Untitled Drama");
-                d.urdu = o.optString("urdu_title", "");
-                d.type = o.optString("type", "Other");
-                d.series = o.optString("series_name", "");
-                d.year = o.optString("year", "");
-                d.image = o.optString("thumbnail_url", "");
-                d.youtube = o.optString("youtube_url", "");
-                d.episode = o.optInt("episode_number", 0);
-                rows.add(d);
-            }
-            if (page.length() < 1000) break;
+        String query = "/rest/v1/Drama?select=id,title,urdu_title,description,youtube_url,thumbnail_url,type,series_name,episode_number,year&order=id.desc&limit="
+                + limit + "&offset=" + offset;
+        JSONArray page = requestArray(API + query);
+        for (int i = 0; i < page.length(); i++) {
+            JSONObject o = page.getJSONObject(i);
+            Drama d = new Drama();
+            d.raw = o;
+            d.id = o.optInt("id");
+            d.title = o.optString("title", "Untitled Drama");
+            d.urdu = o.optString("urdu_title", "");
+            d.type = o.optString("type", "Other");
+            d.series = o.optString("series_name", "");
+            d.year = o.optString("year", "");
+            d.image = o.optString("thumbnail_url", "");
+            d.youtube = o.optString("youtube_url", "");
+            d.episode = o.optInt("episode_number", 0);
+            rows.add(d);
         }
-        if (rows.isEmpty()) throw new Exception("Supabase returned no drama records");
         return rows;
     }
 
-    private List<String> fetchCategories() {
+    private List<String> defaultCategories() {
         List<String> result = new ArrayList<>();
-        try {
-            JSONArray a = requestArray(API + "/storage/v1/object/public/thumbnails/config/categories.json");
-            for (int i = 0; i < a.length(); i++) result.add(a.optString(i));
-        } catch (Exception ignored) { }
-        if (result.isEmpty()) {
-            result.add("Serial / Series");
-            result.add("Long Play");
-            result.add("Comedy");
-            result.add("Shorts");
-        }
+        result.add("Serial / Series");
+        result.add("Long Play");
+        result.add("Comedy");
+        result.add("Shorts");
         return result;
+    }
+
+    private void appendCatalogPage(List<Drama> page) {
+        if (catalogRows == null || catalogAdapter == null) return;
+        catalogRows.addAll(page);
+        catalogAdapter.appendPage(page);
     }
 
     private JSONArray requestArray(String address) throws Exception {
         HttpURLConnection c = (HttpURLConnection) new URL(address).openConnection();
         c.setRequestMethod("GET");
-        c.setConnectTimeout(15000);
-        c.setReadTimeout(25000);
+        c.setConnectTimeout(8000);
+        c.setReadTimeout(12000);
         c.setRequestProperty("apikey", KEY);
         c.setRequestProperty("Authorization", "Bearer " + KEY);
         c.setRequestProperty("Accept", "application/json");
@@ -203,7 +224,8 @@ public final class CatalogActivity extends Activity {
             if (!matches.isEmpty()) sections.add(new Section(category, matches, true));
         }
         if (sections.size() == 1) sections.add(new Section("All Dramas", catalogRows, false));
-        list.setAdapter(new SectionAdapter(sections));
+        catalogAdapter = new SectionAdapter(sections);
+        list.setAdapter(catalogAdapter);
         list.scrollToPosition(0);
     }
 
@@ -280,6 +302,27 @@ public final class CatalogActivity extends Activity {
             Section section = sections.get(position);
             holder.heading.setText(section.title);
             holder.rail.setAdapter(new DramaCardAdapter(section.items, section.seriesGroups));
+            holder.itemView.setTag(holder.rail);
+        }
+        void appendPage(List<Drama> page) {
+            for (Section section : sections) {
+                if (!"Latest Dramas".equals(section.title)) {
+                    for (Drama d : page) if (same(d.type, section.title)) section.items.add(d);
+                }
+            }
+            // Refresh only the rails currently attached to the screen. Rails
+            // created later will bind against the already-updated section data.
+            for (int i = 0; i < list.getChildCount(); i++) {
+                View child = list.getChildAt(i);
+                Object tag = child.getTag();
+                if (tag instanceof RecyclerView) {
+                    RecyclerView rail = (RecyclerView) tag;
+                    RecyclerView.Adapter<?> adapter = rail.getAdapter();
+                    if (adapter instanceof DramaCardAdapter) {
+                        ((DramaCardAdapter) adapter).refreshData();
+                    }
+                }
+            }
         }
         @Override public int getItemCount() { return sections.size(); }
     }
@@ -296,12 +339,19 @@ public final class CatalogActivity extends Activity {
 
     private final class DramaCardAdapter extends RecyclerView.Adapter<CardHolder> {
         private final List<Drama> rows;
-        private final List<List<Drama>> groupedRows;
+        private List<List<Drama>> groupedRows;
         private final boolean groupSeries;
         DramaCardAdapter(List<Drama> rows, boolean groupSeries) {
             this.rows = rows;
             this.groupSeries = groupSeries;
+            rebuildGroups();
+        }
+        private void rebuildGroups() {
             this.groupedRows = groupSeries ? buildGroups(rows) : null;
+        }
+        void refreshData() {
+            rebuildGroups();
+            notifyDataSetChanged();
         }
         @Override public CardHolder onCreateViewHolder(ViewGroup parent, int type) {
             LinearLayout card = new LinearLayout(CatalogActivity.this);
@@ -332,16 +382,19 @@ public final class CatalogActivity extends Activity {
             holder.title.setText(label);
             holder.meta.setText(group.size() > 1 ? group.size() + " EPISODES" : d.urdu);
             holder.itemView.setOnClickListener(v -> openGroup(label, group));
-            Glide.with(CatalogActivity.this).clear(holder.image);
-            holder.image.setImageDrawable(null);
+            clearThumbnail(holder.image);
             if (d.image != null && d.image.startsWith("http")) {
-                Glide.with(CatalogActivity.this).load(d.image)
+                Glide.with(getApplicationContext()).load(d.image)
                         .override(dp(380), dp(214))
                         .centerInside()
                         .dontAnimate()
-                        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                        .diskCacheStrategy(Build.VERSION.SDK_INT > 21 ? DiskCacheStrategy.ALL : DiskCacheStrategy.NONE)
                         .into(holder.image);
             }
+        }
+        @Override public void onViewRecycled(CardHolder holder) {
+            clearThumbnail(holder.image);
+            super.onViewRecycled(holder);
         }
         private List<Drama> groupAt(int index) {
             if (!groupSeries) return single(rows.get(index));
@@ -437,17 +490,20 @@ public final class CatalogActivity extends Activity {
                 h.number.setText("Episode " + (d.episode > 0 ? d.episode : index + 1));
                 h.title.setText(d.title);
                 h.itemView.setOnClickListener(v -> selected(d));
-                Glide.with(CatalogActivity.this).clear(h.image);
-                h.image.setImageDrawable(null);
+                clearThumbnail(h.image);
                 if (d.image != null && d.image.startsWith("http")) {
-                    Glide.with(CatalogActivity.this).load(d.image)
+                    Glide.with(getApplicationContext()).load(d.image)
                             .override(dp(320), dp(180))
                             .centerInside()
                             .dontAnimate()
-                            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                            .diskCacheStrategy(Build.VERSION.SDK_INT > 21 ? DiskCacheStrategy.ALL : DiskCacheStrategy.NONE)
                             .into(h.image);
                 }
             }
+        }
+        @Override public void onViewRecycled(RecyclerView.ViewHolder holder) {
+            if (holder instanceof EpisodeHolder) clearThumbnail(((EpisodeHolder) holder).image);
+            super.onViewRecycled(holder);
         }
         @Override public int getItemCount() { return episodes.size() + 1; }
     }
@@ -464,6 +520,11 @@ public final class CatalogActivity extends Activity {
             this.number = number;
             this.title = title;
         }
+    }
+
+    private void clearThumbnail(ImageView image) {
+        Glide.with(getApplicationContext()).clear(image);
+        image.setImageDrawable(null);
     }
 
     private GradientDrawable border(boolean focused) {
