@@ -22,6 +22,10 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.liskovsoft.smartyoutubetv2.common.exoplayer.selector.FormatItem;
+import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
+import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerTweaksData;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -45,6 +49,10 @@ public final class CatalogActivity extends Activity {
     private final ExecutorService io = Executors.newFixedThreadPool(4);
     private final Handler main = new Handler(Looper.getMainLooper());
     private LinearLayout content;
+    private ScrollView catalogScroll;
+    private List<Drama> catalogRows;
+    private List<String> catalogCategories;
+    private boolean showingSeriesPage;
     private final java.util.Map<String, Bitmap> imageCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     private static final class Drama {
@@ -59,6 +67,9 @@ public final class CatalogActivity extends Activity {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        PlayerData.instance(this).setFormat(FormatItem.VIDEO_AUTO);
+        PlayerTweaksData.instance(this).setAvcOverVp9Preferred(true);
+        PlayerTweaksData.instance(this).setSuggestionsDisabled(true);
         buildShell();
         loadCatalog();
     }
@@ -75,13 +86,13 @@ public final class CatalogActivity extends Activity {
         sub.setLetterSpacing(0.16f);
         root.addView(sub, new LinearLayout.LayoutParams(-1, dp(28)));
 
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(false);
+        catalogScroll = new ScrollView(this);
+        catalogScroll.setFillViewport(false);
         content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(0, dp(8), 0, dp(36));
-        scroll.addView(content);
-        root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
+        catalogScroll.addView(content);
+        root.addView(catalogScroll, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(root);
     }
 
@@ -90,7 +101,7 @@ public final class CatalogActivity extends Activity {
             try {
                 List<Drama> rows = fetchRows();
                 List<String> categories = fetchCategories();
-                main.post(() -> render(rows, categories));
+                main.post(() -> { catalogRows = rows; catalogCategories = categories; render(rows, categories); });
             } catch (Exception e) {
                 main.post(() -> Toast.makeText(this, "Catalogue connection failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
             }
@@ -161,14 +172,15 @@ public final class CatalogActivity extends Activity {
 
     private void render(List<Drama> rows, List<String> categories) {
         content.removeAllViews();
-        addSection("Latest Dramas", rows, 24, false);
+        showingSeriesPage = false;
+        addSection("Latest Dramas", rows, Integer.MAX_VALUE, false);
         int initialViews = content.getChildCount();
         for (String category : categories) {
             List<Drama> matches = new ArrayList<>();
             for (Drama d : rows) if (same(d.type, category)) matches.add(d);
-            if (!matches.isEmpty()) addSection(category, matches, 36, true);
+            if (!matches.isEmpty()) addSection(category, matches, Integer.MAX_VALUE, true);
         }
-        if (content.getChildCount() == initialViews) addSection("All Dramas", rows, 36, false);
+        if (content.getChildCount() == initialViews) addSection("All Dramas", rows, Integer.MAX_VALUE, false);
     }
 
     private void addSection(String title, List<Drama> source, int limit, boolean groupSeries) {
@@ -213,7 +225,7 @@ public final class CatalogActivity extends Activity {
         image.setBackgroundColor(Color.BLACK);
         // Keep the complete YouTube thumbnail visible in a landscape 16:9 frame.
         image.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        card.addView(image, new LinearLayout.LayoutParams(-1, dp(108)));
+        card.addView(image, new LinearLayout.LayoutParams(-1, dp(101))); // 16:9 image area
         if (imageUrl != null && imageUrl.startsWith("http")) loadImage(imageUrl, image);
 
         TextView name = text(title, 14, Color.WHITE, true);
@@ -239,13 +251,77 @@ public final class CatalogActivity extends Activity {
             selected(episodes.get(0));
             return;
         }
-        String[] labels = new String[episodes.size()];
-        for (int i = 0; i < episodes.size(); i++) {
-            Drama d = episodes.get(i);
-            labels[i] = (d.episode > 0 ? "Episode " + d.episode + " · " : "") + d.title;
+        showSeriesPage(title, episodes);
+    }
+
+    private void showSeriesPage(String title, List<Drama> episodes) {
+        showingSeriesPage = true;
+        content.removeAllViews();
+        TextView back = text("‹  BACK TO CATALOGUE", 16, GOLD, true);
+        back.setFocusable(true);
+        back.setClickable(true);
+        back.setPadding(0, dp(12), 0, dp(18));
+        back.setOnClickListener(v -> restoreCatalog());
+        content.addView(back);
+        TextView heading = text(title, 24, Color.WHITE, true);
+        heading.setPadding(0, 0, 0, dp(5));
+        content.addView(heading);
+        TextView count = text(episodes.size() + " EPISODES", 12, GOLD, true);
+        count.setPadding(0, 0, 0, dp(14));
+        content.addView(count);
+        List<Drama> ordered = new ArrayList<>(episodes);
+        ordered.sort((a, b) -> {
+            if (a.episode > 0 && b.episode > 0) return Integer.compare(a.episode, b.episode);
+            return Integer.compare(a.id, b.id);
+        });
+        for (int i = 0; i < ordered.size(); i++) content.addView(episodeRow(ordered.get(i), i + 1));
+        catalogScroll.scrollTo(0, 0);
+        back.requestFocus();
+    }
+
+    private View episodeRow(Drama drama, int position) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setFocusable(true);
+        row.setClickable(true);
+        row.setPadding(dp(8), dp(6), dp(8), dp(6));
+        row.setBackground(border(false));
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, dp(108));
+        rp.setMargins(0, 0, 0, dp(7));
+        row.setLayoutParams(rp);
+        ImageView image = new ImageView(this);
+        image.setBackgroundColor(Color.BLACK);
+        image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        row.addView(image, new LinearLayout.LayoutParams(dp(160), dp(90)));
+        if (drama.image != null && drama.image.startsWith("http")) loadImage(drama.image, image);
+        LinearLayout labels = new LinearLayout(this);
+        labels.setOrientation(LinearLayout.VERTICAL);
+        labels.setPadding(dp(14), 0, 0, 0);
+        labels.addView(text("Episode " + (drama.episode > 0 ? drama.episode : position), 16, Color.WHITE, true));
+        TextView subtitle = text(drama.title, 13, GOLD, false);
+        subtitle.setMaxLines(2);
+        labels.addView(subtitle);
+        row.addView(labels, new LinearLayout.LayoutParams(0, -2, 1));
+        row.setOnFocusChangeListener((v, focused) -> v.setBackground(border(focused)));
+        row.setOnClickListener(v -> selected(drama));
+        return row;
+    }
+
+    private void restoreCatalog() {
+        if (catalogRows != null && catalogCategories != null) {
+            render(catalogRows, catalogCategories);
+            catalogScroll.scrollTo(0, 0);
+            showingSeriesPage = false;
         }
-        new AlertDialog.Builder(this).setTitle(title).setItems(labels, (dialog, which) -> selected(episodes.get(which)))
-            .setNegativeButton("Close", null).show();
+    }
+
+    @Override public void onBackPressed() {
+        if (showingSeriesPage) {
+            restoreCatalog();
+            return;
+        }
+        super.onBackPressed();
     }
 
     private void selected(Drama d) {
@@ -269,6 +345,7 @@ public final class CatalogActivity extends Activity {
 
     private void loadImage(String address, ImageView target) {
         Bitmap cached = imageCache.get(address);
+        target.setTag(address);
         if (cached != null) { target.setImageBitmap(cached); return; }
         io.execute(() -> {
             HttpURLConnection c = null;
@@ -279,7 +356,7 @@ public final class CatalogActivity extends Activity {
                 Bitmap bitmap = BitmapFactory.decodeStream(c.getInputStream());
                 if (bitmap != null) {
                     imageCache.put(address, bitmap);
-                    main.post(() -> target.setImageBitmap(bitmap));
+                    main.post(() -> { if (address.equals(target.getTag())) target.setImageBitmap(bitmap); });
                 }
             } catch (Exception ignored) {
             } finally { if (c != null) c.disconnect(); }
