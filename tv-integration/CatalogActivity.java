@@ -1,6 +1,9 @@
 package com.classictvpakistan.tv;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.net.Uri;
 import android.app.AlertDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -246,7 +249,22 @@ public final class CatalogActivity extends Activity {
     }
 
     private void selected(Drama d) {
-        Toast.makeText(this, "Supabase item loaded: " + d.title + "\nPlayer integration is the next stage.", Toast.LENGTH_LONG).show();
+        if (d.youtube == null || d.youtube.trim().isEmpty()) {
+            Toast.makeText(this, "No YouTube video link is saved for " + d.title, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        try {
+            // Route through SmartTube's own SplashPresenter intent chain. This initializes
+            // its playback/session services and opens PlaybackActivity directly, bypassing
+            // SmartTube's browse/home UI while keeping the player inside this APK.
+            Intent play = new Intent(Intent.ACTION_VIEW, Uri.parse(d.youtube.trim()));
+            play.setComponent(new ComponentName(this,
+                    "com.liskovsoft.smartyoutubetv2.tv.ui.main.SplashActivity"));
+            startActivity(play);
+        } catch (Exception e) {
+            Toast.makeText(this, "Could not open video: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void loadImage(String address, ImageView target) {
