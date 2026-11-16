@@ -1,9 +1,6 @@
 name: SmartTube Playback Test APK
 
 on:
-  push:
-    branches:
-      - rebuild/android-tv-kotlin
   workflow_dispatch:
 
 permissions:
