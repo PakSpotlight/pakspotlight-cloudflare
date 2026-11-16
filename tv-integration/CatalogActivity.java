@@ -166,12 +166,13 @@ public final class CatalogActivity extends Activity {
         status.setText("Connected · " + rows.size() + " Supabase records");
         content.removeAllViews();
         addSection("Latest Dramas", rows, 24, false);
+        int initialViews = content.getChildCount();
         for (String category : categories) {
             List<Drama> matches = new ArrayList<>();
             for (Drama d : rows) if (same(d.type, category)) matches.add(d);
             if (!matches.isEmpty()) addSection(category, matches, 36, true);
         }
-        if (content.getChildCount() == 1) addSection("All Dramas", rows, 36, false);
+        if (content.getChildCount() == initialViews) addSection("All Dramas", rows, 36, false);
     }
 
     private void addSection(String title, List<Drama> source, int limit, boolean groupSeries) {
