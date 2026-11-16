@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 from PIL import Image, ImageDraw, ImageFont
 
 repo = Path.cwd()
-smart = Path("smarttube")
+smart = Path("../smarttube") if Path("../smarttube").exists() else Path("smarttube")
 app = smart / "smarttubetv"
 if not (app / "build.gradle").exists():
     raise SystemExit("SmartTube checkout is missing smarttubetv/build.gradle")
