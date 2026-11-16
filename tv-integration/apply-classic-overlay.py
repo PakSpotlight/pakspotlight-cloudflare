@@ -76,15 +76,15 @@ icon_source = repo / "mobile/assets/icon.png"
 if not icon_source.exists():
     raise SystemExit("Classic TV Pakistan icon not found at mobile/assets/icon.png")
 icon = Image.open(icon_source).convert("RGBA")
-icon_files = list((app / "src/main/res").glob("mipmap-*/app_icon.png"))
+icon_files = [p for p in (app / "src/main/res").rglob("app_icon.*") if p.suffix.lower() in (".png", ".webp", ".jpg", ".jpeg")]
 if not icon_files:
     raise SystemExit("Could not find SmartTube mipmap app_icon resources")
 for target in icon_files:
     target.parent.mkdir(parents=True, exist_ok=True)
-    icon.resize((target.stem and Image.open(target).size), Image.Resampling.LANCZOS).save(target)
+    size = Image.open(target).size\n    resized = icon.resize(size, Image.Resampling.LANCZOS)\n    resized.save(target)
 
 # Build a simple branded Android TV banner using the same project artwork.
-banner_files = list((app / "src/main/res").glob("mipmap-*/app_banner.png"))
+banner_files = [p for p in (app / "src/main/res").rglob("app_banner.*") if p.suffix.lower() in (".png", ".webp", ".jpg", ".jpeg")]
 for target in banner_files:
     original = Image.open(target)
     w, h = original.size
