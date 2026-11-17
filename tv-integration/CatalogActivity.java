@@ -85,7 +85,8 @@ public final class CatalogActivity extends Activity {
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         PlayerData.instance(this).setFormat(FormatItem.VIDEO_AUTO);
         PlayerTweaksData.instance(this).setAvcOverVp9Preferred(true);
-        PlayerTweaksData.instance(this).setSuggestionsDisabled(true);
+        // Keep YouTube's player suggestions enabled; the catalogue overlay must not hide them.
+        PlayerTweaksData.instance(this).setSuggestionsDisabled(false);
         buildShell();
         loadCatalog();
     }
