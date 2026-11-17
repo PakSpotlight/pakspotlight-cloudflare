@@ -382,17 +382,21 @@ public final class CatalogActivity extends Activity {
             holder.title.setText(label);
             holder.meta.setText(group.size() > 1 ? group.size() + " EPISODES" : d.urdu);
             holder.itemView.setOnClickListener(v -> openGroup(label, group));
+            holder.imageUrl = d.image;
+            holder.imageWidth = dp(380);
+            holder.imageHeight = dp(214);
             clearThumbnail(holder.image);
-            if (d.image != null && d.image.startsWith("http")) {
-                Glide.with(getApplicationContext()).load(d.image)
-                        .override(dp(380), dp(214))
-                        .centerInside()
-                        .dontAnimate()
-                        .diskCacheStrategy(Build.VERSION.SDK_INT > 21 ? DiskCacheStrategy.ALL : DiskCacheStrategy.NONE)
-                        .into(holder.image);
-            }
+        }
+        @Override public void onViewAttachedToWindow(CardHolder holder) {
+            super.onViewAttachedToWindow(holder);
+            loadThumbnail(holder.image, holder.imageUrl, holder.imageWidth, holder.imageHeight);
+        }
+        @Override public void onViewDetachedFromWindow(CardHolder holder) {
+            clearThumbnail(holder.image);
+            super.onViewDetachedFromWindow(holder);
         }
         @Override public void onViewRecycled(CardHolder holder) {
+            holder.imageUrl = null;
             clearThumbnail(holder.image);
             super.onViewRecycled(holder);
         }
@@ -423,6 +427,8 @@ public final class CatalogActivity extends Activity {
     private static final class CardHolder extends RecyclerView.ViewHolder {
         final ImageView image;
         final TextView title, meta;
+        String imageUrl;
+        int imageWidth, imageHeight;
         CardHolder(View item, ImageView image, TextView title, TextView meta) {
             super(item);
             this.image = image;
@@ -490,19 +496,29 @@ public final class CatalogActivity extends Activity {
                 h.number.setText("Episode " + (d.episode > 0 ? d.episode : index + 1));
                 h.title.setText(d.title);
                 h.itemView.setOnClickListener(v -> selected(d));
+                h.imageUrl = d.image;
+                h.imageWidth = dp(320);
+                h.imageHeight = dp(180);
                 clearThumbnail(h.image);
-                if (d.image != null && d.image.startsWith("http")) {
-                    Glide.with(getApplicationContext()).load(d.image)
-                            .override(dp(320), dp(180))
-                            .centerInside()
-                            .dontAnimate()
-                            .diskCacheStrategy(Build.VERSION.SDK_INT > 21 ? DiskCacheStrategy.ALL : DiskCacheStrategy.NONE)
-                            .into(h.image);
-                }
             }
         }
-        @Override public void onViewRecycled(RecyclerView.ViewHolder holder) {
+        @Override public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
+            super.onViewAttachedToWindow(holder);
+            if (holder instanceof EpisodeHolder) {
+                EpisodeHolder h = (EpisodeHolder) holder;
+                loadThumbnail(h.image, h.imageUrl, h.imageWidth, h.imageHeight);
+            }
+        }
+        @Override public void onViewDetachedFromWindow(RecyclerView.ViewHolder holder) {
             if (holder instanceof EpisodeHolder) clearThumbnail(((EpisodeHolder) holder).image);
+            super.onViewDetachedFromWindow(holder);
+        }
+        @Override public void onViewRecycled(RecyclerView.ViewHolder holder) {
+            if (holder instanceof EpisodeHolder) {
+                EpisodeHolder h = (EpisodeHolder) holder;
+                h.imageUrl = null;
+                clearThumbnail(h.image);
+            }
             super.onViewRecycled(holder);
         }
         @Override public int getItemCount() { return episodes.size() + 1; }
@@ -514,12 +530,24 @@ public final class CatalogActivity extends Activity {
     private static final class EpisodeHolder extends RecyclerView.ViewHolder {
         final ImageView image;
         final TextView number, title;
+        String imageUrl;
+        int imageWidth, imageHeight;
         EpisodeHolder(View item, ImageView image, TextView number, TextView title) {
             super(item);
             this.image = image;
             this.number = number;
             this.title = title;
         }
+    }
+
+    private void loadThumbnail(ImageView image, String url, int width, int height) {
+        if (url == null || !url.startsWith("http")) return;
+        Glide.with(image).load(url)
+                .override(width, height)
+                .centerInside()
+                .dontAnimate()
+                .diskCacheStrategy(Build.VERSION.SDK_INT > 21 ? DiskCacheStrategy.ALL : DiskCacheStrategy.NONE)
+                .into(image);
     }
 
     private void clearThumbnail(ImageView image) {
