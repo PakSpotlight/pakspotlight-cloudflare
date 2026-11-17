@@ -67,7 +67,13 @@ jobs:
           sha256sum test-output/ClassicTVPakistan-Catalog-Test.apk | tee test-output/SHA256SUMS.txt
           AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
           test -n "$AAPT"
-          "$AAPT" dump badging test-output/ClassicTVPakistan-Catalog-Test.apk | grep -E "package: name=|application-label:"
+          BADGING=$("$AAPT" dump badging test-output/ClassicTVPakistan-Catalog-Test.apk)
+          echo "$BADGING" | grep -F "package: name='com.classictvpakistan.tv'"
+          echo "$BADGING" | grep -F "application-label:'Classic TV Pakistan'"
+          if echo "$BADGING" | grep -q "application-label:'SmartTube'"; then
+            echo "ERROR: SmartTube launcher branding remains in the APK"
+            exit 1
+          fi
 
       - name: Upload catalog test APK
         uses: actions/upload-artifact@v4
