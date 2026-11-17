@@ -37,7 +37,7 @@ for strings in string_files:
     root = xml.getroot()
     found = False
     for item in root.findall("string"):
-        if item.attrib.get("name") == "app_name":
+        if item.attrib.get("name") in ("app_name", "browse_title"):
             item.text = "Classic TV Pakistan"
             found = True
     if found:
