@@ -27,14 +27,21 @@ dest = app / "src/main/java/com/classictvpakistan/tv/CatalogActivity.java"
 dest.parent.mkdir(parents=True, exist_ok=True)
 shutil.copy2(src, dest)
 
-# Update launcher label.
-strings = app / "src/main/res/values/strings.xml"
-xml = ET.parse(strings)
-root = xml.getroot()
-for item in root.findall("string"):
-    if item.attrib.get("name") == "app_name":
-        item.text = "Classic TV Pakistan"
-xml.write(strings, encoding="utf-8", xml_declaration=True)
+# Update launcher label in the main source set AND the selected ststable
+# product flavor. Flavor resources take precedence over src/main at merge time.
+string_files = list((app / "src").glob("*/res/values/strings.xml"))
+if not string_files:
+    raise SystemExit("Could not find SmartTube app strings resources")
+for strings in string_files:
+    xml = ET.parse(strings)
+    root = xml.getroot()
+    found = False
+    for item in root.findall("string"):
+        if item.attrib.get("name") == "app_name":
+            item.text = "Classic TV Pakistan"
+            found = True
+    if found:
+        xml.write(strings, encoding="utf-8", xml_declaration=True)
 
 # Make the catalogue screen the only main/Leanback launcher entry.
 manifest = app / "src/main/AndroidManifest.xml"
