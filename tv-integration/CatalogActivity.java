@@ -57,6 +57,7 @@ public final class CatalogActivity extends Activity {
     private List<String> catalogCategories;
     private SectionAdapter catalogAdapter;
     private TextView status;
+    private Typeface urduTypeface;
     private boolean showingSeriesPage;
     private int catalogScrollY;
 
@@ -83,6 +84,8 @@ public final class CatalogActivity extends Activity {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        try { urduTypeface = Typeface.createFromAsset(getAssets(), "fonts/NotoNastaliqUrdu-Regular.ttf"); }
+        catch (Exception ignored) { urduTypeface = Typeface.DEFAULT; }
         PlayerData.instance(this).setFormat(FormatItem.VIDEO_AUTO);
         PlayerTweaksData.instance(this).setAvcOverVp9Preferred(true);
         // Keep YouTube's player suggestions enabled; the catalogue overlay must not hide them.
@@ -164,13 +167,13 @@ public final class CatalogActivity extends Activity {
             Drama d = new Drama();
             d.raw = o;
             d.id = o.optInt("id");
-            d.title = o.optString("title", "Untitled Drama");
-            d.urdu = o.optString("urdu_title", "");
-            d.type = o.optString("type", "Other");
-            d.series = o.optString("series_name", "");
-            d.year = o.optString("year", "");
-            d.image = o.optString("thumbnail_url", "");
-            d.youtube = o.optString("youtube_url", "");
+            d.title = clean(o.optString("title", ""), "Untitled");
+            d.urdu = clean(o.optString("urdu_title", ""), "");
+            d.type = clean(o.optString("type", ""), "Other");
+            d.series = clean(o.optString("series_name", ""), "");
+            d.year = clean(o.optString("year", ""), "");
+            d.image = clean(o.optString("thumbnail_url", ""), "");
+            d.youtube = clean(o.optString("youtube_url", ""), "");
             d.episode = o.optInt("episode_number", 0);
             rows.add(d);
         }
@@ -301,8 +304,9 @@ public final class CatalogActivity extends Activity {
             LinearLayout block = new LinearLayout(CatalogActivity.this);
             block.setOrientation(LinearLayout.VERTICAL);
             TextView heading = text("", 21, Color.WHITE, true);
-            heading.setPadding(0, dp(17), 0, dp(8));
-            block.addView(heading, new LinearLayout.LayoutParams(-1, dp(42)));
+            heading.setIncludeFontPadding(true);
+            heading.setPadding(0, dp(7), 0, dp(5));
+            block.addView(heading, new LinearLayout.LayoutParams(-1, dp(48)));
             RecyclerView rail = new RecyclerView(CatalogActivity.this);
             rail.setLayoutManager(new LinearLayoutManager(CatalogActivity.this,
                     RecyclerView.HORIZONTAL, false));
@@ -311,7 +315,7 @@ public final class CatalogActivity extends Activity {
             rail.setNestedScrollingEnabled(false);
             rail.setClipToPadding(false);
             rail.setItemViewCacheSize(4);
-            block.addView(rail, new LinearLayout.LayoutParams(-1, dp(218)));
+            block.addView(rail, new LinearLayout.LayoutParams(-1, dp(184)));
             return new SectionHolder(block, heading, rail);
         }
         @Override public void onBindViewHolder(SectionHolder holder, int position) {
@@ -396,26 +400,40 @@ public final class CatalogActivity extends Activity {
             card.setBackground(border(false));
             ImageView image = new ImageView(CatalogActivity.this);
             image.setBackgroundColor(Color.BLACK);
-            image.setScaleType(ImageView.ScaleType.FIT_CENTER);
             image.setScaleType(ImageView.ScaleType.CENTER_CROP);
             card.addView(image, new LinearLayout.LayoutParams(-1, dp(101)));
+            LinearLayout titleRow = new LinearLayout(CatalogActivity.this);
+            titleRow.setOrientation(LinearLayout.HORIZONTAL);
+            titleRow.setGravity(Gravity.CENTER_VERTICAL);
+            titleRow.setPadding(dp(2), dp(3), dp(2), 0);
             TextView name = text("", 14, Color.WHITE, true);
-            name.setMaxLines(2);
-            name.setPadding(dp(2), dp(6), dp(2), 0);
-            card.addView(name);
+            name.setSingleLine(true);
+            name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            titleRow.addView(name, new LinearLayout.LayoutParams(0, dp(36), 1f));
+            TextView urdu = text("", 15, GOLD, false);
+            urdu.setTypeface(urduTypeface);
+            urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
+            urdu.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+            urdu.setSingleLine(true);
+            urdu.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            titleRow.addView(urdu, new LinearLayout.LayoutParams(dp(82), dp(42)));
+            card.addView(titleRow);
             TextView meta = text("", 10, GOLD, true);
             meta.setMaxLines(1);
             card.addView(meta);
             card.setOnFocusChangeListener((v, focused) -> v.setBackground(border(focused)));
-            card.setLayoutParams(new RecyclerView.LayoutParams(dp(190), dp(174)));
-            return new CardHolder(card, image, name, meta);
+            card.setLayoutParams(new RecyclerView.LayoutParams(dp(190), dp(156)));
+            return new CardHolder(card, image, name, urdu, meta);
         }
         @Override public void onBindViewHolder(CardHolder holder, int position) {
             List<Drama> group = groupAt(position);
             Drama d = group.get(0);
             String label = !d.series.trim().isEmpty() ? d.series : d.title;
             holder.title.setText(label);
-            holder.meta.setText(group.size() > 1 ? group.size() + " EPISODES" : d.urdu);
+            holder.urdu.setText(d.urdu);
+            holder.urdu.setVisibility(d.urdu.isEmpty() ? View.GONE : View.VISIBLE);
+            holder.meta.setText(group.size() > 1 ? group.size() + " EPISODES" :
+                    (isMovieCategory(d.type) ? d.year : (d.year.isEmpty() ? "" : d.year)));
             holder.itemView.setOnClickListener(v -> openGroup(label, group));
             holder.imageUrl = preferredThumbnail(d);
             holder.imageWidth = dp(380);
@@ -451,7 +469,9 @@ public final class CatalogActivity extends Activity {
         private List<List<Drama>> buildGroups(List<Drama> source) {
             LinkedHashMap<String, List<Drama>> groups = new LinkedHashMap<>();
             for (Drama d : source) {
-                String key = !d.series.trim().isEmpty() ? "series:" + d.series.trim() : "drama:" + d.id;
+                boolean canGroupAsSeries = !isMovieCategory(d.type)
+                        && !d.series.trim().isEmpty() && d.episode > 0;
+                String key = canGroupAsSeries ? "series:" + d.series.trim() : "drama:" + d.id;
                 if (!groups.containsKey(key)) groups.put(key, new ArrayList<>());
                 groups.get(key).add(d);
             }
@@ -461,13 +481,14 @@ public final class CatalogActivity extends Activity {
 
     private static final class CardHolder extends RecyclerView.ViewHolder {
         final ImageView image;
-        final TextView title, meta;
+        final TextView title, urdu, meta;
         String imageUrl;
         int imageWidth, imageHeight;
-        CardHolder(View item, ImageView image, TextView title, TextView meta) {
+        CardHolder(View item, ImageView image, TextView title, TextView urdu, TextView meta) {
             super(item);
             this.image = image;
             this.title = title;
+            this.urdu = urdu;
             this.meta = meta;
         }
     }
@@ -641,6 +662,20 @@ public final class CatalogActivity extends Activity {
         t.setGravity(Gravity.CENTER_VERTICAL);
         if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         return t;
+    }
+
+    private String clean(String value, String fallback) {
+        if (value == null) return fallback;
+        String trimmed = value.trim();
+        if (trimmed.isEmpty() || "null".equalsIgnoreCase(trimmed)
+                || "undefined".equalsIgnoreCase(trimmed)) return fallback;
+        return trimmed;
+    }
+
+    private boolean isMovieCategory(String type) {
+        if (type == null) return false;
+        String value = type.toLowerCase();
+        return value.contains("movie") || value.contains("film");
     }
 
     private boolean same(String a, String b) {
