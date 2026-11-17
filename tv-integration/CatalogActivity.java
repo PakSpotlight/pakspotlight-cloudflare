@@ -17,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -121,7 +122,7 @@ public final class CatalogActivity extends Activity {
                 // does not block the first screen.
                 List<Drama> firstPage = fetchRowsPage(0, 200);
                 if (firstPage.isEmpty()) throw new Exception("Supabase returned no drama records");
-                List<String> categories = defaultCategories();
+                List<String> categories = collectCategories(firstPage);
                 runOnUiThread(() -> {
                     catalogRows = new ArrayList<>(firstPage);
                     catalogCategories = categories;
@@ -175,13 +176,15 @@ public final class CatalogActivity extends Activity {
         return rows;
     }
 
-    private List<String> defaultCategories() {
-        List<String> result = new ArrayList<>();
-        result.add("Serial / Series");
-        result.add("Long Play");
-        result.add("Comedy");
-        result.add("Shorts");
-        return result;
+    // Build category rails from the actual values stored in Supabase. Do not
+    // assume a fixed list: new/less common types may occur after the first page.
+    private List<String> collectCategories(List<Drama> rows) {
+        LinkedHashMap<String, Boolean> found = new LinkedHashMap<>();
+        for (Drama d : rows) {
+            String type = d.type == null ? "" : d.type.trim();
+            if (!type.isEmpty()) found.put(type, Boolean.TRUE);
+        }
+        return new ArrayList<>(found.keySet());
     }
 
     private void appendCatalogPage(List<Drama> page) {
@@ -218,6 +221,7 @@ public final class CatalogActivity extends Activity {
         catalogScrollY = 0;
         List<Section> sections = new ArrayList<>();
         sections.add(new Section("Latest Dramas", catalogRows, false));
+        catalogCategories = collectCategories(catalogRows);
         for (String category : catalogCategories) {
             List<Drama> matches = new ArrayList<>();
             for (Drama d : catalogRows) if (same(d.type, category)) matches.add(d);
@@ -225,6 +229,7 @@ public final class CatalogActivity extends Activity {
         }
         if (sections.size() == 1) sections.add(new Section("All Dramas", catalogRows, false));
         catalogAdapter = new SectionAdapter(sections);
+        list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         list.setAdapter(catalogAdapter);
         list.scrollToPosition(0);
     }
@@ -237,7 +242,17 @@ public final class CatalogActivity extends Activity {
             if (a.episode > 0 && b.episode > 0) return Integer.compare(a.episode, b.episode);
             return Integer.compare(a.id, b.id);
         });
-        list.setAdapter(new EpisodeAdapter(title, ordered));
+        EpisodeAdapter episodeAdapter = new EpisodeAdapter(title, ordered);
+        int columns = Math.max(3, Math.min(5,
+                getResources().getDisplayMetrics().widthPixels / dp(220)));
+        GridLayoutManager grid = new GridLayoutManager(this, columns);
+        grid.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override public int getSpanSize(int position) {
+                return position == 0 ? columns : 1;
+            }
+        });
+        list.setLayoutManager(grid);
+        list.setAdapter(episodeAdapter);
         list.scrollToPosition(0);
     }
 
@@ -305,13 +320,31 @@ public final class CatalogActivity extends Activity {
             holder.itemView.setTag(holder.rail);
         }
         void appendPage(List<Drama> page) {
-            for (Section section : sections) {
-                if (!"Latest Dramas".equals(section.title)) {
-                    for (Drama d : page) if (same(d.type, section.title)) section.items.add(d);
+            // Add newly encountered Supabase types as new rails, then append
+            // records to existing rails. This also handles categories that do
+            // not appear in the first 200 rows.
+            for (Drama d : page) {
+                String type = d.type == null ? "" : d.type.trim();
+                if (type.isEmpty()) continue;
+                Section target = null;
+                for (Section section : sections) {
+                    if (!"Latest Dramas".equals(section.title) && same(section.title, type)) {
+                        target = section;
+                        break;
+                    }
                 }
+                if (target == null) {
+                    target = new Section(type, new ArrayList<>(), true);
+                    sections.add(target);
+                    notifyItemInserted(sections.size() - 1);
+                    if (catalogCategories != null && !catalogCategories.contains(type)) {
+                        catalogCategories.add(type);
+                    }
+                }
+                target.items.add(d);
             }
-            // Refresh only the rails currently attached to the screen. Rails
-            // created later will bind against the already-updated section data.
+            // Latest Dramas shares catalogRows, while category rails use their
+            // own lists. Refresh attached rails so appended rows become visible.
             for (int i = 0; i < list.getChildCount(); i++) {
                 View child = list.getChildAt(i);
                 Object tag = child.getTag();
@@ -363,6 +396,7 @@ public final class CatalogActivity extends Activity {
             ImageView image = new ImageView(CatalogActivity.this);
             image.setBackgroundColor(Color.BLACK);
             image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            image.setScaleType(ImageView.ScaleType.CENTER_CROP);
             card.addView(image, new LinearLayout.LayoutParams(-1, dp(101)));
             TextView name = text("", 14, Color.WHITE, true);
             name.setMaxLines(2);
@@ -372,7 +406,7 @@ public final class CatalogActivity extends Activity {
             meta.setMaxLines(1);
             card.addView(meta);
             card.setOnFocusChangeListener((v, focused) -> v.setBackground(border(focused)));
-            card.setLayoutParams(new RecyclerView.LayoutParams(dp(190), dp(210)));
+            card.setLayoutParams(new RecyclerView.LayoutParams(dp(190), dp(174)));
             return new CardHolder(card, image, name, meta);
         }
         @Override public void onBindViewHolder(CardHolder holder, int position) {
@@ -382,7 +416,7 @@ public final class CatalogActivity extends Activity {
             holder.title.setText(label);
             holder.meta.setText(group.size() > 1 ? group.size() + " EPISODES" : d.urdu);
             holder.itemView.setOnClickListener(v -> openGroup(label, group));
-            holder.imageUrl = d.image;
+            holder.imageUrl = preferredThumbnail(d);
             holder.imageWidth = dp(380);
             holder.imageHeight = dp(214);
             clearThumbnail(holder.image);
@@ -464,29 +498,28 @@ public final class CatalogActivity extends Activity {
                 header.addView(count);
                 return new HeaderHolder(header);
             }
-            LinearLayout row = new LinearLayout(CatalogActivity.this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setFocusable(true);
-            row.setClickable(true);
-            row.setPadding(dp(8), dp(6), dp(8), dp(6));
-            row.setBackground(border(false));
+            LinearLayout card = new LinearLayout(CatalogActivity.this);
+            card.setOrientation(LinearLayout.VERTICAL);
+            card.setFocusable(true);
+            card.setClickable(true);
+            card.setPadding(dp(6), dp(6), dp(6), dp(7));
+            card.setBackground(border(false));
             ImageView image = new ImageView(CatalogActivity.this);
             image.setBackgroundColor(Color.BLACK);
-            image.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            row.addView(image, new LinearLayout.LayoutParams(dp(160), dp(90)));
-            LinearLayout labels = new LinearLayout(CatalogActivity.this);
-            labels.setOrientation(LinearLayout.VERTICAL);
-            labels.setPadding(dp(14), 0, 0, 0);
-            TextView number = text("", 16, Color.WHITE, true);
-            labels.addView(number);
-            TextView title = text("", 13, GOLD, false);
+            image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            card.addView(image, new LinearLayout.LayoutParams(-1, dp(112)));
+            TextView number = text("", 15, Color.WHITE, true);
+            number.setPadding(dp(3), dp(5), dp(3), 0);
+            card.addView(number);
+            TextView title = text("", 12, GOLD, false);
             title.setMaxLines(2);
-            labels.addView(title);
-            row.addView(labels, new LinearLayout.LayoutParams(0, -2, 1));
-            row.setOnFocusChangeListener((v, focused) -> v.setBackground(border(focused)));
-            row.setLayoutParams(new RecyclerView.LayoutParams(-1, dp(108)));
-            return new EpisodeHolder(row, image, number, title);
+            title.setPadding(dp(3), 0, dp(3), 0);
+            card.addView(title);
+            card.setOnFocusChangeListener((v, focused) -> v.setBackground(border(focused)));
+            RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(-1, dp(164));
+            params.setMargins(dp(4), dp(4), dp(4), dp(4));
+            card.setLayoutParams(params);
+            return new EpisodeHolder(card, image, number, title);
         }
         @Override public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             if (holder instanceof EpisodeHolder) {
@@ -496,7 +529,7 @@ public final class CatalogActivity extends Activity {
                 h.number.setText("Episode " + (d.episode > 0 ? d.episode : index + 1));
                 h.title.setText(d.title);
                 h.itemView.setOnClickListener(v -> selected(d));
-                h.imageUrl = d.image;
+                h.imageUrl = preferredThumbnail(d);
                 h.imageWidth = dp(320);
                 h.imageHeight = dp(180);
                 clearThumbnail(h.image);
@@ -540,11 +573,47 @@ public final class CatalogActivity extends Activity {
         }
     }
 
+    // Prefer the video's own landscape YouTube thumbnail. Some catalogue
+    // thumbnail_url values are portrait posters; those are only a fallback.
+    private String preferredThumbnail(Drama drama) {
+        String videoId = extractYoutubeId(drama.youtube);
+        if (!videoId.isEmpty()) return "https://i.ytimg.com/vi/" + videoId + "/mqdefault.jpg";
+        return drama.image;
+    }
+
+    private String extractYoutubeId(String raw) {
+        if (raw == null || raw.trim().isEmpty()) return "";
+        try {
+            Uri uri = Uri.parse(raw.trim());
+            String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase();
+            String id = "";
+            if (host.endsWith("youtu.be")) {
+                List<String> parts = uri.getPathSegments();
+                if (!parts.isEmpty()) id = parts.get(0);
+            } else if (host.contains("youtube.com") || host.contains("youtube-nocookie.com")) {
+                id = uri.getQueryParameter("v");
+                if (id == null || id.isEmpty()) {
+                    List<String> parts = uri.getPathSegments();
+                    for (int i = 0; i + 1 < parts.size(); i++) {
+                        if ("embed".equals(parts.get(i)) || "shorts".equals(parts.get(i))
+                                || "live".equals(parts.get(i))) {
+                            id = parts.get(i + 1);
+                            break;
+                        }
+                    }
+                }
+            }
+            return id != null && id.matches("[A-Za-z0-9_-]{11}") ? id : "";
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
     private void loadThumbnail(ImageView image, String url, int width, int height) {
         if (url == null || !url.startsWith("http")) return;
         Glide.with(image).load(url)
                 .override(width, height)
-                .centerInside()
+                .centerCrop()
                 .dontAnimate()
                 .diskCacheStrategy(Build.VERSION.SDK_INT > 21 ? DiskCacheStrategy.ALL : DiskCacheStrategy.NONE)
                 .into(image);
