@@ -306,7 +306,7 @@ public final class CatalogActivity extends Activity {
             TextView heading = text("", 21, Color.WHITE, true);
             heading.setIncludeFontPadding(true);
             heading.setPadding(0, dp(7), 0, dp(5));
-            block.addView(heading, new LinearLayout.LayoutParams(-1, dp(48)));
+            block.addView(heading, new LinearLayout.LayoutParams(-1, dp(44)));
             RecyclerView rail = new RecyclerView(CatalogActivity.this);
             rail.setLayoutManager(new LinearLayoutManager(CatalogActivity.this,
                     RecyclerView.HORIZONTAL, false));
@@ -315,7 +315,7 @@ public final class CatalogActivity extends Activity {
             rail.setNestedScrollingEnabled(false);
             rail.setClipToPadding(false);
             rail.setItemViewCacheSize(4);
-            block.addView(rail, new LinearLayout.LayoutParams(-1, dp(184)));
+            block.addView(rail, new LinearLayout.LayoutParams(-1, dp(166)));
             return new SectionHolder(block, heading, rail);
         }
         @Override public void onBindViewHolder(SectionHolder holder, int position) {
@@ -410,7 +410,7 @@ public final class CatalogActivity extends Activity {
             name.setSingleLine(true);
             name.setEllipsize(android.text.TextUtils.TruncateAt.END);
             titleRow.addView(name, new LinearLayout.LayoutParams(0, dp(36), 1f));
-            TextView urdu = text("", 15, GOLD, false);
+            TextView urdu = text("", 13, GOLD, false);
             urdu.setTypeface(urduTypeface);
             urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
             urdu.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
