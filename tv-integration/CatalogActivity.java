@@ -13,6 +13,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,6 +58,13 @@ public final class CatalogActivity extends Activity {
     private List<String> catalogCategories;
     private SectionAdapter catalogAdapter;
     private TextView status;
+    private LinearLayout sidebar;
+    private FrameLayout heroPanel;
+    private ImageView heroImage;
+    private TextView heroTitle;
+    private TextView heroUrdu;
+    private TextView heroPlay;
+    private String selectedNav = "Home";
     private Typeface urduTypeface;
     private boolean showingSeriesPage;
     private int catalogScrollY;
@@ -98,24 +106,139 @@ public final class CatalogActivity extends Activity {
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(BG);
-        root.setPadding(dp(28), dp(20), dp(20), dp(12));
+        root.setPadding(dp(24), dp(16), dp(18), dp(10));
 
-        root.addView(text("CLASSIC TV PAKISTAN", 25, Color.WHITE, true),
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.VERTICAL);
+        header.addView(text("CLASSIC TV PAKISTAN", 25, Color.WHITE, true),
                 new LinearLayout.LayoutParams(-1, dp(34)));
         status = text("PAKISTANI DRAMA ARCHIVE", 11, GOLD, true);
         status.setLetterSpacing(0.16f);
-        root.addView(status, new LinearLayout.LayoutParams(-1, dp(28)));
+        header.addView(status, new LinearLayout.LayoutParams(-1, dp(25)));
+        root.addView(header, new LinearLayout.LayoutParams(-1, dp(62)));
+
+        LinearLayout body = new LinearLayout(this);
+        body.setOrientation(LinearLayout.HORIZONTAL);
+        body.setGravity(Gravity.TOP);
+        root.addView(body, new LinearLayout.LayoutParams(-1, 0, 1));
+
+        sidebar = new LinearLayout(this);
+        sidebar.setOrientation(LinearLayout.VERTICAL);
+        sidebar.setPadding(0, dp(8), dp(16), dp(8));
+        body.addView(sidebar, new LinearLayout.LayoutParams(dp(176), -1));
+        addNavItem("Home");
+        addNavItem("Latest Dramas");
+        addNavItem("Serials");
+        addNavItem("Telefilms");
+        addNavItem("Comedy");
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        body.addView(content, new LinearLayout.LayoutParams(0, -1, 1f));
+
+        heroPanel = new FrameLayout(this);
+        heroPanel.setFocusable(false);
+        heroPanel.setBackground(border(false));
+        heroPanel.setClipToOutline(true);
+        heroImage = new ImageView(this);
+        heroImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        heroPanel.addView(heroImage, new FrameLayout.LayoutParams(-1, -1));
+
+        View scrim = new View(this);
+        scrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{Color.rgb(5, 7, 6), 0xCC050706, 0x22050706}));
+        heroPanel.addView(scrim, new FrameLayout.LayoutParams(-1, -1));
+
+        LinearLayout heroCopy = new LinearLayout(this);
+        heroCopy.setOrientation(LinearLayout.VERTICAL);
+        heroCopy.setGravity(Gravity.CENTER_VERTICAL);
+        heroCopy.setPadding(dp(24), dp(12), dp(18), dp(12));
+        FrameLayout.LayoutParams copyParams = new FrameLayout.LayoutParams(
+                dp(510), -1, Gravity.LEFT | Gravity.CENTER_VERTICAL);
+        heroPanel.addView(heroCopy, copyParams);
+
+        TextView eyebrow = text("FEATURED FROM THE ARCHIVE", 10, GOLD, true);
+        eyebrow.setLetterSpacing(0.14f);
+        heroCopy.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(22)));
+        heroUrdu = text("", 17, GOLD, false);
+        heroUrdu.setTypeface(urduTypeface);
+        heroUrdu.setTextDirection(View.TEXT_DIRECTION_RTL);
+        heroUrdu.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        heroCopy.addView(heroUrdu, new LinearLayout.LayoutParams(-1, dp(34)));
+        heroTitle = text("Classic Pakistani Dramas", 24, Color.WHITE, true);
+        heroTitle.setMaxLines(2);
+        heroCopy.addView(heroTitle, new LinearLayout.LayoutParams(-1, dp(58)));
+        heroPlay = text("▶   PLAY NOW", 13, Color.BLACK, true);
+        heroPlay.setGravity(Gravity.CENTER);
+        heroPlay.setBackground(border(true));
+        heroPlay.setBackgroundTintList(android.content.res.ColorStateList.valueOf(GOLD));
+        heroPlay.setFocusable(true);
+        heroPlay.setClickable(true);
+        heroPlay.setOnClickListener(v -> {
+            if (catalogRows != null && !catalogRows.isEmpty()) selected(catalogRows.get(0));
+        });
+        LinearLayout.LayoutParams playParams = new LinearLayout.LayoutParams(dp(150), dp(38));
+        playParams.topMargin = dp(5);
+        heroCopy.addView(heroPlay, playParams);
+        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, dp(196));
+        heroParams.bottomMargin = dp(8);
+        content.addView(heroPanel, heroParams);
 
         list = new RecyclerView(this);
         list.setBackgroundColor(BG);
         list.setClipToPadding(false);
-        list.setPadding(0, dp(6), 0, dp(30));
+        list.setPadding(0, dp(2), 0, dp(30));
         list.setItemAnimator(null);
         list.setHasFixedSize(false);
         list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         list.setItemViewCacheSize(3);
-        root.addView(list, new LinearLayout.LayoutParams(-1, 0, 1));
+        content.addView(list, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(root);
+    }
+
+    private void addNavItem(String label) {
+        TextView item = text(label, 15, "Home".equals(label) ? GOLD : Color.LTGRAY, true);
+        item.setGravity(Gravity.CENTER_VERTICAL);
+        item.setPadding(dp(14), 0, dp(8), 0);
+        item.setFocusable(true);
+        item.setClickable(true);
+        item.setBackground(border("Home".equals(label)));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, dp(48));
+        params.bottomMargin = dp(7);
+        sidebar.addView(item, params);
+        item.setOnClickListener(v -> {
+            selectedNav = label;
+            updateNavStyles();
+            renderCatalog();
+        });
+        item.setOnFocusChangeListener((v, focused) -> {
+            if (focused) item.setBackground(border(true));
+            else updateNavStyles();
+        });
+        item.setTag(label);
+    }
+
+    private void updateNavStyles() {
+        if (sidebar == null) return;
+        for (int i = 0; i < sidebar.getChildCount(); i++) {
+            View child = sidebar.getChildAt(i);
+            if (!(child instanceof TextView)) continue;
+            boolean active = same(String.valueOf(child.getTag()), selectedNav);
+            child.setBackground(border(active));
+            ((TextView) child).setTextColor(active ? GOLD : Color.LTGRAY);
+        }
+    }
+
+    private void updateHero() {
+        if (catalogRows == null || catalogRows.isEmpty() || heroImage == null) return;
+        Drama featured = catalogRows.get(0);
+        heroTitle.setText(featured.title);
+        heroUrdu.setText(featured.urdu);
+        heroUrdu.setVisibility(featured.urdu.isEmpty() ? View.GONE : View.VISIBLE);
+        String image = preferredThumbnail(featured);
+        Glide.with(this).load(image).centerCrop().dontAnimate()
+                .diskCacheStrategy(DiskCacheStrategy.ALL).into(heroImage);
+        heroPlay.setOnClickListener(v -> selected(featured));
     }
 
     private void loadCatalog() {
@@ -223,23 +346,56 @@ public final class CatalogActivity extends Activity {
     private void renderCatalog() {
         showingSeriesPage = false;
         catalogScrollY = 0;
+        if (heroPanel != null) heroPanel.setVisibility(
+                "Home".equals(selectedNav) || "Latest Dramas".equals(selectedNav) ? View.VISIBLE : View.GONE);
+        updateHero();
+        updateNavStyles();
         List<Section> sections = new ArrayList<>();
-        sections.add(new Section("Latest Dramas", catalogRows, false));
         catalogCategories = collectCategories(catalogRows);
-        for (String category : catalogCategories) {
-            List<Drama> matches = new ArrayList<>();
-            for (Drama d : catalogRows) if (same(d.type, category)) matches.add(d);
-            if (!matches.isEmpty()) sections.add(new Section(category, matches, true));
+        if ("Home".equals(selectedNav)) {
+            sections.add(new Section("Latest Dramas", catalogRows, false));
+            for (String category : catalogCategories) {
+                List<Drama> matches = rowsForCategory(category);
+                if (!matches.isEmpty()) sections.add(new Section(category, matches, true));
+            }
+        } else if ("Latest Dramas".equals(selectedNav)) {
+            sections.add(new Section("Latest Dramas", catalogRows, false));
+        } else {
+            for (String category : catalogCategories) {
+                if (!matchesNavCategory(category, selectedNav)) continue;
+                List<Drama> matches = rowsForCategory(category);
+                if (!matches.isEmpty()) sections.add(new Section(category, matches, true));
+            }
+            if (sections.isEmpty()) {
+                List<Drama> matches = new ArrayList<>();
+                for (Drama d : catalogRows) if (matchesNavCategory(d.type, selectedNav)) matches.add(d);
+                if (!matches.isEmpty()) sections.add(new Section(selectedNav, matches, false));
+            }
         }
-        if (sections.size() == 1) sections.add(new Section("All Dramas", catalogRows, false));
+        if (sections.isEmpty()) sections.add(new Section(selectedNav, new ArrayList<>(), false));
         catalogAdapter = new SectionAdapter(sections);
         list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         list.setAdapter(catalogAdapter);
         list.scrollToPosition(0);
     }
 
+    private List<Drama> rowsForCategory(String category) {
+        List<Drama> matches = new ArrayList<>();
+        for (Drama d : catalogRows) if (same(d.type, category)) matches.add(d);
+        return matches;
+    }
+
+    private boolean matchesNavCategory(String type, String nav) {
+        String value = type == null ? "" : type.toLowerCase();
+        if ("Serials".equals(nav)) return value.contains("serial") || value.contains("series");
+        if ("Telefilms".equals(nav)) return value.contains("telefilm") || value.contains("tele film");
+        if ("Comedy".equals(nav)) return value.contains("comedy");
+        return false;
+    }
+
     private void showSeriesPage(String title, List<Drama> episodes) {
         showingSeriesPage = true;
+        if (heroPanel != null) heroPanel.setVisibility(View.GONE);
         catalogScrollY = list.computeVerticalScrollOffset();
         List<Drama> ordered = new ArrayList<>(episodes);
         ordered.sort((a, b) -> {
