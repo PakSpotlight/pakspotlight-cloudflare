@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,6 +60,7 @@ public final class CatalogActivity extends Activity {
     private SectionAdapter catalogAdapter;
     private TextView status;
     private LinearLayout sidebar;
+    private ScrollView sidebarScroll;
     private FrameLayout heroPanel;
     private ImageView heroImage;
     private TextView heroTitle;
@@ -122,15 +124,15 @@ public final class CatalogActivity extends Activity {
         body.setGravity(Gravity.TOP);
         root.addView(body, new LinearLayout.LayoutParams(-1, 0, 1));
 
+        sidebarScroll = new ScrollView(this);
+        sidebarScroll.setFillViewport(false);
+        sidebarScroll.setVerticalScrollBarEnabled(false);
         sidebar = new LinearLayout(this);
         sidebar.setOrientation(LinearLayout.VERTICAL);
         sidebar.setPadding(0, dp(8), dp(16), dp(8));
-        body.addView(sidebar, new LinearLayout.LayoutParams(dp(176), -1));
-        addNavItem("Home");
-        addNavItem("Latest Dramas");
-        addNavItem("Serials");
-        addNavItem("Telefilms");
-        addNavItem("Comedy");
+        sidebarScroll.addView(sidebar, new ScrollView.LayoutParams(-1, -2));
+        body.addView(sidebarScroll, new LinearLayout.LayoutParams(dp(176), -1));
+        renderSidebar();
 
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
@@ -196,19 +198,35 @@ public final class CatalogActivity extends Activity {
         setContentView(root);
     }
 
+    // Menu labels come from the same type values used by the website catalogue.
+    // Only Home and Latest Dramas are fixed navigation destinations.
+    private void renderSidebar() {
+        if (sidebar == null) return;
+        sidebar.removeAllViews();
+        addNavItem("Home");
+        addNavItem("Latest Dramas");
+        if (catalogCategories != null) {
+            for (String category : catalogCategories) {
+                if (category == null || category.trim().isEmpty()
+                        || "Home".equals(category) || "Latest Dramas".equals(category)) continue;
+                addNavItem(category);
+            }
+        }
+        updateNavStyles();
+    }
+
     private void addNavItem(String label) {
-        TextView item = text(label, 15, "Home".equals(label) ? GOLD : Color.LTGRAY, true);
+        TextView item = text(label, 15, selectedNav.equals(label) ? GOLD : Color.LTGRAY, true);
         item.setGravity(Gravity.CENTER_VERTICAL);
         item.setPadding(dp(14), 0, dp(8), 0);
         item.setFocusable(true);
         item.setClickable(true);
-        item.setBackground(border("Home".equals(label)));
+        item.setBackground(border(selectedNav.equals(label)));
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, dp(48));
         params.bottomMargin = dp(7);
         sidebar.addView(item, params);
         item.setOnClickListener(v -> {
             selectedNav = label;
-            updateNavStyles();
             renderCatalog();
         });
         item.setOnFocusChangeListener((v, focused) -> {
@@ -223,7 +241,7 @@ public final class CatalogActivity extends Activity {
         for (int i = 0; i < sidebar.getChildCount(); i++) {
             View child = sidebar.getChildAt(i);
             if (!(child instanceof TextView)) continue;
-            boolean active = same(String.valueOf(child.getTag()), selectedNav);
+            boolean active = selectedNav.equals(String.valueOf(child.getTag()));
             child.setBackground(border(active));
             ((TextView) child).setTextColor(active ? GOLD : Color.LTGRAY);
         }
@@ -253,6 +271,7 @@ public final class CatalogActivity extends Activity {
                 runOnUiThread(() -> {
                     catalogRows = new ArrayList<>(firstPage);
                     catalogCategories = categories;
+                    renderSidebar();
                     renderCatalog();
                     status.setText("LOADING MORE DRAMAS...");
                 });
@@ -317,7 +336,17 @@ public final class CatalogActivity extends Activity {
     private void appendCatalogPage(List<Drama> page) {
         if (catalogRows == null || catalogAdapter == null) return;
         catalogRows.addAll(page);
-        catalogAdapter.appendPage(page);
+        catalogCategories = collectCategories(catalogRows);
+        renderSidebar();
+        if ("Home".equals(selectedNav) || "Latest Dramas".equals(selectedNav)) {
+            catalogAdapter.appendPage(page);
+        } else {
+            List<Drama> selectedCategoryRows = new ArrayList<>();
+            for (Drama drama : page) {
+                if (same(drama.type, selectedNav)) selectedCategoryRows.add(drama);
+            }
+            if (!selectedCategoryRows.isEmpty()) catalogAdapter.appendPage(selectedCategoryRows);
+        }
     }
 
     private JSONArray requestArray(String address) throws Exception {
@@ -361,16 +390,8 @@ public final class CatalogActivity extends Activity {
         } else if ("Latest Dramas".equals(selectedNav)) {
             sections.add(new Section("Latest Dramas", catalogRows, false));
         } else {
-            for (String category : catalogCategories) {
-                if (!matchesNavCategory(category, selectedNav)) continue;
-                List<Drama> matches = rowsForCategory(category);
-                if (!matches.isEmpty()) sections.add(new Section(category, matches, true));
-            }
-            if (sections.isEmpty()) {
-                List<Drama> matches = new ArrayList<>();
-                for (Drama d : catalogRows) if (matchesNavCategory(d.type, selectedNav)) matches.add(d);
-                if (!matches.isEmpty()) sections.add(new Section(selectedNav, matches, false));
-            }
+            List<Drama> matches = rowsForCategory(selectedNav);
+            if (!matches.isEmpty()) sections.add(new Section(selectedNav, matches, true));
         }
         if (sections.isEmpty()) sections.add(new Section(selectedNav, new ArrayList<>(), false));
         catalogAdapter = new SectionAdapter(sections);
@@ -383,14 +404,6 @@ public final class CatalogActivity extends Activity {
         List<Drama> matches = new ArrayList<>();
         for (Drama d : catalogRows) if (same(d.type, category)) matches.add(d);
         return matches;
-    }
-
-    private boolean matchesNavCategory(String type, String nav) {
-        String value = type == null ? "" : type.toLowerCase();
-        if ("Serials".equals(nav)) return value.contains("serial") || value.contains("series");
-        if ("Telefilms".equals(nav)) return value.contains("telefilm") || value.contains("tele film");
-        if ("Comedy".equals(nav)) return value.contains("comedy");
-        return false;
     }
 
     private void showSeriesPage(String title, List<Drama> episodes) {
@@ -487,6 +500,8 @@ public final class CatalogActivity extends Activity {
             for (Drama d : page) {
                 String type = d.type == null ? "" : d.type.trim();
                 if (type.isEmpty()) continue;
+                if (!"Home".equals(selectedNav) && !"Latest Dramas".equals(selectedNav)
+                        && !same(type, selectedNav)) continue;
                 Section target = null;
                 for (Section section : sections) {
                     if (!"Latest Dramas".equals(section.title) && same(section.title, type)) {
