@@ -64,7 +64,17 @@ jobs:
           test -n "$APK"
           mkdir -p test-output
           cp "$APK" test-output/ClassicTVPakistan-Catalog-Test.apk
-          sha256sum test-output/ClassicTVPakistan-Catalog-Test.apk | tee test-output/SHA256SUMS.txt
+          APK_OUT=test-output/ClassicTVPakistan-Catalog-Test.apk
+          APK_BYTES=$(stat -c%s "$APK_OUT")
+          echo "APK size: $APK_BYTES bytes"
+          if [ "$APK_BYTES" -lt 10000000 ]; then
+            echo "ERROR: APK is unexpectedly small; refusing to publish an incomplete artifact"
+            exit 1
+          fi
+          sha256sum "$APK_OUT" | tee test-output/SHA256SUMS.txt
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --verbose "$APK_OUT"
           AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
           test -n "$AAPT"
           BADGING=$("$AAPT" dump badging test-output/ClassicTVPakistan-Catalog-Test.apk)
