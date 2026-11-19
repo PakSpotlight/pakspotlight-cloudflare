@@ -336,8 +336,11 @@ public final class CatalogActivity extends Activity {
     private void appendCatalogPage(List<Drama> page) {
         if (catalogRows == null || catalogAdapter == null) return;
         catalogRows.addAll(page);
+        List<String> previousCategories = catalogCategories == null
+                ? new ArrayList<>() : new ArrayList<>(catalogCategories);
         catalogCategories = collectCategories(catalogRows);
-        renderSidebar();
+        if (!previousCategories.containsAll(catalogCategories)
+                || !catalogCategories.containsAll(previousCategories)) renderSidebar();
         if ("Home".equals(selectedNav) || "Latest Dramas".equals(selectedNav)) {
             catalogAdapter.appendPage(page);
         } else {
