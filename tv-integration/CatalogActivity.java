@@ -143,7 +143,7 @@ public final class CatalogActivity extends Activity {
         heroPanel.setBackground(border(false));
         heroPanel.setClipToOutline(true);
         heroImage = new ImageView(this);
-        heroImage.setScaleType(ImageView.ScaleType.FIT_XY);
+        heroImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
         heroPanel.addView(heroImage, new FrameLayout.LayoutParams(-1, -1));
 
         View scrim = new View(this);
@@ -189,7 +189,7 @@ public final class CatalogActivity extends Activity {
         LinearLayout.LayoutParams playParams = new LinearLayout.LayoutParams(dp(150), dp(38));
         playParams.topMargin = dp(5);
         heroCopy.addView(heroPlay, playParams);
-        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, dp(196));
+        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, dp(240));
         heroParams.bottomMargin = dp(8);
         content.addView(heroPanel, heroParams);
 
@@ -261,7 +261,7 @@ public final class CatalogActivity extends Activity {
         heroUrdu.setText(featured.urdu);
         heroUrdu.setVisibility(featured.urdu.isEmpty() ? View.GONE : View.VISIBLE);
         String image = preferredThumbnail(featured);
-        Glide.with(this).load(image).dontTransform().dontAnimate()
+        Glide.with(this).load(image).centerCrop().dontAnimate()
                 .diskCacheStrategy(DiskCacheStrategy.ALL).into(heroImage);
         heroPlay.setOnClickListener(v -> selected(featured));
     }
