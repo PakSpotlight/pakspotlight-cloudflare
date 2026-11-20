@@ -143,7 +143,7 @@ public final class CatalogActivity extends Activity {
         heroPanel.setBackground(border(false));
         heroPanel.setClipToOutline(true);
         heroImage = new ImageView(this);
-        heroImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        heroImage.setScaleType(ImageView.ScaleType.FIT_XY);
         heroPanel.addView(heroImage, new FrameLayout.LayoutParams(-1, -1));
 
         View scrim = new View(this);
@@ -162,14 +162,21 @@ public final class CatalogActivity extends Activity {
         TextView eyebrow = text("FEATURED FROM THE ARCHIVE", 10, GOLD, true);
         eyebrow.setLetterSpacing(0.14f);
         heroCopy.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(22)));
+        heroTitle = text("Classic Pakistani Dramas", 24, Color.WHITE, true);
+        heroTitle.setSingleLine(true);
+        heroTitle.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
+        heroTitle.setMarqueeRepeatLimit(-1);
+        heroTitle.setSelected(true);
         heroUrdu = text("", 17, GOLD, false);
         heroUrdu.setTypeface(urduTypeface);
         heroUrdu.setTextDirection(View.TEXT_DIRECTION_RTL);
         heroUrdu.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        heroCopy.addView(heroUrdu, new LinearLayout.LayoutParams(-1, dp(34)));
-        heroTitle = text("Classic Pakistani Dramas", 24, Color.WHITE, true);
-        heroTitle.setMaxLines(2);
-        heroCopy.addView(heroTitle, new LinearLayout.LayoutParams(-1, dp(58)));
+        heroCopy.addView(heroTitle, new LinearLayout.LayoutParams(-1, dp(42)));
+        heroUrdu.setSingleLine(true);
+        heroUrdu.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
+        heroUrdu.setMarqueeRepeatLimit(-1);
+        heroUrdu.setSelected(true);
+        heroCopy.addView(heroUrdu, new LinearLayout.LayoutParams(-1, dp(36)));
         heroPlay = text("▶   PLAY NOW", 13, Color.BLACK, true);
         heroPlay.setGravity(Gravity.CENTER);
         heroPlay.setBackground(border(true));
@@ -254,7 +261,7 @@ public final class CatalogActivity extends Activity {
         heroUrdu.setText(featured.urdu);
         heroUrdu.setVisibility(featured.urdu.isEmpty() ? View.GONE : View.VISIBLE);
         String image = preferredThumbnail(featured);
-        Glide.with(this).load(image).centerCrop().dontAnimate()
+        Glide.with(this).load(image).dontTransform().dontAnimate()
                 .diskCacheStrategy(DiskCacheStrategy.ALL).into(heroImage);
         heroPlay.setOnClickListener(v -> selected(featured));
     }
