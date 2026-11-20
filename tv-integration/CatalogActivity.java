@@ -494,7 +494,7 @@ public final class CatalogActivity extends Activity {
             rail.setNestedScrollingEnabled(false);
             rail.setClipToPadding(false);
             rail.setItemViewCacheSize(4);
-            block.addView(rail, new LinearLayout.LayoutParams(-1, dp(166)));
+            block.addView(rail, new LinearLayout.LayoutParams(-1, dp(190)));
             return new SectionHolder(block, heading, rail);
         }
         @Override public void onBindViewHolder(SectionHolder holder, int position) {
@@ -584,26 +584,31 @@ public final class CatalogActivity extends Activity {
             image.setScaleType(ImageView.ScaleType.CENTER_CROP);
             card.addView(image, new LinearLayout.LayoutParams(-1, dp(101)));
             LinearLayout titleRow = new LinearLayout(CatalogActivity.this);
-            titleRow.setOrientation(LinearLayout.HORIZONTAL);
+            titleRow.setOrientation(LinearLayout.VERTICAL);
             titleRow.setGravity(Gravity.CENTER_VERTICAL);
-            titleRow.setPadding(dp(2), dp(3), dp(2), 0);
+            titleRow.setPadding(dp(2), dp(2), dp(2), 0);
             TextView name = text("", 14, Color.WHITE, true);
             name.setSingleLine(true);
-            name.setEllipsize(android.text.TextUtils.TruncateAt.END);
-            titleRow.addView(name, new LinearLayout.LayoutParams(0, dp(36), 1f));
+            name.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
+            name.setMarqueeRepeatLimit(-1);
+            name.setSelected(true);
+            titleRow.addView(name, new LinearLayout.LayoutParams(-1, dp(25)));
             TextView urdu = text("", 13, GOLD, false);
             urdu.setTypeface(urduTypeface);
             urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
             urdu.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+            urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
             urdu.setSingleLine(true);
-            urdu.setEllipsize(android.text.TextUtils.TruncateAt.END);
-            titleRow.addView(urdu, new LinearLayout.LayoutParams(dp(82), dp(42)));
+            urdu.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
+            urdu.setMarqueeRepeatLimit(-1);
+            urdu.setSelected(true);
+            titleRow.addView(urdu, new LinearLayout.LayoutParams(-1, dp(30)));
             card.addView(titleRow);
             TextView meta = text("", 10, GOLD, true);
             meta.setMaxLines(1);
             card.addView(meta);
             card.setOnFocusChangeListener((v, focused) -> v.setBackground(border(focused)));
-            card.setLayoutParams(new RecyclerView.LayoutParams(dp(190), dp(156)));
+            card.setLayoutParams(new RecyclerView.LayoutParams(dp(190), dp(180)));
             return new CardHolder(card, image, name, urdu, meta);
         }
         @Override public void onBindViewHolder(CardHolder holder, int position) {
