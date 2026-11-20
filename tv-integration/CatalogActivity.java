@@ -162,21 +162,14 @@ public final class CatalogActivity extends Activity {
         TextView eyebrow = text("FEATURED FROM THE ARCHIVE", 10, GOLD, true);
         eyebrow.setLetterSpacing(0.14f);
         heroCopy.addView(eyebrow, new LinearLayout.LayoutParams(-1, dp(22)));
-        heroTitle = text("Classic Pakistani Dramas", 24, Color.WHITE, true);
-        heroTitle.setSingleLine(true);
-        heroTitle.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
-        heroTitle.setMarqueeRepeatLimit(-1);
-        heroTitle.setSelected(true);
         heroUrdu = text("", 17, GOLD, false);
         heroUrdu.setTypeface(urduTypeface);
         heroUrdu.setTextDirection(View.TEXT_DIRECTION_RTL);
         heroUrdu.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        heroCopy.addView(heroTitle, new LinearLayout.LayoutParams(-1, dp(42)));
-        heroUrdu.setSingleLine(true);
-        heroUrdu.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
-        heroUrdu.setMarqueeRepeatLimit(-1);
-        heroUrdu.setSelected(true);
-        heroCopy.addView(heroUrdu, new LinearLayout.LayoutParams(-1, dp(36)));
+        heroCopy.addView(heroUrdu, new LinearLayout.LayoutParams(-1, dp(34)));
+        heroTitle = text("Classic Pakistani Dramas", 24, Color.WHITE, true);
+        heroTitle.setMaxLines(2);
+        heroCopy.addView(heroTitle, new LinearLayout.LayoutParams(-1, dp(58)));
         heroPlay = text("▶   PLAY NOW", 13, Color.BLACK, true);
         heroPlay.setGravity(Gravity.CENTER);
         heroPlay.setBackground(border(true));
@@ -189,9 +182,19 @@ public final class CatalogActivity extends Activity {
         LinearLayout.LayoutParams playParams = new LinearLayout.LayoutParams(dp(150), dp(38));
         playParams.topMargin = dp(5);
         heroCopy.addView(heroPlay, playParams);
-        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, dp(240));
+        // Keep the hero at the YouTube thumbnail's native 16:9 ratio.
+        // This shows the full image without squeezing or cropping its center.
+        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, dp(196));
         heroParams.bottomMargin = dp(8);
         content.addView(heroPanel, heroParams);
+        content.post(() -> {
+            int availableWidth = content.getWidth();
+            if (availableWidth > 0) {
+                ViewGroup.LayoutParams params = heroPanel.getLayoutParams();
+                params.height = Math.round(availableWidth * 9f / 16f);
+                heroPanel.setLayoutParams(params);
+            }
+        });
 
         list = new RecyclerView(this);
         list.setBackgroundColor(BG);
@@ -494,7 +497,7 @@ public final class CatalogActivity extends Activity {
             rail.setNestedScrollingEnabled(false);
             rail.setClipToPadding(false);
             rail.setItemViewCacheSize(4);
-            block.addView(rail, new LinearLayout.LayoutParams(-1, dp(190)));
+            block.addView(rail, new LinearLayout.LayoutParams(-1, dp(166)));
             return new SectionHolder(block, heading, rail);
         }
         @Override public void onBindViewHolder(SectionHolder holder, int position) {
@@ -584,31 +587,26 @@ public final class CatalogActivity extends Activity {
             image.setScaleType(ImageView.ScaleType.CENTER_CROP);
             card.addView(image, new LinearLayout.LayoutParams(-1, dp(101)));
             LinearLayout titleRow = new LinearLayout(CatalogActivity.this);
-            titleRow.setOrientation(LinearLayout.VERTICAL);
+            titleRow.setOrientation(LinearLayout.HORIZONTAL);
             titleRow.setGravity(Gravity.CENTER_VERTICAL);
-            titleRow.setPadding(dp(2), dp(2), dp(2), 0);
+            titleRow.setPadding(dp(2), dp(3), dp(2), 0);
             TextView name = text("", 14, Color.WHITE, true);
             name.setSingleLine(true);
-            name.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
-            name.setMarqueeRepeatLimit(-1);
-            name.setSelected(true);
-            titleRow.addView(name, new LinearLayout.LayoutParams(-1, dp(25)));
+            name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            titleRow.addView(name, new LinearLayout.LayoutParams(0, dp(36), 1f));
             TextView urdu = text("", 13, GOLD, false);
             urdu.setTypeface(urduTypeface);
             urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
             urdu.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
-            urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
             urdu.setSingleLine(true);
-            urdu.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
-            urdu.setMarqueeRepeatLimit(-1);
-            urdu.setSelected(true);
-            titleRow.addView(urdu, new LinearLayout.LayoutParams(-1, dp(30)));
+            urdu.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            titleRow.addView(urdu, new LinearLayout.LayoutParams(dp(82), dp(42)));
             card.addView(titleRow);
             TextView meta = text("", 10, GOLD, true);
             meta.setMaxLines(1);
             card.addView(meta);
             card.setOnFocusChangeListener((v, focused) -> v.setBackground(border(focused)));
-            card.setLayoutParams(new RecyclerView.LayoutParams(dp(190), dp(180)));
+            card.setLayoutParams(new RecyclerView.LayoutParams(dp(190), dp(156)));
             return new CardHolder(card, image, name, urdu, meta);
         }
         @Override public void onBindViewHolder(CardHolder holder, int position) {
