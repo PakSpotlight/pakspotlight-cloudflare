@@ -63,8 +63,10 @@ public final class CatalogActivity extends Activity {
     private ScrollView sidebarScroll;
     private FrameLayout heroPanel;
     private ImageView heroImage;
+    private ImageView heroArtwork;
     private TextView heroTitle;
     private TextView heroUrdu;
+    private TextView heroDescription;
     private TextView heroPlay;
     private String selectedNav = "Home";
     private Typeface urduTypeface;
@@ -73,7 +75,7 @@ public final class CatalogActivity extends Activity {
 
     private static final class Drama {
         int id;
-        String title, urdu, type, series, year, image, youtube;
+        String title, urdu, description, type, series, year, image, youtube;
         int episode;
         JSONObject raw;
     }
@@ -146,6 +148,16 @@ public final class CatalogActivity extends Activity {
         heroImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
         heroPanel.addView(heroImage, new FrameLayout.LayoutParams(-1, -1));
 
+        // A second, right-aligned copy preserves the complete 16:9 YouTube
+        // artwork while the background copy fills the wide cinematic banner.
+        heroArtwork = new ImageView(this);
+        heroArtwork.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        heroArtwork.setAdjustViewBounds(true);
+        FrameLayout.LayoutParams artworkParams = new FrameLayout.LayoutParams(
+                -1, -1, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        artworkParams.leftMargin = dp(430);
+        heroPanel.addView(heroArtwork, artworkParams);
+
         View scrim = new View(this);
         scrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
                 new int[]{Color.rgb(5, 7, 6), 0xCC050706, 0x22050706}));
@@ -167,10 +179,16 @@ public final class CatalogActivity extends Activity {
         heroUrdu.setTextDirection(View.TEXT_DIRECTION_RTL);
         heroUrdu.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         heroCopy.addView(heroUrdu, new LinearLayout.LayoutParams(-1, dp(34)));
-        heroTitle = text("Classic Pakistani Dramas", 24, Color.WHITE, true);
+        heroTitle = text("Classic Pakistani Dramas", 26, Color.WHITE, true);
         heroTitle.setMaxLines(2);
         heroCopy.addView(heroTitle, new LinearLayout.LayoutParams(-1, dp(58)));
-        heroPlay = text("▶   PLAY NOW", 13, Color.BLACK, true);
+        heroDescription = text("Discover memorable Pakistani dramas from the archive.", 13, Color.WHITE, false);
+        heroDescription.setMaxLines(3);
+        heroDescription.setLineSpacing(dp(2), 1.0f);
+        LinearLayout.LayoutParams descriptionParams = new LinearLayout.LayoutParams(-1, dp(54));
+        descriptionParams.bottomMargin = dp(4);
+        heroCopy.addView(heroDescription, descriptionParams);
+        heroPlay = text("▶   WATCH NOW", 13, Color.BLACK, true);
         heroPlay.setGravity(Gravity.CENTER);
         heroPlay.setBackground(border(true));
         heroPlay.setBackgroundTintList(android.content.res.ColorStateList.valueOf(GOLD));
@@ -179,22 +197,25 @@ public final class CatalogActivity extends Activity {
         heroPlay.setOnClickListener(v -> {
             if (catalogRows != null && !catalogRows.isEmpty()) selected(catalogRows.get(0));
         });
-        LinearLayout.LayoutParams playParams = new LinearLayout.LayoutParams(dp(150), dp(38));
+        heroPlay.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == android.view.KeyEvent.KEYCODE_DPAD_DOWN
+                    && event.getAction() == android.view.KeyEvent.ACTION_DOWN) {
+                focusFirstCatalogCard();
+                return true;
+            }
+            return false;
+        });
+        LinearLayout.LayoutParams playParams = new LinearLayout.LayoutParams(dp(170), dp(42));
         playParams.topMargin = dp(5);
         heroCopy.addView(heroPlay, playParams);
-        // Keep the hero at the YouTube thumbnail's native 16:9 ratio.
-        // This shows the full image without squeezing or cropping its center.
-        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, dp(196));
+        // A controlled banner height keeps the first content rail visible on
+        // 720p and 1080p televisions. Never derive height from full screen width.
+        float screenHeightDp = getResources().getDisplayMetrics().heightPixels
+                / getResources().getDisplayMetrics().density;
+        int heroHeight = Math.round(Math.max(220f, Math.min(320f, screenHeightDp * 0.36f)));
+        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, dp(heroHeight));
         heroParams.bottomMargin = dp(8);
         content.addView(heroPanel, heroParams);
-        content.post(() -> {
-            int availableWidth = content.getWidth();
-            if (availableWidth > 0) {
-                ViewGroup.LayoutParams params = heroPanel.getLayoutParams();
-                params.height = Math.round(availableWidth * 9f / 16f);
-                heroPanel.setLayoutParams(params);
-            }
-        });
 
         list = new RecyclerView(this);
         list.setBackgroundColor(BG);
@@ -263,9 +284,14 @@ public final class CatalogActivity extends Activity {
         heroTitle.setText(featured.title);
         heroUrdu.setText(featured.urdu);
         heroUrdu.setVisibility(featured.urdu.isEmpty() ? View.GONE : View.VISIBLE);
+        heroDescription.setText(featured.description.isEmpty()
+                ? "Explore the stories and unforgettable performances in our archive."
+                : featured.description);
         String image = preferredThumbnail(featured);
         Glide.with(this).load(image).centerCrop().dontAnimate()
                 .diskCacheStrategy(DiskCacheStrategy.ALL).into(heroImage);
+        Glide.with(this).load(image).fitCenter().dontAnimate()
+                .diskCacheStrategy(DiskCacheStrategy.ALL).into(heroArtwork);
         heroPlay.setOnClickListener(v -> selected(featured));
     }
 
@@ -321,6 +347,7 @@ public final class CatalogActivity extends Activity {
             d.id = o.optInt("id");
             d.title = clean(o.optString("title", ""), "Untitled");
             d.urdu = clean(o.optString("urdu_title", ""), "");
+            d.description = clean(o.optString("description", ""), "");
             d.type = clean(o.optString("type", ""), "Other");
             d.series = clean(o.optString("series_name", ""), "");
             d.year = clean(o.optString("year", ""), "");
@@ -383,6 +410,25 @@ public final class CatalogActivity extends Activity {
         } finally {
             c.disconnect();
         }
+    }
+
+    private void focusFirstCatalogCard() {
+        if (list == null || catalogAdapter == null || catalogAdapter.getItemCount() == 0) return;
+        list.scrollToPosition(0);
+        list.post(() -> {
+            RecyclerView.ViewHolder rowHolder = list.findViewHolderForAdapterPosition(0);
+            if (rowHolder == null) return;
+            View railView = rowHolder.itemView.findViewWithTag("catalog_rail");
+            if (!(railView instanceof RecyclerView)) return;
+            RecyclerView rail = (RecyclerView) railView;
+            rail.post(() -> {
+                if (rail.getAdapter() != null && rail.getAdapter().getItemCount() > 0) {
+                    RecyclerView.ViewHolder first = rail.findViewHolderForAdapterPosition(0);
+                    if (first != null) first.itemView.requestFocus();
+                    else rail.scrollToPosition(0);
+                }
+            });
+        });
     }
 
     private void renderCatalog() {
@@ -504,6 +550,7 @@ public final class CatalogActivity extends Activity {
             Section section = sections.get(position);
             holder.heading.setText(section.title);
             holder.rail.setAdapter(new DramaCardAdapter(section.items, section.seriesGroups));
+            holder.rail.setTag("catalog_rail");
             holder.itemView.setTag(holder.rail);
         }
         void appendPage(List<Drama> page) {
