@@ -153,9 +153,12 @@ public final class CatalogActivity extends Activity {
         heroArtwork = new ImageView(this);
         heroArtwork.setScaleType(ImageView.ScaleType.FIT_CENTER);
         heroArtwork.setAdjustViewBounds(true);
+        float displayDensity = getResources().getDisplayMetrics().density;
+        int displayWidthDp = Math.round(getResources().getDisplayMetrics().widthPixels / displayDensity);
+        int contentWidthDp = Math.max(520, displayWidthDp - 218);
+        int artworkWidth = Math.round(contentWidthDp * 0.56f);
         FrameLayout.LayoutParams artworkParams = new FrameLayout.LayoutParams(
-                -1, -1, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        artworkParams.leftMargin = dp(430);
+                dp(artworkWidth), -1, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         heroPanel.addView(heroArtwork, artworkParams);
 
         View scrim = new View(this);
