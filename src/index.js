@@ -669,6 +669,22 @@ var index_default = {
     const url = new URL(request.url);
     ctxRef.waitUntil = ctx.waitUntil ? ctx.waitUntil.bind(ctx) : null;
 
+    // Preview safety: block admin access and all write requests on the isolated preview.
+    // This flag is only enabled by wrangler.preview.jsonc; production is unaffected.
+    if (env.PREVIEW_MODE === "true") {
+      if (url.pathname === "/robots.txt") {
+        return new Response("User-agent: *\\nDisallow: /\\n", {
+          headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": "noindex, nofollow" }
+        });
+      }
+      if (url.pathname === "/admin" || url.pathname === "/admin.html" || request.method === "POST" || request.method === "PUT" || request.method === "PATCH" || request.method === "DELETE") {
+        return new Response("Admin and write operations are disabled on the preview site.", {
+          status: 403,
+          headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": "noindex, nofollow" }
+        });
+      }
+    }
+
     // Pre-flight CORS support
     if (request.method === "OPTIONS") {
       return new Response(null, {

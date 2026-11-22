@@ -61,6 +61,8 @@ function renderCatalogPane() {
   return `
     <div class="vault-summary">
       <span><strong>${serialCount}</strong> serial${serialCount !== 1 ? 's' : ''}, <strong>${singleCount}</strong> single title${singleCount !== 1 ? 's' : ''}, <strong>${allDramas.length}</strong> videos in the vault.</span>
+      ${catalogLoadingMore ? '<span class="alert">Loading remaining archive… Search covers loaded titles until loading finishes.</span>' : ''}
+      ${catalogLoadFailed ? '<span class="alert">Some archive records could not be loaded. Please refresh and try again.</span>' : ''}
       ${missingArtwork > 0
         ? `<span class="alert">${missingArtwork} missing artwork.</span><button class="link-btn" type="button" onclick="runSyncArtwork(null)">Sync artwork</button>`
         : ''}
