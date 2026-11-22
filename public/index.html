@@ -457,15 +457,23 @@
       });
     }, { passive: true });
     window.addEventListener("focus", resyncHeroSlider);
-    // Initialize Home Page
-    Promise.all([loadData(), loadCategories()]).then(() => {
+    // Initialize Home progressively: paint the first archive batch, then refresh when the
+    // remaining catalogue pages arrive. Category configuration may arrive independently.
+    let homeAuthInitialized = false;
+    function paintHome() {
       renderCategoryNavigation();
       renderHome();
-      initAuth();
-    }).catch(err => {
-      console.error(err);
-      renderHome();
-    });
+      if (!homeAuthInitialized) {
+        initAuth();
+        homeAuthInitialized = true;
+      }
+    }
+    Promise.all([loadData({ onPartial: paintHome }), loadCategories()])
+      .then(paintHome)
+      .catch(err => {
+        console.error(err);
+        paintHome();
+      });
 
     const mInput = $("mobileSearchInput");
     if (mInput) mInput.addEventListener("input", handleMobileSearchInput);
