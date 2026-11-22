@@ -62,6 +62,7 @@ public final class CatalogActivity extends Activity {
     private LinearLayout sidebar;
     private ScrollView sidebarScroll;
     private FrameLayout heroPanel;
+    private int heroHeightPx;
     private ImageView heroImage;
     private ImageView heroArtwork;
     private TextView heroTitle;
@@ -216,8 +217,7 @@ public final class CatalogActivity extends Activity {
         float screenHeightDp = getResources().getDisplayMetrics().heightPixels
                 / getResources().getDisplayMetrics().density;
         int heroHeight = Math.round(Math.max(220f, Math.min(320f, screenHeightDp * 0.36f)));
-        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, dp(heroHeight));
-        heroParams.bottomMargin = dp(8);
+        heroHeightPx = dp(heroHeight);
         // Hero and category rails share one vertical list so the complete home page scrolls.
         list = new RecyclerView(this);
         list.setBackgroundColor(BG);
@@ -556,7 +556,9 @@ public final class CatalogActivity extends Activity {
                 if (heroPanel.getParent() instanceof ViewGroup) {
                     ((ViewGroup) heroPanel.getParent()).removeView(heroPanel);
                 }
-                header.addView(heroPanel, new LinearLayout.LayoutParams(-1, -2));
+                header.addView(heroPanel, new LinearLayout.LayoutParams(-1, heroHeightPx));
+                View spacer = new View(CatalogActivity.this);
+                header.addView(spacer, new LinearLayout.LayoutParams(1, dp(8)));
                 return new SectionHolder(header, null, null);
             }
             LinearLayout block = new LinearLayout(CatalogActivity.this);
