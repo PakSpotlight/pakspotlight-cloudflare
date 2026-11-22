@@ -78,67 +78,51 @@ let activeTab = "catalog";
 const ADMIN_PAGE_SIZE = 1000; // Supabase's server-side max-rows per response
 const ADMIN_MAX_PAGES = 50;   // runaway guard: up to 50k titles
 
-async function fetchArchiveData() {
-  if (!window.sbClient) return;
+let catalogLoadingMore = false;
+let catalogLoadFailed = false;
+let archiveNextOffset = 0;
+const ADMIN_PROGRESSIVE_PAGE_SIZE = 500;
+
+function mapAdminRows(data) {
+  return (data || []).map(r => {
+    const parsedEp = r.episode_number != null ? Number(r.episode_number) : parseEpisodeNumber(r.title);
+    const rawSeries = (r.series_name || "").trim();
+    const cleanedTitle = cleanDramaTitle(r.title);
+    const isSerialType = ["serial / series", "series", "serial"].includes(String(r.type || "").toLowerCase().trim());
+    const inferredSeries = rawSeries || (parsedEp || isSerialType ? cleanedTitle : "");
+    return {
+      id: r.id, title: r.title || "Untitled", urdu: r.urdu_title || "",
+      year: r.year || "", type: r.type || "Serial / Series",
+      series_name: inferredSeries, episode_number: parsedEp,
+      writer: r.writer || "", director: r.director || "", produced: r.produced || "",
+      cast: r.cast || "", description: r.description || "",
+      youtube_url: r.youtube_url || "", thumbnail_url: r.thumbnail_url || ""
+    };
+  });
+}
+
+async function fetchArchiveData(options = {}) {
+  const progressive = !!options.progressive;
+  const pageSize = progressive ? ADMIN_PROGRESSIVE_PAGE_SIZE : ADMIN_PAGE_SIZE;
+  catalogLoadingMore = progressive;
+  catalogLoadFailed = false;
+  archiveNextOffset = 0;
+
   const [catRes, featRes] = await Promise.all([
     fetch("/api/categories").catch(() => null),
     fetch("/api/featured").catch(() => null)
   ]);
-
-  // Page the Drama query explicitly: a single `.select("*")` is silently capped at 1000 rows
-  // and the archive is larger, so the admin catalog only ever saw the newest 1000 entries.
-  const dramaRows = [];
-  let dramaError = null;
-  for (let page = 0; page < ADMIN_MAX_PAGES; page += 1) {
-    const from = page * ADMIN_PAGE_SIZE;
-    const to = from + ADMIN_PAGE_SIZE - 1;
-    const { data, error } = await window.sbClient
-      .from("Drama")
-      .select("*")
-      .order("id", { ascending: false })
-      .range(from, to);
-
-    if (error) {
-      dramaError = error;
-      break;
-    }
-    if (Array.isArray(data) && data.length > 0) {
-      for (let i = 0; i < data.length; i += 1) dramaRows.push(data[i]);
-      if (data.length < ADMIN_PAGE_SIZE) break;
-    } else {
-      break;
-    }
+  const first = await window.sbClient.from("Drama").select("*").order("id", { ascending: false }).range(0, pageSize - 1);
+  if (first.error) {
+    console.error("Drama query failed:", first.error);
+    catalogLoadFailed = true;
+    catalogLoadingMore = false;
+    return;
   }
-
-  if (dramaError) {
-    console.error("Drama query failed:", dramaError);
-  }
-  if (dramaRows.length > 0) {
-    allDramas = dramaRows.map(r => {
-      const parsedEp = r.episode_number != null ? Number(r.episode_number) : parseEpisodeNumber(r.title);
-      const rawSeries = (r.series_name || "").trim();
-      const cleanedTitle = cleanDramaTitle(r.title);
-      const isSerialType = ["serial / series", "series", "serial"].includes(String(r.type || "").toLowerCase().trim());
-      const inferredSeries = rawSeries || (parsedEp || isSerialType ? cleanedTitle : "");
-
-      return {
-        id: r.id,
-        title: r.title || "Untitled",
-        urdu: r.urdu_title || "",
-        year: r.year || "",
-        type: r.type || "Serial / Series",
-        series_name: inferredSeries,
-        episode_number: parsedEp,
-        writer: r.writer || "",
-        director: r.director || "",
-        produced: r.produced || "",
-        cast: r.cast || "",
-        description: r.description || "",
-        youtube_url: r.youtube_url || "",
-        thumbnail_url: r.thumbnail_url || ""
-      };
-    });
-  }
+  const firstRows = Array.isArray(first.data) ? first.data : [];
+  allDramas = mapAdminRows(firstRows);
+  archiveNextOffset = firstRows.length;
+  if (firstRows.length < pageSize) archiveNextOffset = 0;
 
   if (catRes && catRes.ok) {
     const catData = await catRes.json();
@@ -148,8 +132,76 @@ async function fetchArchiveData() {
     const featData = await featRes.json();
     if (Array.isArray(featData.featuredIds)) configuredFeaturedIds = featData.featuredIds;
   }
+
+  if (progressive) return;
+
+  // Non-progressive refreshes fetch all pages in parallel batches.
+  const chunks = [firstRows];
+  for (let offset = pageSize; offset < ADMIN_MAX_PAGES * pageSize; offset += pageSize * 3) {
+    const offsets = [offset, offset + pageSize, offset + pageSize * 2].filter(o => o < ADMIN_MAX_PAGES * pageSize);
+    const results = await Promise.all(offsets.map(o =>
+      window.sbClient.from("Drama").select("*").order("id", { ascending: false }).range(o, o + pageSize - 1)
+    ));
+    let stop = false;
+    for (const result of results) {
+      if (result.error) {
+        console.error("Drama query failed:", result.error);
+        catalogLoadFailed = true;
+        stop = true;
+        break;
+      }
+      const chunk = Array.isArray(result.data) ? result.data : [];
+      chunks.push(chunk);
+      if (chunk.length < pageSize) stop = true;
+    }
+    if (stop) break;
+  }
+  allDramas = mapAdminRows(chunks.flat());
+  archiveNextOffset = 0;
+  catalogLoadingMore = false;
 }
 
+async function loadRemainingArchive() {
+  if (!archiveNextOffset || !window.sbClient) {
+    catalogLoadingMore = false;
+    return;
+  }
+  const pageSize = ADMIN_PROGRESSIVE_PAGE_SIZE;
+  let offset = archiveNextOffset;
+  const chunks = [];
+  for (let batch = 0; batch < ADMIN_MAX_PAGES; batch += 1) {
+    const offsets = [offset, offset + pageSize, offset + pageSize * 2];
+    const results = await Promise.all(offsets.map(o =>
+      window.sbClient.from("Drama").select("*").order("id", { ascending: false }).range(o, o + pageSize - 1)
+    ));
+    let finished = false;
+    for (const result of results) {
+      if (result.error) {
+        console.error("Background archive fetch failed:", result.error);
+        catalogLoadFailed = true;
+        finished = true;
+        break;
+      }
+      const chunk = Array.isArray(result.data) ? result.data : [];
+      chunks.push(...chunk);
+      if (chunk.length < pageSize) finished = true;
+    }
+    offset += pageSize * 3;
+    if (finished || chunks.length === 0) break;
+  }
+  if (chunks.length) {
+    const combined = allDramas.concat(mapAdminRows(chunks));
+    const seen = new Set();
+    allDramas = combined.filter(d => !seen.has(d.id) && seen.add(d.id));
+  }
+  archiveNextOffset = 0;
+  catalogLoadingMore = false;
+  const pane = $("pane-catalog");
+  if (pane) {
+    pane.innerHTML = renderCatalogPane();
+    bindCatalogEvents();
+  }
+}
 // Re-fetch data and re-render the open tab (keeps the current tab).
 async function refreshApp() {
   await fetchArchiveData();
@@ -173,12 +225,13 @@ async function checkAuth() {
 
 async function openConsole() {
   updateTopAuthUi();
-  await fetchArchiveData();
+  await fetchArchiveData({ progressive: true });
   renderPanes();
   document.body.classList.add("authed");
   $("vaultTabs").hidden = false;
   $("vaultBottomnav").hidden = false;
   syncTabUi();
+  if (archiveNextOffset) loadRemainingArchive();
 }
 
 function updateTopAuthUi() {
