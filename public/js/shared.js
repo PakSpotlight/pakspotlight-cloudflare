@@ -153,108 +153,100 @@ async function loadCategories() {
   return categories;
 }
 
-async function loadData() {
-  // v2: the first cache keyed a single unpaginated query, which Supabase silently caps at 1000
-  // rows. A new key retires those incomplete copies instead of serving them for another 3 minutes.
+async function loadData(options = {}) {
+  const onPartial = typeof options.onPartial === "function" ? options.onPartial : null;
   const CACHE_KEY = "pak_spotlight_dramas_cache_v2";
   const CACHE_TIME_KEY = "pak_spotlight_dramas_cache_time_v2";
-  const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
-  const PAGE_SIZE = 1000; // Supabase's server-side max-rows
-  const MAX_PAGES = 50; // runaway guard: 50k titles
+  const CACHE_TTL = 3 * 60 * 1000;
+  const PAGE_SIZE = 500;
+  const MAX_PAGES = 50;
 
-  console.log("🎬 loadData() starting...");
-  console.log("sbClient available:", !!sbClient);
+  const notify = () => {
+    if (onPartial) {
+      try { onPartial(rows); } catch (err) { console.warn("Partial homepage render failed:", err); }
+    }
+  };
+  const loadFeatured = async () => {
+    try {
+      const featRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/featured.json?t=${Date.now()}`);
+      if (featRes.ok) {
+        const featList = await featRes.json();
+        if (Array.isArray(featList)) featuredIds = featList.map(Number).filter(n => !isNaN(n) && n > 0);
+      }
+    } catch (err) {
+      console.warn("Could not refresh featured IDs:", err);
+    }
+  };
 
-  // Try cache first
+  // A fresh cache can paint immediately; refresh featured configuration separately.
   try {
     const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
     const cachedRaw = localStorage.getItem(CACHE_KEY);
     if (cachedRaw && cachedTime && (Date.now() - Number(cachedTime) < CACHE_TTL)) {
       const parsed = JSON.parse(cachedRaw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        console.log("✓ Using cached data:", parsed.length, "rows");
         rows = parsed.map(mapRow);
-        // Featured slide IDs are independent of the drama catalogue cache.
-        // Always refresh them so the homepage does not fall back to one latest drama.
-        try {
-          const featRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/featured.json?t=${Date.now()}`);
-          if (featRes.ok) {
-            const featList = await featRes.json();
-            if (Array.isArray(featList)) {
-              featuredIds = featList.map(Number).filter(n => !isNaN(n) && n > 0);
-            }
-          }
-        } catch (err) {
-          console.warn("Could not refresh featured IDs while using cached dramas:", err);
-        }
+        notify();
+        await loadFeatured();
         return rows;
       }
     }
   } catch {}
 
-  // Fetch from Supabase using client library
   if (!sbClient) {
     console.error("❌ Supabase client not initialized");
     return [];
   }
 
   try {
-    console.log("📡 Fetching Drama table from Supabase...");
+    const featuredPromise = loadFeatured();
+    const first = await sbClient.from("Drama").select("*").order("id", { ascending: false }).range(0, PAGE_SIZE - 1);
+    if (first.error) throw first.error;
+    const data = Array.isArray(first.data) ? first.data : [];
+    if (!data.length) { rows = []; notify(); await featuredPromise; return rows; }
 
-    // `.select('*')` alone returns at most 1000 rows — the archive is larger than that, so the
-    // oldest titles never reached the site. Page explicitly and stop on the short final page.
-    const data = [];
-    for (let page = 0; page < MAX_PAGES; page += 1) {
-      const from = page * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-      const result = await sbClient
-        .from('Drama')
-        .select('*')
-        .order('id', { ascending: false })
-        .range(from, to);
+    // Paint a useful first batch before waiting for the rest of the archive.
+    rows = data.map(mapRow);
+    notify();
 
-      if (result.error) {
-        console.error("❌ Supabase error:", result.error);
-        if (data.length === 0) return [];
-        break;
+    // Fetch the remaining batches in small parallel groups to avoid a long serial wait.
+    let complete = data.length < PAGE_SIZE;
+    for (let pageStart = 1; !complete && pageStart < MAX_PAGES; pageStart += 3) {
+      const pages = [pageStart, pageStart + 1, pageStart + 2].filter(p => p < MAX_PAGES);
+      const results = await Promise.all(pages.map(p =>
+        sbClient.from("Drama").select("*").order("id", { ascending: false }).range(p * PAGE_SIZE, (p + 1) * PAGE_SIZE - 1)
+      ));
+      for (let j = 0; j < results.length; j += 1) {
+        const result = results[j];
+        if (result.error) {
+          console.error("❌ Supabase archive page error:", result.error);
+          complete = true;
+          break;
+        }
+        const chunk = Array.isArray(result.data) ? result.data : [];
+        data.push(...chunk);
+        if (chunk.length < PAGE_SIZE) complete = true;
       }
-
-      const chunk = Array.isArray(result.data) ? result.data : [];
-      for (let i = 0; i < chunk.length; i += 1) data.push(chunk[i]);
-      if (chunk.length < PAGE_SIZE) break;
     }
 
-    if (data.length === 0) return [];
-
-    console.log("✅ Successfully loaded Drama data, count:", data.length);
     rows = data.map(mapRow);
-
-    // Cache it. The old keys are removed so an oversized stale copy cannot eat the quota.
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-      localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-      localStorage.removeItem("pak_spotlight_dramas_cache");
-      localStorage.removeItem("pak_spotlight_dramas_cache_time");
-    } catch {}
-
-    // Load featured IDs
-    try {
-      const featRes = await fetch(`${SUPABASE_URL}/storage/v1/object/public/thumbnails/config/featured.json?t=${Date.now()}`);
-      if (featRes.ok) {
-        const featList = await featRes.json();
-        if (Array.isArray(featList)) {
-          featuredIds = featList.map(Number).filter(n => !isNaN(n) && n > 0);
-        }
-      }
-    } catch {}
-
+    notify();
+    if (data.length) {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+        localStorage.removeItem("pak_spotlight_dramas_cache");
+        localStorage.removeItem("pak_spotlight_dramas_cache_time");
+      } catch {}
+    }
+    await featuredPromise;
+    notify();
     return rows;
   } catch (err) {
     console.error("❌ Error fetching dramas:", err);
-    return [];
+    return rows || [];
   }
 }
-
 
 async function loadWatchData(id) {
   const numericId = Number(id);
