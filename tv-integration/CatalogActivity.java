@@ -218,8 +218,7 @@ public final class CatalogActivity extends Activity {
         int heroHeight = Math.round(Math.max(220f, Math.min(320f, screenHeightDp * 0.36f)));
         LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, dp(heroHeight));
         heroParams.bottomMargin = dp(8);
-        content.addView(heroPanel, heroParams);
-
+        // Hero and category rails share one vertical list so the complete home page scrolls.
         list = new RecyclerView(this);
         list.setBackgroundColor(BG);
         list.setClipToPadding(false);
@@ -415,11 +414,25 @@ public final class CatalogActivity extends Activity {
         }
     }
 
+    // Scroll the outer vertical list whenever focus enters a card in a nested rail.
+    private void ensureCatalogRowVisible(View focusedCard) {
+        if (list == null) return;
+        View directChild = focusedCard;
+        while (directChild.getParent() instanceof View && directChild.getParent() != list) {
+            directChild = (View) directChild.getParent();
+        }
+        if (directChild.getParent() == list) {
+            int position = list.getChildAdapterPosition(directChild);
+            if (position != RecyclerView.NO_POSITION) list.smoothScrollToPosition(position);
+        }
+    }
+
     private void focusFirstCatalogCard() {
         if (list == null || catalogAdapter == null || catalogAdapter.getItemCount() == 0) return;
-        list.scrollToPosition(0);
+        int firstSectionPosition = catalogAdapter.hasHero ? 1 : 0;
+        list.scrollToPosition(firstSectionPosition);
         list.post(() -> {
-            RecyclerView.ViewHolder rowHolder = list.findViewHolderForAdapterPosition(0);
+            RecyclerView.ViewHolder rowHolder = list.findViewHolderForAdapterPosition(firstSectionPosition);
             if (rowHolder == null) return;
             View railView = rowHolder.itemView.findViewWithTag("catalog_rail");
             if (!(railView instanceof RecyclerView)) return;
@@ -437,8 +450,7 @@ public final class CatalogActivity extends Activity {
     private void renderCatalog() {
         showingSeriesPage = false;
         catalogScrollY = 0;
-        if (heroPanel != null) heroPanel.setVisibility(
-                "Home".equals(selectedNav) || "Latest Dramas".equals(selectedNav) ? View.VISIBLE : View.GONE);
+        boolean showHero = "Home".equals(selectedNav) || "Latest Dramas".equals(selectedNav);
         updateHero();
         updateNavStyles();
         List<Section> sections = new ArrayList<>();
@@ -456,7 +468,7 @@ public final class CatalogActivity extends Activity {
             if (!matches.isEmpty()) sections.add(new Section(selectedNav, matches, true));
         }
         if (sections.isEmpty()) sections.add(new Section(selectedNav, new ArrayList<>(), false));
-        catalogAdapter = new SectionAdapter(sections);
+        catalogAdapter = new SectionAdapter(sections, showHero);
         list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         list.setAdapter(catalogAdapter);
         list.scrollToPosition(0);
@@ -470,7 +482,6 @@ public final class CatalogActivity extends Activity {
 
     private void showSeriesPage(String title, List<Drama> episodes) {
         showingSeriesPage = true;
-        if (heroPanel != null) heroPanel.setVisibility(View.GONE);
         catalogScrollY = list.computeVerticalScrollOffset();
         List<Drama> ordered = new ArrayList<>(episodes);
         ordered.sort((a, b) -> {
@@ -530,8 +541,24 @@ public final class CatalogActivity extends Activity {
 
     private final class SectionAdapter extends RecyclerView.Adapter<SectionHolder> {
         private final List<Section> sections;
-        SectionAdapter(List<Section> sections) { this.sections = sections; }
+        final boolean hasHero;
+        SectionAdapter(List<Section> sections, boolean hasHero) {
+            this.sections = sections;
+            this.hasHero = hasHero;
+        }
+        @Override public int getItemViewType(int position) {
+            return hasHero && position == 0 ? TYPE_HEADER : TYPE_EPISODE;
+        }
         @Override public SectionHolder onCreateViewHolder(ViewGroup parent, int type) {
+            if (type == TYPE_HEADER) {
+                LinearLayout header = new LinearLayout(CatalogActivity.this);
+                header.setOrientation(LinearLayout.VERTICAL);
+                if (heroPanel.getParent() instanceof ViewGroup) {
+                    ((ViewGroup) heroPanel.getParent()).removeView(heroPanel);
+                }
+                header.addView(heroPanel, new LinearLayout.LayoutParams(-1, -2));
+                return new SectionHolder(header, null, null);
+            }
             LinearLayout block = new LinearLayout(CatalogActivity.this);
             block.setOrientation(LinearLayout.VERTICAL);
             TextView heading = text("", 21, Color.WHITE, true);
@@ -550,7 +577,8 @@ public final class CatalogActivity extends Activity {
             return new SectionHolder(block, heading, rail);
         }
         @Override public void onBindViewHolder(SectionHolder holder, int position) {
-            Section section = sections.get(position);
+            if (hasHero && position == 0) return;
+            Section section = sections.get(position - (hasHero ? 1 : 0));
             holder.heading.setText(section.title);
             holder.rail.setAdapter(new DramaCardAdapter(section.items, section.seriesGroups));
             holder.rail.setTag("catalog_rail");
@@ -575,7 +603,7 @@ public final class CatalogActivity extends Activity {
                 if (target == null) {
                     target = new Section(type, new ArrayList<>(), true);
                     sections.add(target);
-                    notifyItemInserted(sections.size() - 1);
+                    notifyItemInserted(sections.size() - 1 + (hasHero ? 1 : 0));
                     if (catalogCategories != null && !catalogCategories.contains(type)) {
                         catalogCategories.add(type);
                     }
@@ -596,7 +624,7 @@ public final class CatalogActivity extends Activity {
                 }
             }
         }
-        @Override public int getItemCount() { return sections.size(); }
+        @Override public int getItemCount() { return sections.size() + (hasHero ? 1 : 0); }
     }
 
     private static final class SectionHolder extends RecyclerView.ViewHolder {
@@ -655,7 +683,10 @@ public final class CatalogActivity extends Activity {
             TextView meta = text("", 10, GOLD, true);
             meta.setMaxLines(1);
             card.addView(meta);
-            card.setOnFocusChangeListener((v, focused) -> v.setBackground(border(focused)));
+            card.setOnFocusChangeListener((v, focused) -> {
+                v.setBackground(border(focused));
+                if (focused) ensureCatalogRowVisible(v);
+            });
             card.setLayoutParams(new RecyclerView.LayoutParams(dp(190), dp(156)));
             return new CardHolder(card, image, name, urdu, meta);
         }
