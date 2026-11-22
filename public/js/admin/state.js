@@ -108,11 +108,12 @@ async function fetchArchiveData(options = {}) {
   catalogLoadFailed = false;
   archiveNextOffset = 0;
 
-  const [catRes, featRes] = await Promise.all([
+  const configPromise = Promise.all([
     fetch("/api/categories").catch(() => null),
     fetch("/api/featured").catch(() => null)
   ]);
   const first = await window.sbClient.from("Drama").select("*").order("id", { ascending: false }).range(0, pageSize - 1);
+  const [catRes, featRes] = await configPromise;
   if (first.error) {
     console.error("Drama query failed:", first.error);
     catalogLoadFailed = true;
