@@ -211,6 +211,7 @@ async function loadData(options = {}) {
 
     // Fetch the remaining batches in small parallel groups to avoid a long serial wait.
     let complete = data.length < PAGE_SIZE;
+    let cacheComplete = complete;
     for (let pageStart = 1; !complete && pageStart < MAX_PAGES; pageStart += 3) {
       const pages = [pageStart, pageStart + 1, pageStart + 2].filter(p => p < MAX_PAGES);
       const results = await Promise.all(pages.map(p =>
@@ -221,17 +222,21 @@ async function loadData(options = {}) {
         if (result.error) {
           console.error("❌ Supabase archive page error:", result.error);
           complete = true;
+          cacheComplete = false;
           break;
         }
         const chunk = Array.isArray(result.data) ? result.data : [];
         data.push(...chunk);
-        if (chunk.length < PAGE_SIZE) complete = true;
+        if (chunk.length < PAGE_SIZE) {
+          complete = true;
+          cacheComplete = true;
+        }
       }
     }
 
     rows = data.map(mapRow);
     notify();
-    if (data.length) {
+    if (data.length && cacheComplete) {
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify(data));
         localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
