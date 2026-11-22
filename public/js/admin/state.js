@@ -123,7 +123,10 @@ async function fetchArchiveData(options = {}) {
   const firstRows = Array.isArray(first.data) ? first.data : [];
   allDramas = mapAdminRows(firstRows);
   archiveNextOffset = firstRows.length;
-  if (firstRows.length < pageSize) archiveNextOffset = 0;
+  if (firstRows.length < pageSize) {
+    archiveNextOffset = 0;
+    catalogLoadingMore = false;
+  }
 
   if (catRes && catRes.ok) {
     const catData = await catRes.json();
