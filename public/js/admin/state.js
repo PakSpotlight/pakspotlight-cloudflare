@@ -81,6 +81,7 @@ const ADMIN_MAX_PAGES = 50;   // runaway guard: up to 50k titles
 let catalogLoadingMore = false;
 let catalogLoadFailed = false;
 let archiveNextOffset = 0;
+let archiveFetchGeneration = 0;
 const ADMIN_PROGRESSIVE_PAGE_SIZE = 500;
 
 function mapAdminRows(data) {
@@ -102,6 +103,7 @@ function mapAdminRows(data) {
 }
 
 async function fetchArchiveData(options = {}) {
+  const generation = ++archiveFetchGeneration;
   const progressive = !!options.progressive;
   const pageSize = progressive ? ADMIN_PROGRESSIVE_PAGE_SIZE : ADMIN_PAGE_SIZE;
   catalogLoadingMore = progressive;
@@ -165,7 +167,8 @@ async function fetchArchiveData(options = {}) {
   catalogLoadingMore = false;
 }
 
-async function loadRemainingArchive() {
+async function loadRemainingArchive(generation) {
+  if (generation !== archiveFetchGeneration) return;
   if (!archiveNextOffset || !window.sbClient) {
     catalogLoadingMore = false;
     return;
@@ -179,6 +182,7 @@ async function loadRemainingArchive() {
     const results = await Promise.all(offsets.map(o =>
       window.sbClient.from("Drama").select("*").order("id", { ascending: false }).range(o, o + pageSize - 1)
     ));
+    if (generation !== archiveFetchGeneration) return;
     let finished = false;
     for (const result of results) {
       if (result.error) {
@@ -199,6 +203,7 @@ async function loadRemainingArchive() {
     const seen = new Set();
     allDramas = combined.filter(d => !seen.has(d.id) && seen.add(d.id));
   }
+  if (generation !== archiveFetchGeneration) return;
   archiveNextOffset = 0;
   catalogLoadingMore = false;
   const pane = $("pane-catalog");
@@ -236,7 +241,7 @@ async function openConsole() {
   $("vaultTabs").hidden = false;
   $("vaultBottomnav").hidden = false;
   syncTabUi();
-  if (archiveNextOffset) loadRemainingArchive();
+  if (archiveNextOffset) loadRemainingArchive(archiveFetchGeneration);
 }
 
 function updateTopAuthUi() {
