@@ -173,8 +173,9 @@ async function loadRemainingArchive() {
   const pageSize = ADMIN_PROGRESSIVE_PAGE_SIZE;
   let offset = archiveNextOffset;
   const chunks = [];
-  for (let batch = 0; batch < ADMIN_MAX_PAGES; batch += 1) {
-    const offsets = [offset, offset + pageSize, offset + pageSize * 2];
+  for (let batch = 0; offset < ADMIN_MAX_PAGES * ADMIN_PAGE_SIZE; batch += 1) {
+    const offsets = [offset, offset + pageSize, offset + pageSize * 2]
+      .filter(o => o < ADMIN_MAX_PAGES * ADMIN_PAGE_SIZE);
     const results = await Promise.all(offsets.map(o =>
       window.sbClient.from("Drama").select("*").order("id", { ascending: false }).range(o, o + pageSize - 1)
     ));
