@@ -414,6 +414,54 @@ public final class CatalogActivity extends Activity {
         }
     }
 
+    private RecyclerView findContainingRail(View view) {
+        View current = view;
+        while (current.getParent() instanceof View) {
+            View parent = (View) current.getParent();
+            if (parent instanceof RecyclerView && parent != list) return (RecyclerView) parent;
+            current = parent;
+        }
+        return null;
+    }
+
+    private void moveFocusBetweenRows(View focusedCard, int direction) {
+        RecyclerView rail = findContainingRail(focusedCard);
+        if (rail == null || list == null || catalogAdapter == null) return;
+        View row = rail;
+        while (row.getParent() instanceof View && row.getParent() != list) {
+            row = (View) row.getParent();
+        }
+        if (row.getParent() != list) return;
+        int currentRow = list.getChildAdapterPosition(row);
+        int targetRow = currentRow + direction;
+        if (targetRow < 0) {
+            if (catalogAdapter.hasHero) {
+                list.smoothScrollToPosition(0);
+                heroPlay.post(() -> heroPlay.requestFocus());
+            }
+            return;
+        }
+        if (targetRow >= catalogAdapter.getItemCount()) return;
+        int sourceIndex = Math.max(0, rail.getChildAdapterPosition(focusedCard));
+        list.smoothScrollToPosition(targetRow);
+        list.post(() -> {
+            RecyclerView.ViewHolder rowHolder = list.findViewHolderForAdapterPosition(targetRow);
+            if (rowHolder == null) return;
+            View nextRailView = rowHolder.itemView.findViewWithTag("catalog_rail");
+            if (!(nextRailView instanceof RecyclerView)) return;
+            RecyclerView nextRail = (RecyclerView) nextRailView;
+            nextRail.post(() -> {
+                if (nextRail.getAdapter() == null || nextRail.getAdapter().getItemCount() == 0) return;
+                int nextIndex = Math.min(sourceIndex, nextRail.getAdapter().getItemCount() - 1);
+                nextRail.scrollToPosition(nextIndex);
+                nextRail.post(() -> {
+                    RecyclerView.ViewHolder next = nextRail.findViewHolderForAdapterPosition(nextIndex);
+                    if (next != null) next.itemView.requestFocus();
+                });
+            });
+        });
+    }
+
     // Scroll the outer vertical list whenever focus enters a card in a nested rail.
     private void ensureCatalogRowVisible(View focusedCard) {
         if (list == null) return;
@@ -699,6 +747,23 @@ public final class CatalogActivity extends Activity {
             card.setOnFocusChangeListener((v, focused) -> {
                 v.setBackground(border(focused));
                 if (focused) ensureCatalogRowVisible(v);
+            });
+            card.setOnKeyListener((v, keyCode, event) -> {
+                if (event.getAction() != android.view.KeyEvent.ACTION_DOWN) return false;
+                if (keyCode == android.view.KeyEvent.KEYCODE_DPAD_RIGHT) {
+                    RecyclerView rail = findContainingRail(v);
+                    if (rail != null && rail.getAdapter() != null
+                            && rail.getChildAdapterPosition(v) == rail.getAdapter().getItemCount() - 1) {
+                        return true; // Do not let RIGHT escape into the sidebar.
+                    }
+                }
+                if (keyCode == android.view.KeyEvent.KEYCODE_DPAD_DOWN
+                        || keyCode == android.view.KeyEvent.KEYCODE_DPAD_UP) {
+                    moveFocusBetweenRows(v,
+                            keyCode == android.view.KeyEvent.KEYCODE_DPAD_DOWN ? 1 : -1);
+                    return true;
+                }
+                return false;
             });
             card.setLayoutParams(new RecyclerView.LayoutParams(dp(190), dp(156)));
             return new CardHolder(card, image, name, urdu, meta);
