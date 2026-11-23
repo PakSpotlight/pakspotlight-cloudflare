@@ -215,8 +215,10 @@ public final class CatalogActivity extends Activity {
                 / getResources().getDisplayMetrics().density;
         int heroHeight = Math.round(Math.max(220f, Math.min(320f, screenHeightDp * 0.36f)));
         heroHeightPx = dp(heroHeight);
-        // The hero is adapter item zero on Home/Latest and scrolls with all rails.
+        // Keep the hero as a stable banner above the scrolling category list.
+        // This avoids RecyclerView recycling/reparenting the same hero ViewHolder.
         heroPanel.setVisibility(View.VISIBLE);
+        content.addView(heroPanel, new LinearLayout.LayoutParams(-1, heroHeightPx));
         list = new RecyclerView(this);
         list.setBackgroundColor(BG);
         list.setClipToPadding(false);
@@ -226,7 +228,7 @@ public final class CatalogActivity extends Activity {
         list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         list.setNestedScrollingEnabled(true);
         list.setItemViewCacheSize(3);
-        content.addView(list, new LinearLayout.LayoutParams(-1, -1));
+        content.addView(list, new LinearLayout.LayoutParams(-1, 0, 1f));
         setContentView(root);
     }
 
@@ -431,7 +433,7 @@ public final class CatalogActivity extends Activity {
         if (row.getParent() != list) return;
         int currentRow = list.getChildAdapterPosition(row);
         int targetRow = currentRow + direction;
-        if (direction < 0 && currentRow == 1 && catalogAdapter.hasHero
+        if (direction < 0 && currentRow == 0
                 && ("Home".equals(selectedNav) || "Latest Dramas".equals(selectedNav))) {
             heroPlay.post(() -> heroPlay.requestFocus());
             return;
@@ -476,7 +478,7 @@ public final class CatalogActivity extends Activity {
 
     private void focusFirstCatalogCard() {
         if (list == null || catalogAdapter == null || catalogAdapter.getItemCount() == 0) return;
-        int firstSectionPosition = catalogAdapter.hasHero ? 1 : 0;
+        int firstSectionPosition = 0;
         list.smoothScrollToPosition(0);
         list.scrollToPosition(firstSectionPosition);
         list.post(() -> {
@@ -517,7 +519,7 @@ public final class CatalogActivity extends Activity {
             if (!matches.isEmpty()) sections.add(new Section(selectedNav, matches, true));
         }
         if (sections.isEmpty()) sections.add(new Section(selectedNav, new ArrayList<>(), false));
-        catalogAdapter = new SectionAdapter(sections, showHero);
+        catalogAdapter = new SectionAdapter(sections, false);
         list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         list.setAdapter(catalogAdapter);
         list.scrollToPosition(0);
