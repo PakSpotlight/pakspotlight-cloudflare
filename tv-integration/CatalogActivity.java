@@ -55,7 +55,6 @@ public final class CatalogActivity extends Activity {
     private final ExecutorService dataIo = Executors.newSingleThreadExecutor();
     private LinearLayout root;
     private LinearLayout content;
-    private ScrollView pageScroll;
     private RecyclerView list;
     private List<Drama> catalogRows;
     private List<String> catalogCategories;
@@ -66,7 +65,6 @@ public final class CatalogActivity extends Activity {
     private FrameLayout heroPanel;
     private int heroHeightPx;
     private ImageView heroImage;
-    private ImageView heroArtwork;
     private TextView heroTitle;
     private TextView heroUrdu;
     private TextView heroDescription;
@@ -142,16 +140,10 @@ public final class CatalogActivity extends Activity {
         body.addView(sidebarScroll, new LinearLayout.LayoutParams(dp(sidebarWidthDp), -1));
         renderSidebar();
 
-        // One vertical scroll owner contains both the hero and every category rail.
-        // This prevents rails from moving underneath a stationary hero banner.
-        pageScroll = new ScrollView(this);
-        pageScroll.setFillViewport(true);
-        pageScroll.setVerticalScrollBarEnabled(false);
-        pageScroll.setClipToPadding(false);
+        // A single vertical RecyclerView owns the hero header and all category rails.
         content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        pageScroll.addView(content, new ScrollView.LayoutParams(-1, -2));
-        body.addView(pageScroll, new LinearLayout.LayoutParams(0, -1, 1f));
+        body.addView(content, new LinearLayout.LayoutParams(0, -1, 1f));
 
         heroPanel = new FrameLayout(this);
         heroPanel.setFocusable(false);
@@ -167,21 +159,13 @@ public final class CatalogActivity extends Activity {
                 new int[]{0xF2050706, 0xB8050706, 0x18050706}));
         heroPanel.addView(scrim, new FrameLayout.LayoutParams(-1, -1));
 
-        // The foreground preserves the complete 16:9 YouTube thumbnail.
-        heroArtwork = new ImageView(this);
-        heroArtwork.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        heroArtwork.setAdjustViewBounds(false);
+        // One full-bleed thumbnail background; no duplicate foreground poster.
         int contentWidthDp = Math.max(260, displayWidthDp - sidebarWidthDp - 66);
-        int artworkWidth = Math.max(120, Math.round(contentWidthDp * 0.42f));
-        FrameLayout.LayoutParams artworkParams = new FrameLayout.LayoutParams(
-                dp(artworkWidth), -1, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        heroPanel.addView(heroArtwork, artworkParams);
-
         LinearLayout heroCopy = new LinearLayout(this);
         heroCopy.setOrientation(LinearLayout.VERTICAL);
         heroCopy.setGravity(Gravity.CENTER_VERTICAL);
         heroCopy.setPadding(dp(24), dp(12), dp(18), dp(12));
-        int copyWidth = Math.max(140, contentWidthDp - artworkWidth);
+        int copyWidth = Math.max(140, Math.round(contentWidthDp * 0.72f));
         FrameLayout.LayoutParams copyParams = new FrameLayout.LayoutParams(
                 dp(copyWidth), -1, Gravity.LEFT | Gravity.CENTER_VERTICAL);
         heroPanel.addView(heroCopy, copyParams);
@@ -231,14 +215,8 @@ public final class CatalogActivity extends Activity {
                 / getResources().getDisplayMetrics().density;
         int heroHeight = Math.round(Math.max(220f, Math.min(320f, screenHeightDp * 0.36f)));
         heroHeightPx = dp(heroHeight);
-        // Hero is the first item in the shared vertical page scroll and scrolls
-        // naturally off-screen as the category rails move upward.
-        heroPanel.setVisibility(View.GONE);
-        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, heroHeightPx);
-        heroParams.bottomMargin = dp(8);
-        content.addView(heroPanel, heroParams);
-        // The outer ScrollView owns vertical movement; this RecyclerView only
-        // measures and displays its section rows inside that shared page.
+        // The hero is adapter item zero on Home/Latest and scrolls with all rails.
+        heroPanel.setVisibility(View.VISIBLE);
         list = new RecyclerView(this);
         list.setBackgroundColor(BG);
         list.setClipToPadding(false);
@@ -246,7 +224,7 @@ public final class CatalogActivity extends Activity {
         list.setItemAnimator(null);
         list.setHasFixedSize(false);
         list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
-        list.setNestedScrollingEnabled(false);
+        list.setNestedScrollingEnabled(true);
         list.setItemViewCacheSize(3);
         content.addView(list, new LinearLayout.LayoutParams(-1, -2));
         setContentView(root);
@@ -313,8 +291,6 @@ public final class CatalogActivity extends Activity {
         String image = preferredThumbnail(featured);
         Glide.with(this).load(image).centerCrop().dontAnimate()
                 .diskCacheStrategy(DiskCacheStrategy.ALL).into(heroImage);
-        Glide.with(this).load(image).fitCenter().dontAnimate()
-                .diskCacheStrategy(DiskCacheStrategy.ALL).into(heroArtwork);
         heroPlay.setOnClickListener(v -> selected(featured));
     }
 
@@ -455,7 +431,7 @@ public final class CatalogActivity extends Activity {
         if (row.getParent() != list) return;
         int currentRow = list.getChildAdapterPosition(row);
         int targetRow = currentRow + direction;
-        if (direction < 0 && currentRow == 0
+        if (direction < 0 && currentRow == 1 && catalogAdapter.hasHero
                 && ("Home".equals(selectedNav) || "Latest Dramas".equals(selectedNav))) {
             heroPlay.post(() -> heroPlay.requestFocus());
             return;
@@ -466,7 +442,7 @@ public final class CatalogActivity extends Activity {
         list.post(() -> {
             RecyclerView.ViewHolder rowHolder = list.findViewHolderForAdapterPosition(targetRow);
             if (rowHolder == null) return;
-            pageScroll.smoothScrollTo(0, rowHolder.itemView.getTop());
+            list.smoothScrollToPosition(targetRow);
             View nextRailView = rowHolder.itemView.findViewWithTag("catalog_rail");
             if (!(nextRailView instanceof RecyclerView)) return;
             RecyclerView nextRail = (RecyclerView) nextRailView;
@@ -493,15 +469,15 @@ public final class CatalogActivity extends Activity {
             int position = list.getChildAdapterPosition(directChild);
             if (position != RecyclerView.NO_POSITION) {
                 View section = list.getChildAt(position);
-                if (section != null) pageScroll.smoothScrollTo(0, section.getTop());
+                if (section != null) list.smoothScrollToPosition(position);
             }
         }
     }
 
     private void focusFirstCatalogCard() {
         if (list == null || catalogAdapter == null || catalogAdapter.getItemCount() == 0) return;
-        int firstSectionPosition = 0;
-        pageScroll.smoothScrollTo(0, 0);
+        int firstSectionPosition = catalogAdapter.hasHero ? 1 : 0;
+        list.smoothScrollToPosition(0);
         list.scrollToPosition(firstSectionPosition);
         list.post(() -> {
             RecyclerView.ViewHolder rowHolder = list.findViewHolderForAdapterPosition(firstSectionPosition);
@@ -541,7 +517,7 @@ public final class CatalogActivity extends Activity {
             if (!matches.isEmpty()) sections.add(new Section(selectedNav, matches, true));
         }
         if (sections.isEmpty()) sections.add(new Section(selectedNav, new ArrayList<>(), false));
-        catalogAdapter = new SectionAdapter(sections, false);
+        catalogAdapter = new SectionAdapter(sections, showHero);
         list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         list.setAdapter(catalogAdapter);
         list.scrollToPosition(0);
@@ -556,7 +532,7 @@ public final class CatalogActivity extends Activity {
     private void showSeriesPage(String title, List<Drama> episodes) {
         showingSeriesPage = true;
         heroPanel.setVisibility(View.GONE);
-        catalogScrollY = pageScroll.getScrollY();
+        catalogScrollY = list.computeVerticalScrollOffset();
         List<Drama> ordered = new ArrayList<>(episodes);
         ordered.sort((a, b) -> {
             if (a.episode > 0 && b.episode > 0) return Integer.compare(a.episode, b.episode);
@@ -580,7 +556,7 @@ public final class CatalogActivity extends Activity {
         if (catalogRows == null || catalogCategories == null) return;
         final int restoreY = catalogScrollY;
         renderCatalog();
-        pageScroll.post(() -> pageScroll.scrollTo(0, restoreY));
+        list.post(() -> list.scrollBy(0, restoreY));
         showingSeriesPage = false;
     }
 
@@ -637,6 +613,9 @@ public final class CatalogActivity extends Activity {
                 header.setVisibility(View.VISIBLE);
                 header.setFocusable(false);
                 header.setClipChildren(false);
+                if (heroPanel.getParent() instanceof ViewGroup) {
+                    ((ViewGroup) heroPanel.getParent()).removeView(heroPanel);
+                }
                 header.addView(heroPanel, new LinearLayout.LayoutParams(-1, heroHeightPx));
                 View spacer = new View(CatalogActivity.this);
                 header.addView(spacer, new LinearLayout.LayoutParams(1, dp(8)));
