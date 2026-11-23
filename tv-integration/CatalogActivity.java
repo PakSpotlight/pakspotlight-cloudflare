@@ -443,12 +443,12 @@ public final class CatalogActivity extends Activity {
         if (row.getParent() != list) return;
         int currentRow = list.getChildAdapterPosition(row);
         int targetRow = currentRow + direction;
-        if (targetRow < 0) return;
         if (direction < 0 && currentRow == 0
                 && ("Home".equals(selectedNav) || "Latest Dramas".equals(selectedNav))) {
             heroPlay.post(() -> heroPlay.requestFocus());
             return;
         }
+        if (targetRow < 0) return;
         if (targetRow >= catalogAdapter.getItemCount()) return;
         int sourceIndex = Math.max(0, rail.getChildAdapterPosition(focusedCard));
         list.smoothScrollToPosition(targetRow);
@@ -539,6 +539,7 @@ public final class CatalogActivity extends Activity {
 
     private void showSeriesPage(String title, List<Drama> episodes) {
         showingSeriesPage = true;
+        heroPanel.setVisibility(View.GONE);
         catalogScrollY = list.computeVerticalScrollOffset();
         List<Drama> ordered = new ArrayList<>(episodes);
         ordered.sort((a, b) -> {
