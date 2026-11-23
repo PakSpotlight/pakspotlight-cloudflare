@@ -55,6 +55,7 @@ public final class CatalogActivity extends Activity {
     private final ExecutorService dataIo = Executors.newSingleThreadExecutor();
     private LinearLayout root;
     private LinearLayout content;
+    private ScrollView pageScroll;
     private RecyclerView list;
     private List<Drama> catalogRows;
     private List<String> catalogCategories;
@@ -143,7 +144,7 @@ public final class CatalogActivity extends Activity {
 
         // One vertical scroll owner contains both the hero and every category rail.
         // This prevents rails from moving underneath a stationary hero banner.
-        ScrollView pageScroll = new ScrollView(this);
+        pageScroll = new ScrollView(this);
         pageScroll.setFillViewport(true);
         pageScroll.setVerticalScrollBarEnabled(false);
         pageScroll.setClipToPadding(false);
@@ -462,10 +463,10 @@ public final class CatalogActivity extends Activity {
         if (targetRow < 0) return;
         if (targetRow >= catalogAdapter.getItemCount()) return;
         int sourceIndex = Math.max(0, rail.getChildAdapterPosition(focusedCard));
-        list.smoothScrollToPosition(targetRow);
         list.post(() -> {
             RecyclerView.ViewHolder rowHolder = list.findViewHolderForAdapterPosition(targetRow);
             if (rowHolder == null) return;
+            pageScroll.smoothScrollTo(0, rowHolder.itemView.getTop());
             View nextRailView = rowHolder.itemView.findViewWithTag("catalog_rail");
             if (!(nextRailView instanceof RecyclerView)) return;
             RecyclerView nextRail = (RecyclerView) nextRailView;
@@ -481,7 +482,7 @@ public final class CatalogActivity extends Activity {
         });
     }
 
-    // Scroll the outer vertical list whenever focus enters a card in a nested rail.
+    // Scroll the shared page whenever focus enters a card in a nested rail.
     private void ensureCatalogRowVisible(View focusedCard) {
         if (list == null) return;
         View directChild = focusedCard;
@@ -490,13 +491,17 @@ public final class CatalogActivity extends Activity {
         }
         if (directChild.getParent() == list) {
             int position = list.getChildAdapterPosition(directChild);
-            if (position != RecyclerView.NO_POSITION) list.smoothScrollToPosition(position);
+            if (position != RecyclerView.NO_POSITION) {
+                View section = list.getChildAt(position);
+                if (section != null) pageScroll.smoothScrollTo(0, section.getTop());
+            }
         }
     }
 
     private void focusFirstCatalogCard() {
         if (list == null || catalogAdapter == null || catalogAdapter.getItemCount() == 0) return;
         int firstSectionPosition = 0;
+        pageScroll.smoothScrollTo(0, 0);
         list.scrollToPosition(firstSectionPosition);
         list.post(() -> {
             RecyclerView.ViewHolder rowHolder = list.findViewHolderForAdapterPosition(firstSectionPosition);
@@ -551,7 +556,7 @@ public final class CatalogActivity extends Activity {
     private void showSeriesPage(String title, List<Drama> episodes) {
         showingSeriesPage = true;
         heroPanel.setVisibility(View.GONE);
-        catalogScrollY = list.computeVerticalScrollOffset();
+        catalogScrollY = pageScroll.getScrollY();
         List<Drama> ordered = new ArrayList<>(episodes);
         ordered.sort((a, b) -> {
             if (a.episode > 0 && b.episode > 0) return Integer.compare(a.episode, b.episode);
@@ -574,7 +579,7 @@ public final class CatalogActivity extends Activity {
     private void restoreCatalog() {
         if (catalogRows == null || catalogCategories == null) return;
         renderCatalog();
-        list.post(() -> list.scrollBy(0, catalogScrollY));
+        pageScroll.post(() -> pageScroll.scrollTo(0, catalogScrollY));
         showingSeriesPage = false;
     }
 
