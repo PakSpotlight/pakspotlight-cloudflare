@@ -29,27 +29,25 @@ dest = app / "src/main/java/com/classictvpakistan/tv/CatalogActivity.java"
 dest.parent.mkdir(parents=True, exist_ok=True)
 shutil.copy2(src, dest)
 
-# Bundle the same Noto Nastaliq Urdu family used by the website. Use a static
-# Regular TTF where available so older Android TV devices can render it too.
+# Bundle Jameel Noori Nastaleeq for an evaluation build. The upstream mirror
+# identifies the original contributor but lists the font licence as unknown;
+# retain source attribution and do not publish this APK commercially without
+# confirming redistribution rights.
 font_dir = app / "src/main/assets/fonts"
 font_dir.mkdir(parents=True, exist_ok=True)
-font_archive = repo / "tv-integration" / "NotoNastaliqUrdu-v4.000.zip"
-font_url = "https://github.com/notofonts/nastaliq/releases/download/NotoNastaliqUrdu-v4.000/NotoNastaliqUrdu-v4.000.zip"
-urllib.request.urlretrieve(font_url, font_archive)
-with zipfile.ZipFile(font_archive) as archive:
-    font_names = archive.namelist()
-    regular = next((name for name in font_names
-                    if name.endswith("NotoNastaliqUrdu-Regular.ttf")), None)
-    if regular is None:
-        regular = next((name for name in font_names
-                        if name.endswith("NotoNastaliqUrdu[wght].ttf")), None)
-    if regular is None:
-        raise SystemExit("Noto Nastaliq Urdu font file is missing from the official release")
-    (font_dir / "NotoNastaliqUrdu-Regular.ttf").write_bytes(archive.read(regular))
-    license_entry = next((name for name in font_names if name.endswith("/OFL.txt")), None)
-    if license_entry:
-        (font_dir / "OFL-NotoNastaliqUrdu.txt").write_bytes(archive.read(license_entry))
-font_archive.unlink()
+font_url = "https://raw.githubusercontent.com/abid-mujtaba/ttf-jameel-noori-nastaleeq/v1.1.0/Jameel%20Noori%20Nastaleeq.ttf"
+font_path = font_dir / "JameelNooriNastaleeq.ttf"
+urllib.request.urlretrieve(font_url, font_path)
+if not font_path.exists() or font_path.stat().st_size < 1000000:
+    raise SystemExit("Jameel Noori Nastaleeq font download is missing or unexpectedly small")
+(font_dir / "Jameel-Noori-font-source.txt").write_text(
+    "Jameel Noori Nastaleeq font\n"
+    "Source mirror: https://github.com/abid-mujtaba/ttf-jameel-noori-nastaleeq\n"
+    "Original contributor: Jahanzaib (Urdu Jahan)\n"
+    "The source package records the licence as unknown. Confirm redistribution "
+    "rights before public/commercial distribution.\n",
+    encoding="utf-8"
+)
 
 # Update launcher label in the main source set AND the selected ststable
 # product flavor. Flavor resources take precedence over src/main at merge time.
