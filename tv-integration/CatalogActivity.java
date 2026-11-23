@@ -135,12 +135,22 @@ public final class CatalogActivity extends Activity {
         sidebar.setOrientation(LinearLayout.VERTICAL);
         sidebar.setPadding(0, dp(8), dp(16), dp(8));
         sidebarScroll.addView(sidebar, new ScrollView.LayoutParams(-1, -2));
-        body.addView(sidebarScroll, new LinearLayout.LayoutParams(dp(176), -1));
+        int displayWidthDp = Math.round(getResources().getDisplayMetrics().widthPixels
+                / getResources().getDisplayMetrics().density);
+        int sidebarWidthDp = displayWidthDp < 800 ? 128 : 176;
+        body.addView(sidebarScroll, new LinearLayout.LayoutParams(dp(sidebarWidthDp), -1));
         renderSidebar();
 
+        // One vertical scroll owner contains both the hero and every category rail.
+        // This prevents rails from moving underneath a stationary hero banner.
+        ScrollView pageScroll = new ScrollView(this);
+        pageScroll.setFillViewport(true);
+        pageScroll.setVerticalScrollBarEnabled(false);
+        pageScroll.setClipToPadding(false);
         content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        body.addView(content, new LinearLayout.LayoutParams(0, -1, 1f));
+        pageScroll.addView(content, new ScrollView.LayoutParams(-1, -2));
+        body.addView(pageScroll, new LinearLayout.LayoutParams(0, -1, 1f));
 
         heroPanel = new FrameLayout(this);
         heroPanel.setFocusable(false);
@@ -160,10 +170,8 @@ public final class CatalogActivity extends Activity {
         heroArtwork = new ImageView(this);
         heroArtwork.setScaleType(ImageView.ScaleType.FIT_CENTER);
         heroArtwork.setAdjustViewBounds(false);
-        float displayDensity = getResources().getDisplayMetrics().density;
-        int displayWidthDp = Math.round(getResources().getDisplayMetrics().widthPixels / displayDensity);
-        int contentWidthDp = Math.max(520, displayWidthDp - 218);
-        int artworkWidth = Math.round(contentWidthDp * 0.56f);
+        int contentWidthDp = Math.max(260, displayWidthDp - sidebarWidthDp - 66);
+        int artworkWidth = Math.max(120, Math.round(contentWidthDp * 0.42f));
         FrameLayout.LayoutParams artworkParams = new FrameLayout.LayoutParams(
                 dp(artworkWidth), -1, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         heroPanel.addView(heroArtwork, artworkParams);
@@ -172,8 +180,9 @@ public final class CatalogActivity extends Activity {
         heroCopy.setOrientation(LinearLayout.VERTICAL);
         heroCopy.setGravity(Gravity.CENTER_VERTICAL);
         heroCopy.setPadding(dp(24), dp(12), dp(18), dp(12));
+        int copyWidth = Math.max(140, contentWidthDp - artworkWidth);
         FrameLayout.LayoutParams copyParams = new FrameLayout.LayoutParams(
-                dp(510), -1, Gravity.LEFT | Gravity.CENTER_VERTICAL);
+                dp(copyWidth), -1, Gravity.LEFT | Gravity.CENTER_VERTICAL);
         heroPanel.addView(heroCopy, copyParams);
 
         TextView eyebrow = text("FEATURED FROM THE ARCHIVE", 10, GOLD, true);
@@ -221,13 +230,14 @@ public final class CatalogActivity extends Activity {
                 / getResources().getDisplayMetrics().density;
         int heroHeight = Math.round(Math.max(220f, Math.min(320f, screenHeightDp * 0.36f)));
         heroHeightPx = dp(heroHeight);
-        // Keep the hero attached to the screen's content container. RecyclerView can
-        // recycle category holders freely without detaching/reparenting the banner.
+        // Hero is the first item in the shared vertical page scroll and scrolls
+        // naturally off-screen as the category rails move upward.
         heroPanel.setVisibility(View.GONE);
         LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, heroHeightPx);
         heroParams.bottomMargin = dp(8);
         content.addView(heroPanel, heroParams);
-        // Category rails scroll independently below the stable hero banner.
+        // The outer ScrollView owns vertical movement; this RecyclerView only
+        // measures and displays its section rows inside that shared page.
         list = new RecyclerView(this);
         list.setBackgroundColor(BG);
         list.setClipToPadding(false);
@@ -235,8 +245,9 @@ public final class CatalogActivity extends Activity {
         list.setItemAnimator(null);
         list.setHasFixedSize(false);
         list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
+        list.setNestedScrollingEnabled(false);
         list.setItemViewCacheSize(3);
-        content.addView(list, new LinearLayout.LayoutParams(-1, 0, 1));
+        content.addView(list, new LinearLayout.LayoutParams(-1, -2));
         setContentView(root);
     }
 
