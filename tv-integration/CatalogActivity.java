@@ -54,6 +54,7 @@ public final class CatalogActivity extends Activity {
     // decoding, request cancellation, memory cache and disk cache.
     private final ExecutorService dataIo = Executors.newSingleThreadExecutor();
     private LinearLayout root;
+    private LinearLayout content;
     private RecyclerView list;
     private List<Drama> catalogRows;
     private List<String> catalogCategories;
@@ -97,7 +98,7 @@ public final class CatalogActivity extends Activity {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        try { urduTypeface = Typeface.createFromAsset(getAssets(), "fonts/NotoNastaliqUrdu-Regular.ttf"); }
+        try { urduTypeface = Typeface.createFromAsset(getAssets(), "fonts/JameelNooriNastaleeq.ttf"); }
         catch (Exception ignored) { urduTypeface = Typeface.DEFAULT; }
         PlayerData.instance(this).setFormat(FormatItem.VIDEO_AUTO);
         PlayerTweaksData.instance(this).setAvcOverVp9Preferred(true);
@@ -137,7 +138,7 @@ public final class CatalogActivity extends Activity {
         body.addView(sidebarScroll, new LinearLayout.LayoutParams(dp(176), -1));
         renderSidebar();
 
-        LinearLayout content = new LinearLayout(this);
+        content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
         body.addView(content, new LinearLayout.LayoutParams(0, -1, 1f));
 
@@ -182,7 +183,9 @@ public final class CatalogActivity extends Activity {
         heroUrdu.setTypeface(urduTypeface);
         heroUrdu.setTextDirection(View.TEXT_DIRECTION_RTL);
         heroUrdu.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        heroCopy.addView(heroUrdu, new LinearLayout.LayoutParams(-1, dp(34)));
+        heroUrdu.setIncludeFontPadding(true);
+        heroUrdu.setLineSpacing(dp(3), 1.0f);
+        heroCopy.addView(heroUrdu, new LinearLayout.LayoutParams(-1, dp(48)));
         heroTitle = text("Classic Pakistani Dramas", 26, Color.WHITE, true);
         heroTitle.setMaxLines(2);
         heroCopy.addView(heroTitle, new LinearLayout.LayoutParams(-1, dp(58)));
@@ -218,7 +221,13 @@ public final class CatalogActivity extends Activity {
                 / getResources().getDisplayMetrics().density;
         int heroHeight = Math.round(Math.max(220f, Math.min(320f, screenHeightDp * 0.36f)));
         heroHeightPx = dp(heroHeight);
-        // Hero and category rails share one vertical list so the complete home page scrolls.
+        // Keep the hero attached to the screen's content container. RecyclerView can
+        // recycle category holders freely without detaching/reparenting the banner.
+        heroPanel.setVisibility(View.GONE);
+        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(-1, heroHeightPx);
+        heroParams.bottomMargin = dp(8);
+        content.addView(heroPanel, heroParams);
+        // Category rails scroll independently below the stable hero banner.
         list = new RecyclerView(this);
         list.setBackgroundColor(BG);
         list.setClipToPadding(false);
@@ -435,8 +444,8 @@ public final class CatalogActivity extends Activity {
         int currentRow = list.getChildAdapterPosition(row);
         int targetRow = currentRow + direction;
         if (targetRow < 0) return;
-        if (targetRow == 0 && catalogAdapter.hasHero) {
-            list.smoothScrollToPosition(0);
+        if (direction < 0 && currentRow == 0
+                && ("Home".equals(selectedNav) || "Latest Dramas".equals(selectedNav))) {
             heroPlay.post(() -> heroPlay.requestFocus());
             return;
         }
@@ -476,7 +485,7 @@ public final class CatalogActivity extends Activity {
 
     private void focusFirstCatalogCard() {
         if (list == null || catalogAdapter == null || catalogAdapter.getItemCount() == 0) return;
-        int firstSectionPosition = catalogAdapter.hasHero ? 1 : 0;
+        int firstSectionPosition = 0;
         list.scrollToPosition(firstSectionPosition);
         list.post(() -> {
             RecyclerView.ViewHolder rowHolder = list.findViewHolderForAdapterPosition(firstSectionPosition);
@@ -498,6 +507,7 @@ public final class CatalogActivity extends Activity {
         showingSeriesPage = false;
         catalogScrollY = 0;
         boolean showHero = "Home".equals(selectedNav) || "Latest Dramas".equals(selectedNav);
+        heroPanel.setVisibility(showHero ? View.VISIBLE : View.GONE);
         updateHero();
         updateNavStyles();
         List<Section> sections = new ArrayList<>();
@@ -515,7 +525,7 @@ public final class CatalogActivity extends Activity {
             if (!matches.isEmpty()) sections.add(new Section(selectedNav, matches, true));
         }
         if (sections.isEmpty()) sections.add(new Section(selectedNav, new ArrayList<>(), false));
-        catalogAdapter = new SectionAdapter(sections, showHero);
+        catalogAdapter = new SectionAdapter(sections, false);
         list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         list.setAdapter(catalogAdapter);
         list.scrollToPosition(0);
@@ -737,8 +747,10 @@ public final class CatalogActivity extends Activity {
             urdu.setTextDirection(View.TEXT_DIRECTION_RTL);
             urdu.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
             urdu.setSingleLine(true);
+            urdu.setIncludeFontPadding(true);
+            urdu.setLineSpacing(dp(2), 1.0f);
             urdu.setEllipsize(android.text.TextUtils.TruncateAt.END);
-            titleRow.addView(urdu, new LinearLayout.LayoutParams(dp(82), dp(42)));
+            titleRow.addView(urdu, new LinearLayout.LayoutParams(dp(82), dp(48)));
             card.addView(titleRow);
             TextView meta = text("", 10, GOLD, true);
             meta.setMaxLines(1);
