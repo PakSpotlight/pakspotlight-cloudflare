@@ -101,8 +101,8 @@ public final class CatalogActivity extends Activity {
         catch (Exception ignored) { urduTypeface = Typeface.DEFAULT; }
         PlayerData.instance(this).setFormat(FormatItem.VIDEO_AUTO);
         PlayerTweaksData.instance(this).setAvcOverVp9Preferred(true);
-        // Keep YouTube's player suggestions enabled; the catalogue overlay must not hide them.
-        PlayerTweaksData.instance(this).setSuggestionsDisabled(false);
+        // Disable YouTube recommendation panels for Classic TV playback.
+        PlayerTweaksData.instance(this).setSuggestionsDisabled(true);
         buildShell();
         loadCatalog();
     }
@@ -149,11 +149,16 @@ public final class CatalogActivity extends Activity {
         heroImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
         heroPanel.addView(heroImage, new FrameLayout.LayoutParams(-1, -1));
 
-        // A second, right-aligned copy preserves the complete 16:9 YouTube
-        // artwork while the background copy fills the wide cinematic banner.
+        // Keep the dark gradient over the background only, not over the artwork.
+        View scrim = new View(this);
+        scrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xF2050706, 0xB8050706, 0x18050706}));
+        heroPanel.addView(scrim, new FrameLayout.LayoutParams(-1, -1));
+
+        // The foreground preserves the complete 16:9 YouTube thumbnail.
         heroArtwork = new ImageView(this);
         heroArtwork.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        heroArtwork.setAdjustViewBounds(true);
+        heroArtwork.setAdjustViewBounds(false);
         float displayDensity = getResources().getDisplayMetrics().density;
         int displayWidthDp = Math.round(getResources().getDisplayMetrics().widthPixels / displayDensity);
         int contentWidthDp = Math.max(520, displayWidthDp - 218);
@@ -161,11 +166,6 @@ public final class CatalogActivity extends Activity {
         FrameLayout.LayoutParams artworkParams = new FrameLayout.LayoutParams(
                 dp(artworkWidth), -1, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         heroPanel.addView(heroArtwork, artworkParams);
-
-        View scrim = new View(this);
-        scrim.setBackground(new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{Color.rgb(5, 7, 6), 0xCC050706, 0x22050706}));
-        heroPanel.addView(scrim, new FrameLayout.LayoutParams(-1, -1));
 
         LinearLayout heroCopy = new LinearLayout(this);
         heroCopy.setOrientation(LinearLayout.VERTICAL);
@@ -556,6 +556,12 @@ public final class CatalogActivity extends Activity {
                 if (heroPanel.getParent() instanceof ViewGroup) {
                     ((ViewGroup) heroPanel.getParent()).removeView(heroPanel);
                 }
+                heroPanel.setVisibility(View.VISIBLE);
+                heroPanel.setAlpha(1f);
+                heroPanel.setMinimumHeight(heroHeightPx);
+                header.setVisibility(View.VISIBLE);
+                header.setFocusable(false);
+                header.setClipChildren(false);
                 header.addView(heroPanel, new LinearLayout.LayoutParams(-1, heroHeightPx));
                 View spacer = new View(CatalogActivity.this);
                 header.addView(spacer, new LinearLayout.LayoutParams(1, dp(8)));
@@ -579,7 +585,12 @@ public final class CatalogActivity extends Activity {
             return new SectionHolder(block, heading, rail);
         }
         @Override public void onBindViewHolder(SectionHolder holder, int position) {
-            if (hasHero && position == 0) return;
+            if (hasHero && position == 0) {
+                holder.itemView.setVisibility(View.VISIBLE);
+                holder.itemView.setMinimumHeight(heroHeightPx + dp(8));
+                heroPanel.setVisibility(View.VISIBLE);
+                return;
+            }
             Section section = sections.get(position - (hasHero ? 1 : 0));
             holder.heading.setText(section.title);
             holder.rail.setAdapter(new DramaCardAdapter(section.items, section.seriesGroups));
