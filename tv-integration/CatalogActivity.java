@@ -434,11 +434,10 @@ public final class CatalogActivity extends Activity {
         if (row.getParent() != list) return;
         int currentRow = list.getChildAdapterPosition(row);
         int targetRow = currentRow + direction;
-        if (targetRow < 0) {
-            if (catalogAdapter.hasHero) {
-                list.smoothScrollToPosition(0);
-                heroPlay.post(() -> heroPlay.requestFocus());
-            }
+        if (targetRow < 0) return;
+        if (targetRow == 0 && catalogAdapter.hasHero) {
+            list.smoothScrollToPosition(0);
+            heroPlay.post(() -> heroPlay.requestFocus());
             return;
         }
         if (targetRow >= catalogAdapter.getItemCount()) return;
