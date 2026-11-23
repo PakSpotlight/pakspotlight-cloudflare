@@ -578,8 +578,9 @@ public final class CatalogActivity extends Activity {
 
     private void restoreCatalog() {
         if (catalogRows == null || catalogCategories == null) return;
+        final int restoreY = catalogScrollY;
         renderCatalog();
-        pageScroll.post(() -> pageScroll.scrollTo(0, catalogScrollY));
+        pageScroll.post(() -> pageScroll.scrollTo(0, restoreY));
         showingSeriesPage = false;
     }
 
