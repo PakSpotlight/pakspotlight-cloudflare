@@ -226,7 +226,7 @@ public final class CatalogActivity extends Activity {
         list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         list.setNestedScrollingEnabled(true);
         list.setItemViewCacheSize(3);
-        content.addView(list, new LinearLayout.LayoutParams(-1, -2));
+        content.addView(list, new LinearLayout.LayoutParams(-1, -1));
         setContentView(root);
     }
 
@@ -439,10 +439,10 @@ public final class CatalogActivity extends Activity {
         if (targetRow < 0) return;
         if (targetRow >= catalogAdapter.getItemCount()) return;
         int sourceIndex = Math.max(0, rail.getChildAdapterPosition(focusedCard));
+        list.smoothScrollToPosition(targetRow);
         list.post(() -> {
             RecyclerView.ViewHolder rowHolder = list.findViewHolderForAdapterPosition(targetRow);
             if (rowHolder == null) return;
-            list.smoothScrollToPosition(targetRow);
             View nextRailView = rowHolder.itemView.findViewWithTag("catalog_rail");
             if (!(nextRailView instanceof RecyclerView)) return;
             RecyclerView nextRail = (RecyclerView) nextRailView;
